@@ -1,0 +1,546 @@
+<?php
+namespace App\Controllers;
+
+class Enchere extends BaseController
+{
+    // ==================== INITIALISATION (vérification session) ====================
+    public function init()
+    {
+        $session = session();
+        if (!$session->get('estConnecte')) {
+            return false;
+        }
+        $data = [
+            'titre' => 'EnchèreAPorter',
+            'session' => $session,
+        ];
+        return $data;
+    }
+
+    // ==================== ACCUEIL ====================
+    public function index()
+    {
+        $monmodel = new \App\Models\Modele();
+        $monmodel->mettreAJourStatutsVentes();
+
+        $data = [
+            'titre' => 'Accueil - EnchèreAPorter',
+            'session' => session(),
+            'ventesEnCours' => $monmodel->getLesVentes('en_cours'),
+            'ventesAVenir' => $monmodel->getLesVentes('a_venir'),
+        ];
+        return view('accueil', $data);
+    }
+
+    // ==================== INSCRIPTION ====================
+    public function inscription()
+    {
+        $session = session();
+        if ($session->get('estConnecte')) {
+            return redirect()->to('Enchere/index');
+        }
+        return view('inscription', ['titre' => 'Inscription - EnchèreAPorter']);
+    }
+
+    public function validerInscription()
+    {
+        $rules = [
+            'nom' => 'required|min_length[2]|max_length[100]',
+            'prenom' => 'required|min_length[2]|max_length[100]',
+            'email' => 'required|valid_email|is_unique[utilisateurs.email]',
+            'mot_de_passe' => 'required|min_length[8]',
+            'confirm_password' => 'required|matches[mot_de_passe]',
+            'adresse' => 'required|max_length[255]',
+        ];
+
+        if (!$this->validate($rules)) {
+            return view('inscription', ['titre' => 'Inscription - EnchèreAPorter']);
+        }
+
+        $monmodel = new \App\Models\Modele();
+
+        $data = [
+            'id_role' => 3, // habitant
+            'nom' => $this->request->getVar('nom'),
+            'prenom' => $this->request->getVar('prenom'),
+            'email' => $this->request->getVar('email'),
+            'mot_de_passe' => password_hash($this->request->getVar('mot_de_passe'), PASSWORD_DEFAULT),
+            'telephone' => $this->request->getVar('telephone'),
+            'adresse' => $this->request->getVar('adresse'),
+            'est_habitant' => 1,
+            'est_actif' => 1,
+            'created_at' => date('Y-m-d H:i:s'),
+        ];
+
+        $monmodel->insertUtilisateur($data);
+        return redirect()->to('Enchere/connexion');
+    }
+
+    // ==================== CONNEXION ====================
+    public function connexion()
+    {
+        $session = session();
+        if ($session->get('estConnecte')) {
+            return redirect()->to('Enchere/index');
+        }
+        return view('connexion', ['titre' => 'Connexion - EnchèreAPorter']);
+    }
+
+    public function connecter()
+    {
+        $email = $this->request->getVar('email');
+        $mdp = $this->request->getVar('mot_de_passe');
+
+        $monmodel = new \App\Models\Modele();
+        $utilisateur = $monmodel->getUtilisateurParEmail($email);
+
+        if ($utilisateur && password_verify($mdp, $utilisateur->mot_de_passe)) {
+            if (!$utilisateur->est_actif) {
+                return view('connexion', ['titre' => 'Connexion', 'erreur' => 'Compte désactivé.']);
+            }
+            $role = $monmodel->getRoleParId($utilisateur->id_role);
+
+            $session = session();
+            $session->set('estConnecte', true);
+            $session->set('id_utilisateur', $utilisateur->id_utilisateur);
+            $session->set('nom', $utilisateur->nom);
+            $session->set('prenom', $utilisateur->prenom);
+            $session->set('email', $utilisateur->email);
+            $session->set('role', $role->libelle);
+
+            if ($role->libelle === 'secretaire') {
+                return redirect()->to('Enchere/dashboard');
+            }
+            return redirect()->to('Enchere/index');
+        } else {
+            return view('connexion', ['titre' => 'Connexion', 'erreur' => 'Email ou mot de passe incorrect.']);
+        }
+    }
+
+    public function deconnexion()
+    {
+        $session = session();
+        $session->destroy();
+        return redirect()->to(base_url('Enchere/connexion'));
+    }
+
+    // ==================== VENTES ====================
+    public function listeVentes()
+    {
+        $monmodel = new \App\Models\Modele();
+        $monmodel->mettreAJourStatutsVentes();
+
+        $etat = $this->request->getVar('etat');
+
+        $data = [
+            'titre' => 'Ventes - EnchèreAPorter',
+            'session' => session(),
+            'ventes' => $monmodel->getLesVentes($etat),
+            'filtre' => $etat,
+        ];
+        return view('liste_ventes', $data);
+    }
+
+    public function detailVente($id)
+    {
+        $monmodel = new \App\Models\Modele();
+        $monmodel->mettreAJourStatutsVentes();
+
+        $vente = $monmodel->getVenteParId($id);
+        if (!$vente) {
+            return redirect()->to('Enchere/listeVentes');
+        }
+
+        $articles = $monmodel->getArticlesDeVente($id);
+        $inscrits = $monmodel->getInscritsVente($id);
+
+        $estInscrit = false;
+        $session = session();
+        if ($session->get('id_utilisateur')) {
+            $estInscrit = $monmodel->estInscrit($id, $session->get('id_utilisateur'));
+        }
+
+        // Articles disponibles pour sélection (bénévole/secrétaire)
+        $articlesDisponibles = $monmodel->getArticlesDisponibles();
+
+        $data = [
+            'titre' => $vente->titre . ' - EnchèreAPorter',
+            'session' => $session,
+            'vente' => $vente,
+            'articles' => $articles,
+            'estInscrit' => $estInscrit,
+            'inscrits' => $inscrits,
+            'articlesDisponibles' => $articlesDisponibles,
+        ];
+        return view('detail_vente', $data);
+    }
+
+    public function creerVente()
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+        $session = session();
+        if ($session->get('role') !== 'secretaire') {
+            return redirect()->to('Enchere/index');
+        }
+        return view('creer_vente', $data);
+    }
+
+    public function validerCreerVente()
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+
+        $rules = [
+            'titre' => 'required|max_length[255]',
+            'date_debut' => 'required',
+            'date_fin' => 'required',
+        ];
+
+        if (!$this->validate($rules)) {
+            return view('creer_vente', $data);
+        }
+
+        $monmodel = new \App\Models\Modele();
+        $session = session();
+
+        $venteData = [
+            'id_secretaire' => $session->get('id_utilisateur'),
+            'titre' => $this->request->getVar('titre'),
+            'description' => $this->request->getVar('description'),
+            'date_debut' => $this->request->getVar('date_debut'),
+            'date_fin' => $this->request->getVar('date_fin'),
+            'etat' => 'a_venir',
+            'created_at' => date('Y-m-d H:i:s'),
+        ];
+
+        $monmodel->insertVente($venteData);
+        return redirect()->to('Enchere/listeVentes');
+    }
+
+    public function inscrireVente($idVente)
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+
+        $monmodel = new \App\Models\Modele();
+        $session = session();
+
+        if (!$monmodel->estInscrit($idVente, $session->get('id_utilisateur'))) {
+            $monmodel->insertInscription([
+                'id_vente' => $idVente,
+                'id_utilisateur' => $session->get('id_utilisateur'),
+            ]);
+        }
+        return redirect()->to('Enchere/detailVente/' . $idVente);
+    }
+
+    public function cloturerVente($idVente)
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+        $session = session();
+        if ($session->get('role') !== 'secretaire') {
+            return redirect()->to('Enchere/index');
+        }
+
+        $monmodel = new \App\Models\Modele();
+        $monmodel->updateVente($idVente, ['etat' => 'cloturee']);
+
+        // Attribuer les gagnants
+        $articlesVente = $monmodel->getVenteArticlesParVente($idVente);
+        foreach ($articlesVente as $va) {
+            $enchereGagnante = $monmodel->getEnchereMax($va->id_vente_article);
+            if ($enchereGagnante) {
+                $monmodel->insertAchat([
+                    'id_vente_article' => $va->id_vente_article,
+                    'id_utilisateur' => $enchereGagnante->id_utilisateur,
+                    'id_enchere' => $enchereGagnante->id_enchere,
+                    'montant_final' => $enchereGagnante->montant,
+                    'confirme' => 0,
+                ]);
+            }
+        }
+        return redirect()->to('Enchere/detailVente/' . $idVente);
+    }
+
+    public function qrcodeVente($idVente)
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+
+        $monmodel = new \App\Models\Modele();
+        $vente = $monmodel->getVenteParId($idVente);
+        if (!$vente)
+            return redirect()->to('Enchere/listeVentes');
+
+        $url = base_url('Enchere/detailVente/' . $idVente);
+        $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($url);
+
+        $data['vente'] = $vente;
+        $data['qrCodeUrl'] = $qrCodeUrl;
+        $data['venteUrl'] = $url;
+
+        return view('qrcode_vente', $data);
+    }
+
+    // ==================== ARTICLES ====================
+    public function listeArticles()
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+        $session = session();
+        if (!in_array($session->get('role'), ['benevole', 'secretaire'])) {
+            return redirect()->to('Enchere/index');
+        }
+
+        $monmodel = new \App\Models\Modele();
+        $data['articles'] = $monmodel->getLesArticles();
+        return view('liste_articles', $data);
+    }
+
+    public function creerArticle()
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+        return view('creer_article', $data);
+    }
+
+    public function validerCreerArticle()
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+
+        $rules = [
+            'libelle' => 'required|max_length[255]',
+            'etat' => 'required|in_list[bon,très bon,comme neuf]',
+            'prix_origine' => 'required|decimal',
+        ];
+
+        if (!$this->validate($rules)) {
+            return view('creer_article', $data);
+        }
+
+        $monmodel = new \App\Models\Modele();
+
+        $articleData = [
+            'libelle' => $this->request->getVar('libelle'),
+            'description' => $this->request->getVar('description'),
+            'taille' => $this->request->getVar('taille'),
+            'etat' => $this->request->getVar('etat'),
+            'prix_origine' => $this->request->getVar('prix_origine'),
+        ];
+
+        // Gestion photo
+        $photo = $this->request->getFile('photo');
+        if ($photo && $photo->isValid() && !$photo->hasMoved()) {
+            $newName = $photo->getRandomName();
+            $photo->move(FCPATH . 'uploads/articles/', $newName);
+            $articleData['photo'] = 'uploads/articles/' . $newName;
+        }
+
+        $monmodel->insertArticle($articleData);
+        return redirect()->to('Enchere/listeArticles');
+    }
+
+    public function selectionnerArticle($idVente)
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+
+        $monmodel = new \App\Models\Modele();
+        $session = session();
+
+        $idArticle = $this->request->getVar('id_article');
+        $prixDepart = $this->request->getVar('prix_depart');
+
+        if ($prixDepart < 0.20) {
+            return redirect()->to('Enchere/detailVente/' . $idVente);
+        }
+
+        if (!$monmodel->venteArticleExiste($idVente, $idArticle)) {
+            $monmodel->insertVenteArticle([
+                'id_vente' => $idVente,
+                'id_article' => $idArticle,
+                'id_benevole' => $session->get('id_utilisateur'),
+                'prix_depart' => $prixDepart,
+            ]);
+        }
+        return redirect()->to('Enchere/detailVente/' . $idVente);
+    }
+
+    // ==================== ENCHERES ====================
+    public function encherir($idVenteArticle)
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+
+        $monmodel = new \App\Models\Modele();
+        $session = session();
+
+        $venteArticle = $monmodel->getVenteArticleDetail($idVenteArticle);
+        if (!$venteArticle || $venteArticle->vente_etat !== 'en_cours') {
+            return redirect()->to('Enchere/listeVentes');
+        }
+
+        $montant = (float) $this->request->getVar('montant');
+        $montantMax = $monmodel->getMontantMax($idVenteArticle);
+        $minimum = max($venteArticle->prix_depart, 0.20);
+
+        if ($montantMax > 0) {
+            $minimum = $montantMax + 0.10;
+        }
+
+        if ($montant < $minimum) {
+            return redirect()->to('Enchere/detailVente/' . $venteArticle->id_vente);
+        }
+
+        $monmodel->insertEnchere([
+            'id_vente_article' => $idVenteArticle,
+            'id_utilisateur' => $session->get('id_utilisateur'),
+            'montant' => $montant,
+            'est_annulee' => 0,
+            'date_enchere' => date('Y-m-d H:i:s'),
+        ]);
+
+        return redirect()->to('Enchere/detailVente/' . $venteArticle->id_vente);
+    }
+
+    public function annulerEnchere($idEnchere)
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+
+        $monmodel = new \App\Models\Modele();
+        $session = session();
+        $enchere = $monmodel->getEnchereParId($idEnchere);
+
+        if ($enchere && $enchere->id_utilisateur == $session->get('id_utilisateur')) {
+            $monmodel->annulerEnchere($idEnchere);
+        }
+        return redirect()->to('Enchere/historiqueEncheres');
+    }
+
+    public function historiqueEncheres()
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+
+        $monmodel = new \App\Models\Modele();
+        $session = session();
+        $data['encheres'] = $monmodel->getHistoriqueEncheres($session->get('id_utilisateur'));
+        return view('historique_encheres', $data);
+    }
+
+    // ==================== ACHATS ====================
+    public function mesAchats()
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+
+        $monmodel = new \App\Models\Modele();
+        $session = session();
+        $data['achats'] = $monmodel->getAchatsUtilisateur($session->get('id_utilisateur'));
+        return view('mes_achats', $data);
+    }
+
+    public function confirmerAchat($idAchat)
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+
+        $monmodel = new \App\Models\Modele();
+        $session = session();
+        $achat = $monmodel->getAchatParId($idAchat);
+
+        if ($achat && $achat->id_utilisateur == $session->get('id_utilisateur')) {
+            $monmodel->confirmerAchat($idAchat);
+        }
+        return redirect()->to('Enchere/mesAchats');
+    }
+
+    // ==================== PROFIL ====================
+    public function profil()
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+
+        $monmodel = new \App\Models\Modele();
+        $session = session();
+        $data['utilisateur'] = $monmodel->getUtilisateurParId($session->get('id_utilisateur'));
+        return view('profil', $data);
+    }
+
+    public function modifierProfil()
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+
+        $monmodel = new \App\Models\Modele();
+        $session = session();
+
+        $updateData = [
+            'nom' => $this->request->getVar('nom'),
+            'prenom' => $this->request->getVar('prenom'),
+            'telephone' => $this->request->getVar('telephone'),
+            'adresse' => $this->request->getVar('adresse'),
+        ];
+
+        $newMdp = $this->request->getVar('nouveau_mot_de_passe');
+        if (!empty($newMdp) && strlen($newMdp) >= 8) {
+            $updateData['mot_de_passe'] = password_hash($newMdp, PASSWORD_DEFAULT);
+        }
+
+        $monmodel->updateUtilisateur($session->get('id_utilisateur'), $updateData);
+        $session->set('nom', $updateData['nom']);
+        $session->set('prenom', $updateData['prenom']);
+
+        return redirect()->to('Enchere/profil');
+    }
+
+    // ==================== DASHBOARD (secrétaire) ====================
+    public function dashboard()
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+        $session = session();
+        if ($session->get('role') !== 'secretaire') {
+            return redirect()->to('Enchere/index');
+        }
+
+        $monmodel = new \App\Models\Modele();
+        $monmodel->mettreAJourStatutsVentes();
+
+        $ventesParEtat = $monmodel->compterVentesParEtat();
+        $statsVentes = ['a_venir' => 0, 'en_cours' => 0, 'cloturee' => 0];
+        foreach ($ventesParEtat as $v) {
+            $statsVentes[$v->etat] = $v->total;
+        }
+
+        $data['statsVentes'] = $statsVentes;
+        $data['totalVentes'] = array_sum($statsVentes);
+        $data['montantTotal'] = $monmodel->getMontantTotalAchats();
+        $data['nbUtilisateurs'] = $monmodel->getNbUtilisateurs();
+        $data['nbArticles'] = $monmodel->getNbArticles();
+        $data['dernieresVentes'] = $monmodel->getLesVentes();
+
+        return view('dashboard', $data);
+    }
+}
