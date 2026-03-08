@@ -507,4 +507,98 @@ class Modele extends Model
             $db->close();
         }
     }
+
+    // ==================== STATISTIQUES AVANCÉES ====================
+
+    /**
+     * Récupère les articles les plus enchéris (TOP N par nombre d'enchères).
+     * Utilisé dans le dashboard du secrétaire.
+     */
+    public function getArticlesPlusEncheris($limit = 5)
+    {
+        $db = \Config\Database::connect();
+        $sql = "SELECT a.libelle, COUNT(e.id_enchere) as nb_encheres
+                FROM encheres e
+                JOIN vente_articles va ON va.id_vente_article = e.id_vente_article
+                JOIN articles a ON a.id_article = va.id_article
+                WHERE e.est_annulee = 0
+                GROUP BY a.id_article, a.libelle
+                ORDER BY nb_encheres DESC
+                LIMIT $limit";
+        $query = $db->query($sql);
+        $db->close();
+        return $query->getResult();
+    }
+
+    /**
+     * Récupère l'évolution des enchères par jour sur les X derniers jours.
+     * Utilisé pour le graphique dans le dashboard du secrétaire.
+     */
+    public function getEvolutionEncheres($jours = 7)
+    {
+        $db = \Config\Database::connect();
+        $dateDebut = date('Y-m-d', strtotime("-$jours days"));
+        $sql = "SELECT DATE(date_enchere) as jour, COUNT(id_enchere) as total
+                FROM encheres
+                WHERE est_annulee = 0
+                AND date_enchere >= '$dateDebut'
+                GROUP BY DATE(date_enchere)
+                ORDER BY jour ASC";
+        $query = $db->query($sql);
+        $db->close();
+        return $query->getResult();
+    }
+
+    /**
+     * Taux de participation : combien d'inscrits ont réellement enchéri ?
+     */
+    public function getTauxParticipation()
+    {
+        $db = \Config\Database::connect();
+
+        // Les 10 dernières ventes actives ou finies
+        $ventes = $db->query("SELECT id_vente, titre FROM ventes
+            WHERE etat IN ('en_cours', 'cloturee')
+            ORDER BY date_debut DESC LIMIT 10")->getResult();
+
+        foreach ($ventes as &$v) {
+            // Combien de gens inscrits ?
+            $inscrits = $db->query("SELECT COUNT(*) as nb FROM inscriptions WHERE id_vente = ?", [$v->id_vente])->getRow()->nb;
+
+            // Combien ont enchéri (utilisateurs uniques) ?
+            $actifs = $db->query("SELECT COUNT(DISTINCT e.id_utilisateur) as nb
+                FROM encheres e JOIN vente_articles va ON va.id_vente_article = e.id_vente_article
+                WHERE va.id_vente = ? AND e.est_annulee = 0", [$v->id_vente])->getRow()->nb;
+
+            // Calcul du taux (si personne inscrit = 0%)
+            $v->taux = ($inscrits > 0) ? round(($actifs / $inscrits) * 100) : 0;
+        }
+
+        $db->close();
+        return $ventes;
+    }
+
+    // ==================== REÇU D'ACHAT ====================
+
+    /**
+     * Détails complets d'un achat (article + vente + acheteur) pour le reçu.
+     */
+    public function getAchatDetail($idAchat)
+    {
+        $db = \Config\Database::connect();
+        $sql = "SELECT ac.*, a.libelle as article_libelle, a.description as article_description,
+                a.taille, a.etat as article_etat, a.prix_origine, a.photo,
+                v.titre as vente_titre, v.date_debut as vente_date_debut, v.date_fin as vente_date_fin,
+                u.nom as acheteur_nom, u.prenom as acheteur_prenom, u.email as acheteur_email,
+                u.adresse as acheteur_adresse, u.telephone as acheteur_telephone
+                FROM achats ac
+                JOIN vente_articles va ON va.id_vente_article = ac.id_vente_article
+                JOIN articles a ON a.id_article = va.id_article
+                JOIN ventes v ON v.id_vente = va.id_vente
+                JOIN utilisateurs u ON u.id_utilisateur = ac.id_utilisateur
+                WHERE ac.id_achat = ?";
+        $query = $db->query($sql, [$idAchat]);
+        $db->close();
+        return $query->getRow();
+    }
 }

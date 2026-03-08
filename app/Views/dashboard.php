@@ -307,6 +307,65 @@ else: ?>
 endif; ?>
     </div>
 
+    <!-- STATISTIQUES AVANCÉES : Articles les plus enchéris -->
+    <div class="container">
+        <h2>🏆 Articles les plus enchéris</h2>
+        <?php if (!empty($topArticles)): ?>
+            <table>
+                <tr>
+                    <th>Article</th>
+                    <th>Nombre d'enchères</th>
+                </tr>
+                <?php foreach ($topArticles as $article): ?>
+                    <tr>
+                        <td><?= $article->libelle; ?></td>
+                        <td><strong><?= $article->nb_encheres; ?></strong></td>
+                    </tr>
+                <?php
+    endforeach; ?>
+            </table>
+        <?php
+else: ?>
+            <p style="color: #7f8c8d;">Aucune enchère pour le moment.</p>
+        <?php
+endif; ?>
+
+        <!-- STATISTIQUES AVANCÉES : Évolution des enchères -->
+        <div class="charts-container">
+            <div class="chart-box">
+                <canvas id="evolutionChart"></canvas>
+            </div>
+        </div>
+
+        <!-- STATISTIQUES AVANCÉES : Taux de participation par vente -->
+        <h2>📈 Taux de participation par vente</h2>
+        <?php if (!empty($tauxParticipation)): ?>
+            <table>
+                <tr>
+                    <th>Vente</th>
+                    <th>Taux de participation</th>
+                </tr>
+                <?php foreach ($tauxParticipation as $v): ?>
+                    <tr>
+                        <td><?= $v->titre; ?></td>
+                        <td>
+                            <div style="background: #ecf0f1; border-radius: 10px; overflow: hidden;">
+                                <div style="background: <?= $v->taux >= 50 ? '#27ae60' : '#f39c12'; ?>; width: <?= $v->taux; ?>%; padding: 4px 8px; color: white; font-size: 12px; min-width: 30px; text-align: center;">
+                                    <?= $v->taux; ?>%
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                <?php
+    endforeach; ?>
+            </table>
+        <?php
+else: ?>
+            <p style="color: #7f8c8d;">Aucune donnée de participation.</p>
+        <?php
+endif; ?>
+    </div>
+
     <footer>
         <p>&copy;
             <?= date('Y'); ?> EnchèreAPorter — Ville de Getcet
@@ -365,6 +424,38 @@ endif; ?>
                 plugins: {
                     legend: { display: false },
                     title: { display: true, text: 'Vue d\'ensemble de la plateforme' }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+        // Graphique Évolution des enchères (7 derniers jours)
+        const ctxEvolution = document.getElementById('evolutionChart').getContext('2d');
+        const evolutionChart = new Chart(ctxEvolution, {
+            type: 'line',
+            data: {
+                labels: [<?php foreach ($evolutionEncheres as $e) {
+    echo "'" . date('d/m', strtotime($e->jour)) . "',";
+}?>],
+                datasets: [{
+                    label: 'Enchères par jour',
+                    data: [<?php foreach ($evolutionEncheres as $e) {
+    echo $e->total . ",";
+}?>],
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    borderWidth: 2,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: { display: true, text: 'Évolution des enchères (7 derniers jours)' },
+                    legend: { display: false }
                 },
                 scales: {
                     y: { beginAtZero: true }

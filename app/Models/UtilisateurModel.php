@@ -21,6 +21,7 @@ class UtilisateurModel extends Model
         'mot_de_passe',
         'telephone',
         'adresse',
+        'ville',
         'est_habitant',
         'est_actif',
         'created_at'
