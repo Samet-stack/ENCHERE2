@@ -60,17 +60,40 @@ class VenteModel extends Model
     {
         $now = date('Y-m-d H:i:s');
 
-        // Passer les ventes "à venir" en "en cours"
-        $this->where('etat', 'a_venir')
+        // 1. Trouver les ventes qui vont s'ouvrir
+        $ventesAOuvrir = $this->where('etat', 'a_venir')
             ->where('date_debut <=', $now)
-            ->set('etat', 'en_cours')
-            ->update();
+            ->findAll();
 
-        // Passer les ventes "en cours" en "clôturée"
-        $this->where('etat', 'en_cours')
+        $inscriptionModel = new \App\Models\InscriptionModel();
+
+        foreach ($ventesAOuvrir as $vente) {
+            // Mettre à jour l'état
+            $this->update($vente['id_vente'], ['etat' => 'en_cours']);
+
+            // Envoyer le mail d'ouverture aux inscrits
+            $inscrits = $inscriptionModel->getInscritsVente($vente['id_vente']);
+            foreach ($inscrits as $inscrit) {
+                $sujet = "L'enchère '" . $vente['titre'] . "' est ouverte !";
+                $message = "Bonjour " . $inscrit['prenom'] . ",<br><br>";
+                $message .= "La vente aux enchères <strong>" . $vente['titre'] . "</strong> vient de commencer.<br>";
+                $message .= "Vous pouvez dès à présent faire vos offres !<br><br>";
+                $message .= "<a href='" . base_url('ventes/' . $vente['id_vente']) . "'>Accéder à la vente</a>";
+
+                \App\Libraries\Mailer::envoyerMail($inscrit['email'], $sujet, $message);
+            }
+        }
+
+        // 2. Trouver les ventes qui vont se clôturer (le gagnant sera géré via le bouton/fonction clôturer)
+        $ventesACloturer = $this->where('etat', 'en_cours')
             ->where('date_fin <=', $now)
-            ->set('etat', 'cloturee')
-            ->update();
+            ->findAll();
+
+        foreach ($ventesACloturer as $vente) {
+            $this->update($vente['id_vente'], ['etat' => 'cloturee']);
+        // NOTE: Le mail aux gagnants sera envoyé explicitement lors de l'appel à la fonction cloturer() du contrôleur 
+        // qui gère l'attribution des objets.
+        }
     }
 
     /**

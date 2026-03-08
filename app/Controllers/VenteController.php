@@ -150,8 +150,8 @@ class VenteController extends BaseController
         $articlesVente = $venteArticleModel->where('id_vente', $idVente)->findAll();
 
         foreach ($articlesVente as $va) {
-            // Trouver l'enchère gagnante
-            $enchereGagnante = $enchereModel->getEnchereMax($va['id_vente_article']);
+            // Trouver l'enchère gagnante avec infos utilisateur
+            $enchereGagnante = $enchereModel->getGagnant($va['id_vente_article']);
 
             if ($enchereGagnante) {
                 $achatModel->insert([
@@ -161,10 +161,20 @@ class VenteController extends BaseController
                     'montant_final' => $enchereGagnante['montant'],
                     'confirme' => 0,
                 ]);
+
+                // Envoyer l'email au gagnant
+                $sujet = "Félicitations ! Vous avez remporté l'enchère pour '" . $vente['titre'] . "'";
+                $message = "Bonjour " . $enchereGagnante['prenom'] . ",<br><br>";
+                $message .= "Excellente nouvelle ! Vous avez remporté l'enchère sur l'un des articles de la vente <strong>" . $vente['titre'] . "</strong>.<br>";
+                $message .= "Montant final : <strong>" . number_format($enchereGagnante['montant'], 2) . " €</strong>.<br><br>";
+                $message .= "Veuillez vous connecter à votre espace pour confirmer votre achat.<br><br>";
+                $message .= "<a href='" . base_url('achats') . "'>Voir mes achats</a>";
+
+                \App\Libraries\Mailer::envoyerMail($enchereGagnante['email'], $sujet, $message);
             }
         }
 
-        return redirect()->to('/ventes/' . $idVente)->with('success', 'Vente clôturée ! Les gagnants ont été désignés.');
+        return redirect()->to('/ventes/' . $idVente)->with('success', 'Vente clôturée ! Les gagnants ont été désignés et notifiés par e-mail.');
     }
 
     /**
