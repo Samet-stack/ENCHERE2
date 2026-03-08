@@ -39,6 +39,11 @@ class DashboardController extends BaseController
         $dernieresVentes = $venteModel->getVentesAvecSecretaire();
         $dernieresVentes = array_slice($dernieresVentes, 0, 10);
 
+        // --- NOUVELLES STATISTIQUES AVANCÉES ---
+        $topArticles = $enchereModel->getArticlesPlusEncheris(5);
+        $evolutionEncheres = $enchereModel->getEvolutionEncheres(7);
+        $tauxParticipation = $venteModel->getTauxParticipation();
+
         $data = [
             'title' => 'Tableau de bord - EnchèreAPorter',
             'statsVentes' => $statsVentes,
@@ -47,6 +52,9 @@ class DashboardController extends BaseController
             'nbUtilisateurs' => $nbUtilisateurs,
             'nbArticles' => $nbArticles,
             'dernieresVentes' => $dernieresVentes,
+            'topArticles' => $topArticles,
+            'evolutionEncheres' => $evolutionEncheres,
+            'tauxParticipation' => $tauxParticipation,
         ];
 
         return view('dashboard/index', $data);

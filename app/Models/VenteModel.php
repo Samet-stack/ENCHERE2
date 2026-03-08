@@ -105,4 +105,46 @@ class VenteModel extends Model
             ->groupBy('etat')
             ->findAll();
     }
+
+    /**
+     * STATISTIQUES : Taux de participation par vente (inscrits vs enchérisseurs)
+     */
+    public function getTauxParticipation(): array
+    {
+        // On récupère toutes les ventes clôturées ou en cours
+        $ventes = $this->select('id_vente, titre')
+            ->whereIn('etat', ['en_cours', 'cloturee'])
+            ->orderBy('date_debut', 'DESC')
+            ->limit(10)
+            ->findAll();
+
+        $db = \Config\Database::connect();
+
+        foreach ($ventes as &$vente) {
+            $id = $vente['id_vente'];
+
+            // Nombre d'inscrits à cette vente
+            $inscrits = $db->table('inscriptions')->where('id_vente', $id)->countAllResults();
+
+            // Nombre d'utilisateurs distincts ayant enchéri sur cette vente
+            $encherisseurs = $db->table('encheres e')
+                ->join('vente_articles va', 'va.id_vente_article = e.id_vente_article')
+                ->where('va.id_vente', $id)
+                ->countAllResults(false);
+            // note: pour de vrais utilisateurs uniques: 
+            // SELECT COUNT(DISTINCT id_utilisateur) FROM encheres e JOIN vente_articles va ...
+
+            $query = $db->query("SELECT COUNT(DISTINCT e.id_utilisateur) as nb FROM encheres e JOIN vente_articles va ON va.id_vente_article = e.id_vente_article WHERE va.id_vente = ?", [$id]);
+            $encherisseurs = $query->getRow()->nb;
+
+            if ($inscrits > 0) {
+                $vente['taux'] = round(($encherisseurs / $inscrits) * 100);
+            }
+            else {
+                $vente['taux'] = 0;
+            }
+        }
+
+        return $ventes;
+    }
 }
