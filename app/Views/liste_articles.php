@@ -133,7 +133,8 @@
                     <div class="card card-item">
                         <?php if (!empty($article->photo)): ?>
                             <img src="<?= base_url($article->photo); ?>" alt="<?= $article->libelle; ?>" class="article-photo">
-                        <?php endif; ?>
+                        <?php
+        endif; ?>
                         <h3>
                             <?= $article->libelle; ?>
                         </h3>
@@ -147,14 +148,17 @@
                             <?= $article->description ?? 'Aucune description'; ?>
                         </p>
                         <p class="prix">
-                            <?= number_format($article->prix_origine, 2); ?> €
+                            Prix d'origine : <?= number_format($article->prix_origine, 2); ?> €
                         </p>
                     </div>
-                <?php endforeach; ?>
+                <?php
+    endforeach; ?>
             </div>
-        <?php else: ?>
+        <?php
+else: ?>
             <p style="text-align: center; padding: 30px; color: #7f8c8d;">Aucun article. Ajoutez-en un !</p>
-        <?php endif; ?>
+        <?php
+endif; ?>
     </div>
 
     <footer>

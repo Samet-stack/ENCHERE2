@@ -40,6 +40,7 @@ $routes->get('Enchere/historiqueEncheres', 'Enchere::historiqueEncheres');
 // Achats
 $routes->get('Enchere/mesAchats', 'Enchere::mesAchats');
 $routes->get('Enchere/confirmerAchat/(:num)', 'Enchere::confirmerAchat/$1');
+$routes->get('Enchere/recuAchat/(:num)', 'Enchere::recuAchat/$1');
 
 // Profil
 $routes->get('Enchere/profil', 'Enchere::profil');

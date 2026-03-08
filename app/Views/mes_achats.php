@@ -138,15 +138,18 @@
                     <div class="card card-item">
                         <?php if (!empty($achat->photo)): ?>
                             <img src="<?= base_url($achat->photo); ?>" alt="<?= $achat->article_libelle; ?>" class="article-photo">
-                        <?php endif; ?>
+                        <?php
+        endif; ?>
                         <h3>
                             <?= $achat->article_libelle; ?>
                         </h3>
                         <?php if ($achat->confirme): ?>
                             <span class="badge badge-success">Confirmé</span>
-                        <?php else: ?>
+                        <?php
+        else: ?>
                             <span class="badge badge-warning">En attente</span>
-                        <?php endif; ?>
+                        <?php
+        endif; ?>
                         <p>Vente :
                             <?= $achat->vente_titre; ?>
                         </p>
@@ -156,19 +159,25 @@
 
                         <?php if (!$achat->confirme): ?>
                             <?= anchor('Enchere/confirmerAchat/' . $achat->id_achat, "Confirmer l'achat", ['class' => 'btn btn-success']); ?>
-                        <?php else: ?>
+                        <?php
+        else: ?>
                             <p style="color: #27ae60; font-size: 13px;">Confirmé le
                                 <?= date('d/m/Y à H:i', strtotime($achat->date_confirmation)); ?>
                             </p>
-                        <?php endif; ?>
+                        <?php
+        endif; ?>
+                        <?= anchor('Enchere/recuAchat/' . $achat->id_achat, '📄 Reçu', ['class' => 'btn', 'target' => '_blank', 'style' => 'margin-top: 8px;']); ?>
                     </div>
-                <?php endforeach; ?>
+                <?php
+    endforeach; ?>
             </div>
-        <?php else: ?>
+        <?php
+else: ?>
             <p style="text-align: center; padding: 30px; color: #7f8c8d;">Aucun achat.
                 <?= anchor('Enchere/listeVentes', 'Voir les ventes'); ?>
             </p>
-        <?php endif; ?>
+        <?php
+endif; ?>
     </div>
 
     <footer>
