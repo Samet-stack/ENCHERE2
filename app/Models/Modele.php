@@ -418,7 +418,7 @@ class Modele extends Model
     public function getHistoriqueEncheres($idUtilisateur)
     {
         $db = \Config\Database::connect();
-        $sql = "SELECT e.*, a.libelle as article_libelle, v.titre as vente_titre, va.prix_depart
+        $sql = "SELECT e.*, a.libelle as article_libelle, v.titre as vente_titre, v.etat as vente_etat, va.prix_depart
                 FROM encheres e
                 JOIN vente_articles va ON va.id_vente_article = e.id_vente_article
                 JOIN articles a ON a.id_article = va.id_article

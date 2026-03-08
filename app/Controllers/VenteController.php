@@ -21,6 +21,11 @@ class VenteController extends BaseController
 
         $etat = $this->request->getGet('etat');
 
+        // Restriction bénévole : ne voir que les ventes clôturées
+        if ($this->session->get('role') === 'benevole') {
+            $etat = 'cloturee'; // Force le filtre à 'cloturee'
+        }
+
         $data = [
             'title' => 'Ventes - EnchèreAPorter',
             'ventes' => $venteModel->getVentesAvecSecretaire($etat),
@@ -45,6 +50,11 @@ class VenteController extends BaseController
 
         if (!$vente) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Vente non trouvée');
+        }
+
+        // Restriction bénévole : ne peut voir les détails que si la vente est clôturée
+        if ($this->session->get('role') === 'benevole' && $vente['etat'] !== 'cloturee') {
+            return redirect()->to('/ventes')->with('error', 'En tant que bénévole, vous ne pouvez consulter que les ventes clôturées.');
         }
 
         $articles = $articleModel->getArticlesVente($id);
