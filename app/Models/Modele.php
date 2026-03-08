@@ -76,6 +76,17 @@ class Modele extends Model
         return $result->nb;
     }
 
+    public function getTousLesHabitants()
+    {
+        $db = \Config\Database::connect();
+        $builder = $db->table('utilisateurs');
+        $builder->where('id_role', 3); // 3 = habitant
+        $builder->where('est_actif', 1);
+        $query = $builder->get();
+        $db->close();
+        return $query->getResult();
+    }
+
     // ==================== ARTICLES ====================
     public function getLesArticles()
     {
@@ -113,6 +124,16 @@ class Modele extends Model
         $result = $query->getRow();
         $db->close();
         return $result->nb;
+    }
+
+    public function getArticleParId($id)
+    {
+        $db = \Config\Database::connect();
+        $builder = $db->table('articles');
+        $builder->where('id_article', $id);
+        $query = $builder->get();
+        $db->close();
+        return $query->getRow();
     }
 
     // ==================== VENTES ====================
@@ -166,9 +187,78 @@ class Modele extends Model
         $now = date('Y-m-d H:i:s');
         // A venir -> En cours
         $db->query("UPDATE ventes SET etat='en_cours' WHERE etat='a_venir' AND date_debut <= '$now'");
+
+        // Gestion des Mails de rappel (2 heures avant la clôture)
+        $queryRappel = $db->query("SELECT id_vente, titre, date_fin FROM ventes WHERE etat='en_cours' AND TIMESTAMPDIFF(HOUR, '$now', date_fin) <= 2");
+        $ventesARappeler = $queryRappel->getResult();
+        foreach ($ventesARappeler as $v) {
+            // Vérifier si le mail n'a pas déjà été envoyé pour cette vente
+            $dejaEnvoye = $db->query("SELECT id_mail FROM mails_log WHERE id_vente = " . $v->id_vente . " AND type_mail = 'rappel_2h'")->getRow();
+            if (!$dejaEnvoye) {
+                $inscrits = $this->getInscritsVente($v->id_vente);
+                $sujet = "Rappel : L'enchère " . $v->titre . " se termine bientôt !";
+                $message = "<h1>Attention !</h1><p>La vente <strong>" . $v->titre . "</strong> se termine dans moins de 2 heures (" . date('H:i', strtotime($v->date_fin)) . ").</p>";
+
+                foreach ($inscrits as $inscrit) {
+                    \App\Libraries\Mailer::envoyerMail($inscrit->email, $sujet, $message);
+                    $this->logMail($v->id_vente, 'rappel_2h', $inscrit->email, 'envoye', $db);
+                }
+            }
+        }
+
         // En cours -> Clôturée
-        $db->query("UPDATE ventes SET etat='cloturee' WHERE etat='en_cours' AND date_fin <= '$now'");
+        $query = $db->query("SELECT id_vente FROM ventes WHERE etat='en_cours' AND date_fin <= '$now'");
+        $ventesACloturer = $query->getResult();
+
+        foreach ($ventesACloturer as $v) {
+            $this->cloturerVenteLogique($v->id_vente, $db);
+        }
+
         $db->close();
+    }
+
+    public function cloturerVenteLogique($idVente, $db = null)
+    {
+        $closeDb = false;
+        if ($db === null) {
+            $db = \Config\Database::connect();
+            $closeDb = true;
+        }
+
+        $db->query("UPDATE ventes SET etat='cloturee' WHERE id_vente = $idVente");
+
+        // Attribuer les gagnants
+        $articlesVente = $this->getVenteArticlesParVente($idVente);
+        foreach ($articlesVente as $va) {
+            $enchereGagnante = $this->getEnchereMax($va->id_vente_article);
+            if ($enchereGagnante) {
+                // Vérifier que l'achat n'existe pas déjà pour éviter les doublons
+                $achatExistant = $db->query("SELECT id_achat FROM achats WHERE id_vente_article = " . $va->id_vente_article)->getRow();
+                if (!$achatExistant) {
+                    $this->insertAchat([
+                        'id_vente_article' => $va->id_vente_article,
+                        'id_utilisateur' => $enchereGagnante->id_utilisateur,
+                        'id_enchere' => $enchereGagnante->id_enchere,
+                        'montant_final' => $enchereGagnante->montant,
+                        'confirme' => 0,
+                    ]);
+
+                    // Code duplication for logic closure (often called by chron process)
+                    $article = $this->getArticleParId($va->id_article);
+                    $sujet = "Vous avez remporté l'enchère : " . $article->libelle;
+                    $message = "<h1>Félicitations " . $enchereGagnante->prenom . " !</h1>";
+                    $message .= "<p>Vous avez remporté l'enchère pour l'article <strong>" . $article->libelle . "</strong> avec une offre de <strong>" . $enchereGagnante->montant . " €</strong>.</p>";
+                    $message .= "<p>Merci de vous connecter pour confirmer votre achat.</p>";
+
+                    \App\Libraries\Mailer::envoyerMail($enchereGagnante->email, $sujet, $message);
+                    $this->logMail($idVente, 'gagnant', $enchereGagnante->email, 'envoye', $db);
+                }
+            }
+        }
+
+        if ($closeDb) {
+            $db->close();
+        }
     }
 
     public function compterVentesParEtat()
@@ -199,7 +289,7 @@ class Modele extends Model
     {
         $db = \Config\Database::connect();
         $builder = $db->table('vente_articles va');
-        $builder->select('va.*, a.libelle, a.description, a.taille, a.etat, a.prix_origine, a.photo, v.titre as vente_titre, v.date_fin as vente_date_fin, v.etat as vente_etat, v.id_vente');
+        $builder->select('va.*, a.libelle, a.description, a.taille, a.etat, a.prix_origine, a.photo, v.titre as vente_titre, v.date_debut as vente_date_debut, v.date_fin as vente_date_fin, v.etat as vente_etat, v.id_vente');
         $builder->join('articles a', 'a.id_article = va.id_article');
         $builder->join('ventes v', 'v.id_vente = va.id_vente');
         $builder->where('va.id_vente_article', $id);
@@ -393,5 +483,28 @@ class Modele extends Model
         $result = $query->getRow();
         $db->close();
         return $result->montant_final ?? 0;
+    }
+
+    // ==================== MAILS LOG ====================
+    public function logMail($idVente, $typeMail, $destinataire, $statut, $db = null)
+    {
+        $closeDb = false;
+        if ($db === null) {
+            $db = \Config\Database::connect();
+            $closeDb = true;
+        }
+
+        $builder = $db->table('mails_log');
+        $builder->insert([
+            'id_vente' => $idVente,
+            'type_mail' => $typeMail,
+            'destinataire' => $destinataire,
+            'statut' => $statut,
+            'envoye_le' => date('Y-m-d H:i:s')
+        ]);
+
+        if ($closeDb) {
+            $db->close();
+        }
     }
 }

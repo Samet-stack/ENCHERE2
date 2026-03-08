@@ -161,7 +161,22 @@
             padding: 15px;
             margin-top: 30px;
         }
+
+        .charts-container {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .chart-box {
+            flex: 1;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+        }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -210,6 +225,17 @@
             </div>
         </div>
 
+        <!-- Graphiques Statistiques -->
+        <h2>Évolution et Répartition</h2>
+        <div class="charts-container">
+            <div class="chart-box">
+                <canvas id="ventesChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <canvas id="caChart"></canvas>
+            </div>
+        </div>
+
         <!-- Actions rapides -->
         <div class="card">
             <h3>Actions rapides</h3>
@@ -237,21 +263,21 @@
                             </strong></td>
                         <td>
                             <?php
-                            $badgeClass = 'badge-warning';
-                            $badgeLabel = $vente->etat;
-                            if ($vente->etat === 'en_cours') {
-                                $badgeClass = 'badge-success';
-                                $badgeLabel = 'En cours';
-                            }
-                            if ($vente->etat === 'a_venir') {
-                                $badgeClass = 'badge-warning';
-                                $badgeLabel = 'À venir';
-                            }
-                            if ($vente->etat === 'cloturee') {
-                                $badgeClass = 'badge-danger';
-                                $badgeLabel = 'Clôturée';
-                            }
-                            ?>
+        $badgeClass = 'badge-warning';
+        $badgeLabel = $vente->etat;
+        if ($vente->etat === 'en_cours') {
+            $badgeClass = 'badge-success';
+            $badgeLabel = 'En cours';
+        }
+        if ($vente->etat === 'a_venir') {
+            $badgeClass = 'badge-warning';
+            $badgeLabel = 'À venir';
+        }
+        if ($vente->etat === 'cloturee') {
+            $badgeClass = 'badge-danger';
+            $badgeLabel = 'Clôturée';
+        }
+?>
                             <span class="badge <?= $badgeClass; ?>">
                                 <?= $badgeLabel; ?>
                             </span>
@@ -267,14 +293,18 @@
                             <?= anchor('Enchere/qrcodeVente/' . $vente->id_vente, 'QR', ['class' => 'btn']); ?>
                             <?php if ($vente->etat !== 'cloturee'): ?>
                                 <?= anchor('Enchere/cloturerVente/' . $vente->id_vente, 'Clôturer', ['class' => 'btn btn-danger', 'onclick' => "return confirm('Clôturer ?')"]); ?>
-                            <?php endif; ?>
+                            <?php
+        endif; ?>
                         </td>
                     </tr>
-                <?php endforeach; ?>
+                <?php
+    endforeach; ?>
             </table>
-        <?php else: ?>
+        <?php
+else: ?>
             <p style="color: #7f8c8d;">Aucune vente. Créez-en une !</p>
-        <?php endif; ?>
+        <?php
+endif; ?>
     </div>
 
     <footer>
@@ -282,6 +312,66 @@
             <?= date('Y'); ?> EnchèreAPorter — Ville de Getcet
         </p>
     </footer>
+
+    <script>
+        // Graphique des Ventes (Camembert)
+        const ctxVentes = document.getElementById('ventesChart').getContext('2d');
+        const ventesChart = new Chart(ctxVentes, {
+            type: 'doughnut',
+            data: {
+                labels: ['À venir', 'En cours', 'Clôturées'],
+                datasets: [{
+                    data: [
+                        <?= $statsVentes['a_venir']; ?>,
+                        <?= $statsVentes['en_cours']; ?>,
+                        <?= $statsVentes['cloturee']; ?>
+                    ],
+                    backgroundColor: [
+                        '#f1c40f', // yellow
+                        '#2ecc71', // green
+                        '#e74c3c'  // red
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    title: { display: true, text: 'Répartition des statuts de ventes' }
+                }
+            }
+        });
+
+        // Graphique Vue d'ensemble (Barres)
+        const ctxCa = document.getElementById('caChart').getContext('2d');
+        const caChart = new Chart(ctxCa, {
+            type: 'bar',
+            data: {
+                labels: ['Utilisateurs', 'Articles', 'Ventes Totales'],
+                datasets: [{
+                    label: 'Quantité',
+                    data: [
+                        <?= $nbUtilisateurs; ?>,
+                        <?= $nbArticles; ?>,
+                        <?= $totalVentes; ?>
+                    ],
+                    backgroundColor: '#3498db',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: 'Vue d\'ensemble de la plateforme' }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    </script>
 </body>
 
 </html>
