@@ -159,15 +159,24 @@
 
         <?php if (session()->get('role') === 'secretaire'): ?>
             <?= anchor('Enchere/creerVente', '+ Nouvelle vente', ['class' => 'btn btn-success']); ?>
-        <?php endif; ?>
+        <?php
+endif; ?>
 
         <!-- Filtres -->
-        <div class="filter-bar">
-            <?= anchor('Enchere/listeVentes', 'Toutes', ['class' => 'btn' . (empty($filtre) ? ' active' : '')]); ?>
-            <?= anchor('Enchere/listeVentes?etat=en_cours', 'En cours', ['class' => 'btn' . ($filtre === 'en_cours' ? ' active' : '')]); ?>
-            <?= anchor('Enchere/listeVentes?etat=a_venir', 'À venir', ['class' => 'btn' . ($filtre === 'a_venir' ? ' active' : '')]); ?>
-            <?= anchor('Enchere/listeVentes?etat=cloturee', 'Clôturées', ['class' => 'btn' . ($filtre === 'cloturee' ? ' active' : '')]); ?>
-        </div>
+        <?php if (session()->get('role') !== 'benevole'): ?>
+            <div class="filter-bar">
+                <?= anchor('Enchere/listeVentes', 'Toutes', ['class' => 'btn' . (empty($filtre) ? ' active' : '')]); ?>
+                <?= anchor('Enchere/listeVentes?etat=en_cours', 'En cours', ['class' => 'btn' . ($filtre === 'en_cours' ? ' active' : '')]); ?>
+                <?= anchor('Enchere/listeVentes?etat=a_venir', 'À venir', ['class' => 'btn' . ($filtre === 'a_venir' ? ' active' : '')]); ?>
+                <?= anchor('Enchere/listeVentes?etat=cloturee', 'Clôturées', ['class' => 'btn' . ($filtre === 'cloturee' ? ' active' : '')]); ?>
+            </div>
+        <?php
+else: ?>
+            <div style="background-color: #d1ecf1; color: #0c5460; padding: 15px; border-radius: 4px; margin: 15px 0;">
+                ℹ️ En tant que bénévole, vous n'avez accès qu'aux ventes clôturées.
+            </div>
+        <?php
+endif; ?>
 
         <?php if (!empty($ventes)): ?>
             <div class="card-grid">
@@ -177,21 +186,21 @@
                             <?= $vente->titre; ?>
                         </h3>
                         <?php
-                        $badgeClass = 'badge-warning';
-                        $badgeLabel = $vente->etat;
-                        if ($vente->etat === 'en_cours') {
-                            $badgeClass = 'badge-success';
-                            $badgeLabel = 'En cours';
-                        }
-                        if ($vente->etat === 'a_venir') {
-                            $badgeClass = 'badge-warning';
-                            $badgeLabel = 'À venir';
-                        }
-                        if ($vente->etat === 'cloturee') {
-                            $badgeClass = 'badge-danger';
-                            $badgeLabel = 'Clôturée';
-                        }
-                        ?>
+        $badgeClass = 'badge-warning';
+        $badgeLabel = $vente->etat;
+        if ($vente->etat === 'en_cours') {
+            $badgeClass = 'badge-success';
+            $badgeLabel = 'En cours';
+        }
+        if ($vente->etat === 'a_venir') {
+            $badgeClass = 'badge-warning';
+            $badgeLabel = 'À venir';
+        }
+        if ($vente->etat === 'cloturee') {
+            $badgeClass = 'badge-danger';
+            $badgeLabel = 'Clôturée';
+        }
+?>
                         <span class="badge <?= $badgeClass; ?>">
                             <?= $badgeLabel; ?>
                         </span>
@@ -205,11 +214,14 @@
                         </p>
                         <?= anchor('Enchere/detailVente/' . $vente->id_vente, 'Voir détails →', ['class' => 'btn']); ?>
                     </div>
-                <?php endforeach; ?>
+                <?php
+    endforeach; ?>
             </div>
-        <?php else: ?>
+        <?php
+else: ?>
             <p style="text-align: center; padding: 40px; color: #7f8c8d;">Aucune vente trouvée pour ce filtre.</p>
-        <?php endif; ?>
+        <?php
+endif; ?>
     </div>
 
     <footer>
