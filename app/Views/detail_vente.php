@@ -278,7 +278,7 @@
             </div>
 
             <!-- Inscription -->
-            <?php if (session()->get('id_utilisateur') && $vente->etat !== 'cloturee'): ?>
+            <?php if (session()->get('id_utilisateur') && $vente->etat === 'a_venir'): ?>
                 <div class="card">
                     <h3>Inscription</h3>
                     <?php if ($estInscrit): ?>

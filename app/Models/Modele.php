@@ -185,8 +185,34 @@ class Modele extends Model
     {
         $db = \Config\Database::connect();
         $now = date('Y-m-d H:i:s');
-        // A venir -> En cours
-        $db->query("UPDATE ventes SET etat='en_cours' WHERE etat='a_venir' AND date_debut <= '$now'");
+        // A venir -> En cours + envoi des mails d'ouverture
+        $queryAOuvrir = $db->query("SELECT id_vente, titre FROM ventes WHERE etat='a_venir' AND date_debut <= '$now'");
+        $ventesAOuvrir = $queryAOuvrir->getResult();
+
+        foreach ($ventesAOuvrir as $v) {
+            // Passage de la vente en cours
+            $db->query("UPDATE ventes SET etat='en_cours' WHERE id_vente = " . (int) $v->id_vente);
+
+            // Mail d'ouverture aux inscrits (éviter les doublons via mails_log)
+            $inscrits = $this->getInscritsVente($v->id_vente);
+            $titreVente = htmlspecialchars((string) $v->titre, ENT_QUOTES, 'UTF-8');
+            $sujet = "Ouverture des enchères : " . $v->titre;
+            $message = "<h1>Les enchères sont ouvertes !</h1>";
+            $message .= "<p>La vente <strong>" . $titreVente . "</strong> est maintenant en cours.</p>";
+            $message .= "<p>Connectez-vous pour placer vos enchères.</p>";
+
+            foreach ($inscrits as $inscrit) {
+                $dejaEnvoye = $db->query(
+                    "SELECT id_mail FROM mails_log WHERE id_vente = ? AND type_mail = 'ouverture' AND destinataire = ? LIMIT 1",
+                    [$v->id_vente, $inscrit->email]
+                )->getRow();
+
+                if (!$dejaEnvoye) {
+                    \App\Libraries\Mailer::envoyerMail($inscrit->email, $sujet, $message);
+                    $this->logMail($v->id_vente, 'ouverture', $inscrit->email, 'envoye', $db);
+                }
+            }
+        }
 
         // Gestion des Mails de rappel (2 heures avant la clôture)
         $queryRappel = $db->query("SELECT id_vente, titre, date_fin FROM ventes WHERE etat='en_cours' AND TIMESTAMPDIFF(HOUR, '$now', date_fin) <= 2");

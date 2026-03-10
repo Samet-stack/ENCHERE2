@@ -229,6 +229,15 @@ class Enchere extends BaseController
         $monmodel = new \App\Models\Modele();
         $session = session();
 
+        $vente = $monmodel->getVenteParId($idVente);
+        if (!$vente) {
+            return redirect()->to('Enchere/listeVentes');
+        }
+
+        if ($vente->etat !== 'a_venir' || strtotime($vente->date_debut) <= time()) {
+            return redirect()->to('Enchere/detailVente/' . $idVente);
+        }
+
         if (!$monmodel->estInscrit($idVente, $session->get('id_utilisateur'))) {
             $monmodel->insertInscription([
                 'id_vente' => $idVente,
@@ -249,6 +258,7 @@ class Enchere extends BaseController
         }
 
         $monmodel = new \App\Models\Modele();
+        $vente = $monmodel->getVenteParId($idVente);
         $monmodel->updateVente($idVente, ['etat' => 'cloturee']);
 
         // Attribuer les gagnants
@@ -263,6 +273,20 @@ class Enchere extends BaseController
                     'montant_final' => $enchereGagnante->montant,
                     'confirme' => 0,
                 ]);
+
+                // Notifier le gagnant par email
+                $article = $monmodel->getArticleParId($va->id_article);
+                $venteTitre = $vente ? htmlspecialchars((string) $vente->titre, ENT_QUOTES, 'UTF-8') : 'la vente';
+                $articleLibelle = $article ? htmlspecialchars((string) $article->libelle, ENT_QUOTES, 'UTF-8') : 'un article';
+
+                $sujet = "Felicitation ! Vous avez remporte l'enchere : " . ($article ? $article->libelle : 'Article');
+                $message = "<h1>Felicitation " . htmlspecialchars((string) $enchereGagnante->prenom, ENT_QUOTES, 'UTF-8') . " !</h1>";
+                $message .= "<p>Vous avez remporte l'enchere pour <strong>" . $articleLibelle . "</strong> dans <strong>" . $venteTitre . "</strong>.</p>";
+                $message .= "<p>Montant final : <strong>" . number_format($enchereGagnante->montant, 2) . " EUR</strong>.</p>";
+                $message .= "<p>Connectez-vous a votre espace pour confirmer votre achat.</p>";
+
+                \App\Libraries\Mailer::envoyerMail($enchereGagnante->email, $sujet, $message);
+                $monmodel->logMail($idVente, 'gagnant', $enchereGagnante->email, 'envoye');
             }
         }
         return redirect()->to('Enchere/detailVente/' . $idVente);
