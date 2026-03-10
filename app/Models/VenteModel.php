@@ -6,12 +6,12 @@ use CodeIgniter\Model;
 
 class VenteModel extends Model
 {
-    protected $table = 'ventes';
-    protected $primaryKey = 'id_vente';
-    protected $useAutoIncrement = true;
-    protected $returnType = 'array';
+    public $table = 'ventes';
+    public $primaryKey = 'id_vente';
+    public $useAutoIncrement = true;
+    public $returnType = 'array';
 
-    protected $allowedFields = [
+    public $allowedFields = [
         'id_secretaire',
         'titre',
         'description',
@@ -22,7 +22,7 @@ class VenteModel extends Model
         'created_at'
     ];
 
-    protected $validationRules = [
+    public $validationRules = [
         'titre' => 'required|max_length[255]',
         'date_debut' => 'required|valid_date',
         'date_fin' => 'required|valid_date',

@@ -6,19 +6,19 @@ use CodeIgniter\Model;
 
 class VenteArticleModel extends Model
 {
-    protected $table = 'vente_articles';
-    protected $primaryKey = 'id_vente_article';
-    protected $useAutoIncrement = true;
-    protected $returnType = 'array';
+    public $table = 'vente_articles';
+    public $primaryKey = 'id_vente_article';
+    public $useAutoIncrement = true;
+    public $returnType = 'array';
 
-    protected $allowedFields = [
+    public $allowedFields = [
         'id_vente',
         'id_article',
         'id_benevole',
         'prix_depart'
     ];
 
-    protected $validationRules = [
+    public $validationRules = [
         'prix_depart' => 'required|decimal|greater_than_equal_to[0.20]',
     ];
 

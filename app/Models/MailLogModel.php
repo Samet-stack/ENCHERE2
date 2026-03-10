@@ -6,12 +6,12 @@ use CodeIgniter\Model;
 
 class MailLogModel extends Model
 {
-    protected $table = 'mails_log';
-    protected $primaryKey = 'id_mail';
-    protected $useAutoIncrement = true;
-    protected $returnType = 'array';
+    public $table = 'mails_log';
+    public $primaryKey = 'id_mail';
+    public $useAutoIncrement = true;
+    public $returnType = 'array';
 
-    protected $allowedFields = [
+    public $allowedFields = [
         'id_vente',
         'type_mail',
         'destinataire',

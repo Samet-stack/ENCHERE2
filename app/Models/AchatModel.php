@@ -6,12 +6,12 @@ use CodeIgniter\Model;
 
 class AchatModel extends Model
 {
-    protected $table = 'achats';
-    protected $primaryKey = 'id_achat';
-    protected $useAutoIncrement = true;
-    protected $returnType = 'array';
+    public $table = 'achats';
+    public $primaryKey = 'id_achat';
+    public $useAutoIncrement = true;
+    public $returnType = 'array';
 
-    protected $allowedFields = [
+    public $allowedFields = [
         'id_vente_article',
         'id_utilisateur',
         'id_enchere',

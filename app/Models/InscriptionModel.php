@@ -6,12 +6,12 @@ use CodeIgniter\Model;
 
 class InscriptionModel extends Model
 {
-    protected $table = 'inscriptions';
-    protected $primaryKey = 'id_inscription';
-    protected $useAutoIncrement = true;
-    protected $returnType = 'array';
+    public $table = 'inscriptions';
+    public $primaryKey = 'id_inscription';
+    public $useAutoIncrement = true;
+    public $returnType = 'array';
 
-    protected $allowedFields = [
+    public $allowedFields = [
         'id_vente',
         'id_utilisateur',
         'date_inscription'

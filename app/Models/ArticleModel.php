@@ -6,12 +6,12 @@ use CodeIgniter\Model;
 
 class ArticleModel extends Model
 {
-    protected $table = 'articles';
-    protected $primaryKey = 'id_article';
-    protected $useAutoIncrement = true;
-    protected $returnType = 'array';
+    public $table = 'articles';
+    public $primaryKey = 'id_article';
+    public $useAutoIncrement = true;
+    public $returnType = 'array';
 
-    protected $allowedFields = [
+    public $allowedFields = [
         'libelle',
         'description',
         'taille',
@@ -20,7 +20,7 @@ class ArticleModel extends Model
         'photo'
     ];
 
-    protected $validationRules = [
+    public $validationRules = [
         'libelle' => 'required|max_length[255]',
         'prix_origine' => 'required|decimal',
         'etat' => 'required|in_list[bon,très bon,comme neuf]',

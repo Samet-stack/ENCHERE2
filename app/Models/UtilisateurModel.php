@@ -6,14 +6,14 @@ use CodeIgniter\Model;
 
 class UtilisateurModel extends Model
 {
-    protected $table = 'utilisateurs';
-    protected $primaryKey = 'id_utilisateur';
-    protected $useAutoIncrement = true;
-    protected $returnType = 'array';
-    protected $useSoftDeletes = false;
-    protected $useTimestamps = false;
+    public $table = 'utilisateurs';
+    public $primaryKey = 'id_utilisateur';
+    public $useAutoIncrement = true;
+    public $returnType = 'array';
+    public $useSoftDeletes = false;
+    public $useTimestamps = false;
 
-    protected $allowedFields = [
+    public $allowedFields = [
         'id_role',
         'nom',
         'prenom',
@@ -27,14 +27,14 @@ class UtilisateurModel extends Model
         'created_at'
     ];
 
-    protected $validationRules = [
+    public $validationRules = [
         'nom' => 'required|min_length[2]|max_length[100]',
         'prenom' => 'required|min_length[2]|max_length[100]',
         'email' => 'required|valid_email|max_length[255]',
         'mot_de_passe' => 'required|min_length[8]',
     ];
 
-    protected $validationMessages = [
+    public $validationMessages = [
         'nom' => [
             'required' => 'Le nom est obligatoire.',
             'min_length' => 'Le nom doit contenir au moins 2 caractères.',

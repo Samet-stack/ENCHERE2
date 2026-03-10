@@ -6,12 +6,12 @@ use CodeIgniter\Model;
 
 class EnchereModel extends Model
 {
-    protected $table = 'encheres';
-    protected $primaryKey = 'id_enchere';
-    protected $useAutoIncrement = true;
-    protected $returnType = 'array';
+    public $table = 'encheres';
+    public $primaryKey = 'id_enchere';
+    public $useAutoIncrement = true;
+    public $returnType = 'array';
 
-    protected $allowedFields = [
+    public $allowedFields = [
         'id_vente_article',
         'id_utilisateur',
         'montant',
