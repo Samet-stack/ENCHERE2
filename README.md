@@ -1,61 +1,71 @@
-# CodeIgniter 4 Framework
+# 🏷️ EnchèreAPorter - Ville de Getcet
 
-## What is CodeIgniter?
+> *« Clique vite sinon c’est ton voisin qui le porte ! »*
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+**EnchèreAPorter** est une application web développée avec le framework **CodeIgniter 4** permettant la vente aux enchères de vêtements de seconde main invendus de la friperie municipale *"Fripouilles"*, située dans la ville de Getcet.
 
-This repository holds the distributable version of the framework.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+---
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+## 📖 Présentation du projet
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+Initiative lancée par la Mairie de Getcet pour donner une seconde vie aux vêtements invendus, cette plateforme permet :
+- De financer des actions locales pour la ville.
+- De participer à une démarche écologique (upcycling / seconde main).
+- Aux habitants d'enchérir en ligne sur des pièces uniques depuis chez eux.
 
-## Important Change with index.php
+---
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+## 🚀 Fonctionnalités principales (Modules)
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+L'application est divisée en plusieurs modules selon les rôles des utilisateurs :
 
-**Please** read the user guide for a better explanation of how CI4 works!
+### 🏛️ Rôle "Secrétaire de Mairie" (Administrateur)
+- **Gestion des enchères** : Création des ventes en précisant les dates de début et de fin.
+- **Suivi** : Consultation des enchères pendant et après la vente.
+- **Statistiques** : Accès à un tableau de bord global de l'activité.
+- **Accessibilité** : Création de **QR Codes** pour accéder directement à une vente spécifique.
+- **Notifications (Mails)** : Envoi automatique d'emails pour l'ouverture, 2h avant la clôture, et attribution au gagnant une fois la vente terminée.
 
-## Repository Management
+### 🤝 Rôle "Bénévole"
+- **Sélection des articles** : Ajout d'articles à une vente (avec définition d'un prix de départ minimum de 0.20€).
+- **Consultation** : Accès aux résultats des enchères **uniquement après la clôture** de la vente (véritable verrouillage métier).
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+### 🏠 Rôle "Habitant / Acheteur"
+- **Inscription stricte** : Réservée exclusivement aux habitants de Getcet (vérification stricte du code postal `99999`).
+- **Sécurité** : Obligation d'utiliser un mot de passe fort lors de la création du compte (8 caractères, 1 majuscule, 1 minuscule, 1 chiffre, 1 caractère spécial).
+- **Participation** : Inscription aux ventes à venir et participation active aux enchères en cours.
+- **Suivi & Achats** : Consultation de l'historique de ses enchères, annulation possible (si applicable), et confirmation des achats remportés avec génération d'un **reçu d'achat**.
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+---
 
-## Contributing
+## 🛠️ Stack Technique & Architecture
 
-We welcome contributions from the community.
+- **Architecture** : MVC (Modèle-Vue-Contrôleur)
+- **Framework Backend** : [CodeIgniter 4](https://codeigniter.com/) (PHP)
+- **Base de données** : MySQL / MariaDB
+- **Sécurité** :
+  - **CSRF** activé globalement sur tous les formulaires POST.
+  - **Filtre d'authentification (`AuthFilter`)** bloquant l'accès aux pages privées.
+  - Contrôle d'accès rigoureux coté serveur selon les rôles (`RoleFilter` et conditions dynamiques).
 
-Please read the [*Contributing to CodeIgniter*](https://github.com/codeigniter4/CodeIgniter4/blob/develop/CONTRIBUTING.md) section in the development repository.
+---
 
-## Server Requirements
+## 📋 Prérequis et Installation (Local)
 
-PHP version 8.2 or higher is required, with the following extensions installed:
+1. Cloner le dépôt :
+   ```bash
+   git clone https://github.com/Samet-stack/codeigniter4-school-system.git
+   ```
+2. Importer la base de données :
+   - Importer le fichier sql (ex: `enchere_a_porter.sql` ou `seed.sql`) dans PhpMyAdmin.
+3. Configurer l'environnement :
+   - Modifier le fichier `.env` pour pointer vers la base de données locale.
+   - S'assurer que `app.baseURL` correspond bien à l'adresse URL locale du projet (ex: `http://localhost/MonProjet/public/`).
+4. Lancer le serveur local (WAMP/XAMPP/Laragon) ou utiliser le serveur web intégré de CodeIgniter :
+   ```bash
+   php spark serve
+   ```
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+---
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - The end of life date for PHP 8.1 was December 31, 2025.
-> - If you are still using below PHP 8.2, you should upgrade immediately.
-> - The end of life date for PHP 8.2 will be December 31, 2026.
-
-Additionally, make sure that the following extensions are enabled in your PHP:
-
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+*Projet réalisé dans le cadre de l'examen BTS SIO (Production d’un système opérationnel).*
