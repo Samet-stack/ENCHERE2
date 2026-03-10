@@ -6,11 +6,13 @@ use CodeIgniter\Model;
 
 class VenteArticleModel extends Model
 {
+    // La table qui lie une vente à un article
     public $table = 'vente_articles';
     public $primaryKey = 'id_vente_article';
     public $useAutoIncrement = true;
     public $returnType = 'array';
 
+    // Champs inscriptibles
     public $allowedFields = [
         'id_vente',
         'id_article',

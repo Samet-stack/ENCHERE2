@@ -6,11 +6,13 @@ use CodeIgniter\Model;
 
 class InscriptionModel extends Model
 {
+    // Configuration de base : indique avec quelle table ce modèle communique
     public $table = 'inscriptions';
     public $primaryKey = 'id_inscription';
     public $useAutoIncrement = true;
     public $returnType = 'array';
 
+    // Champs inscriptibles (sécurité CodeIgniter pour éviter les injections de champs non prévus)
     public $allowedFields = [
         'id_vente',
         'id_utilisateur',

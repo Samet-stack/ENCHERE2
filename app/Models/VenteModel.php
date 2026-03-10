@@ -6,11 +6,14 @@ use CodeIgniter\Model;
 
 class VenteModel extends Model
 {
+    // Table des évènements commerciaux
     public $table = 'ventes';
     public $primaryKey = 'id_vente';
     public $useAutoIncrement = true;
+    // Format des résultats
     public $returnType = 'array';
 
+    // Seuls ces champs pourront être enregistrés/modifiés (pour des questions de sécurité)
     public $allowedFields = [
         'id_secretaire',
         'titre',

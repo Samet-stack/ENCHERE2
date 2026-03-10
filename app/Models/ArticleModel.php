@@ -6,11 +6,21 @@ use CodeIgniter\Model;
 
 class ArticleModel extends Model
 {
+    // --- Configuration principale du Modèle ---
+
+    // Nom de la table en BDD associée à ce modèle
     public $table = 'articles';
+    
+    // La colonne qui sert de clé primaire
     public $primaryKey = 'id_article';
+    
+    // Précise que l'ID est généré automatiquement par la BDD
     public $useAutoIncrement = true;
+    
+    // Les résultats de requêtes seront retournés sous forme d'un tableau (array)
     public $returnType = 'array';
 
+    // Liste des colonnes modifiables. Cela protège contre l'injection de données indésirables (Mass Assignment)
     public $allowedFields = [
         'libelle',
         'description',
@@ -20,10 +30,12 @@ class ArticleModel extends Model
         'photo'
     ];
 
+    // --- Règles de validation des données ---
+    // Ces règles s'appliquent automatiquement quand on tente d'insérer ou de mettre à jour un article
     public $validationRules = [
-        'libelle' => 'required|max_length[255]',
-        'prix_origine' => 'required|decimal',
-        'etat' => 'required|in_list[bon,très bon,comme neuf]',
+        'libelle' => 'required|max_length[255]', // Le libellé est obligatoire (max 255 caractères)
+        'prix_origine' => 'required|decimal',  // Le prix doit être renseigné et être un nombre décimal
+        'etat' => 'required|in_list[bon,très bon,comme neuf]', // L'état doit obligatoirement être l'une de ces 3 valeurs
     ];
 
     /**

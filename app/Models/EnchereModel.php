@@ -6,11 +6,19 @@ use CodeIgniter\Model;
 
 class EnchereModel extends Model
 {
+    // Nom de la table de données
     public $table = 'encheres';
+    
+    // Clé primaire de la table
     public $primaryKey = 'id_enchere';
+    
+    // L'identifiant est un AUTO_INCREMENT
     public $useAutoIncrement = true;
+    
+    // Les requêtes retournent des tableaux associatifs
     public $returnType = 'array';
 
+    // Champs que l'on permet de modifier via le modèle
     public $allowedFields = [
         'id_vente_article',
         'id_utilisateur',

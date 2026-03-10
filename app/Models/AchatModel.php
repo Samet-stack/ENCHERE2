@@ -6,11 +6,21 @@ use CodeIgniter\Model;
 
 class AchatModel extends Model
 {
+    // --- Configuration principale du Modèle ---
+
+    // Le nom de la table dans la base de données
     public $table = 'achats';
+    
+    // Le nom de la clé primaire de cette table
     public $primaryKey = 'id_achat';
+    
+    // Indique que la clé primaire s'auto-incrémente (AUTO_INCREMENT)
     public $useAutoIncrement = true;
+    
+    // Le format dans lequel on souhaite récupérer les résultats (ici sous forme de tableau associatif)
     public $returnType = 'array';
 
+    // Les champs que l'on a le droit de modifier ou d'insérer dans la table (sécurité)
     public $allowedFields = [
         'id_vente_article',
         'id_utilisateur',

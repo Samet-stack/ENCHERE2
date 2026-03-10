@@ -6,13 +6,25 @@ use CodeIgniter\Model;
 
 class UtilisateurModel extends Model
 {
+    // Nom de la table associée à la classe
     public $table = 'utilisateurs';
+    
+    // Identifiant principal
     public $primaryKey = 'id_utilisateur';
+    
+    // Auto-incrémentation active
     public $useAutoIncrement = true;
+    
+    // Retour des requêtes en tableau associatif
     public $returnType = 'array';
+    
+    // Soft deletes : si true, supprime virtuellement les entrées (colonne deleted_at). Ici désactivé
     public $useSoftDeletes = false;
+    
+    // Timestamps : si true, gère automatiquement created_at et updated_at. Ici désactivé
     public $useTimestamps = false;
 
+    // Seuls ces champs peuvent être remplis via le modèle
     public $allowedFields = [
         'id_role',
         'nom',
