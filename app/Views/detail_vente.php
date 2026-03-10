@@ -340,21 +340,32 @@
                             <p>Prix origine :
                                 <?= number_format($article->prix_origine, 2); ?> €
                             </p>
-                            <p class="prix">
-                                <?php if ($article->enchere_max): ?>
-                                    Enchère max :
-                                    <?= number_format($article->enchere_max, 2); ?> €
-                                <?php else: ?>
-                                    Prix départ :
-                                    <?= number_format($article->prix_depart, 2); ?> €
-                                <?php endif; ?>
-                            </p>
-                            <p>
-                                <?= $article->nb_encheres; ?> enchère(s)
-                            </p>
 
-                            <!-- Formulaire d'enchère -->
-                            <?php if ($vente->etat === 'en_cours' && session()->get('id_utilisateur')): ?>
+                            <?php
+                            // Restriction bénévole : masquer les montants d'enchères si vente non clôturée
+                            $estBenevole = (session()->get('role') === 'benevole');
+                            $venteTerminee = ($vente->etat === 'cloturee');
+                            ?>
+
+                            <?php if (!$estBenevole || $venteTerminee): ?>
+                                <p class="prix">
+                                    <?php if ($article->enchere_max): ?>
+                                        Enchère max :
+                                        <?= number_format($article->enchere_max, 2); ?> €
+                                    <?php else: ?>
+                                        Prix départ :
+                                        <?= number_format($article->prix_depart, 2); ?> €
+                                    <?php endif; ?>
+                                </p>
+                                <p>
+                                    <?= $article->nb_encheres; ?> enchère(s)
+                                </p>
+                            <?php else: ?>
+                                <p style="color: #7f8c8d; font-style: italic;">🔒 Enchères visibles après clôture de la vente.</p>
+                            <?php endif; ?>
+
+                            <!-- Formulaire d'enchère (masqué pour les bénévoles) -->
+                            <?php if ($vente->etat === 'en_cours' && session()->get('id_utilisateur') && !$estBenevole): ?>
                                 <?php
                                 $minimum = max($article->prix_depart, 0.20);
                                 if ($article->enchere_max) {

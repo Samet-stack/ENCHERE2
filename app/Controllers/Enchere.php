@@ -48,13 +48,28 @@ class Enchere extends BaseController
             'nom' => 'required|min_length[2]|max_length[100]',
             'prenom' => 'required|min_length[2]|max_length[100]',
             'email' => 'required|valid_email|is_unique[utilisateurs.email]',
-            'mot_de_passe' => 'required|min_length[8]',
+            'mot_de_passe' => [
+                'rules' => 'required|min_length[8]|regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/]',
+                'errors' => [
+                    'regex_match' => 'Le mot de passe doit contenir au moins 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial.'
+                ]
+            ],
             'confirm_password' => 'required|matches[mot_de_passe]',
             'adresse' => 'required|max_length[255]',
+            'code_postal' => 'required|exact_length[5]',
         ];
 
         if (!$this->validate($rules)) {
             return view('inscription', ['titre' => 'Inscription - EnchèreAPorter']);
+        }
+
+        // Vérification que le code postal correspond à la ville de Getcet
+        $codePostal = $this->request->getVar('code_postal');
+        if ($codePostal !== '99999') {
+            return view('inscription', [
+                'titre' => 'Inscription - EnchèreAPorter',
+                'erreur' => 'Seuls les habitants de Getcet (code postal 99999) peuvent s\'inscrire.',
+            ]);
         }
 
         $monmodel = new \App\Models\Modele();
@@ -409,8 +424,14 @@ class Enchere extends BaseController
         if (!$data)
             return redirect()->to(base_url('Enchere/connexion'));
 
-        $monmodel = new \App\Models\Modele();
         $session = session();
+
+        // Restriction bénévole : ne peut pas enchérir
+        if ($session->get('role') === 'benevole') {
+            return redirect()->to('Enchere/index');
+        }
+
+        $monmodel = new \App\Models\Modele();
 
         $venteArticle = $monmodel->getVenteArticleDetail($idVenteArticle);
         if (!$venteArticle || $venteArticle->vente_etat !== 'en_cours') {
@@ -462,8 +483,14 @@ class Enchere extends BaseController
         if (!$data)
             return redirect()->to(base_url('Enchere/connexion'));
 
-        $monmodel = new \App\Models\Modele();
         $session = session();
+
+        // Restriction bénévole : ne peut pas consulter l'historique des enchères
+        if ($session->get('role') === 'benevole') {
+            return redirect()->to('Enchere/index');
+        }
+
+        $monmodel = new \App\Models\Modele();
         $data['encheres'] = $monmodel->getHistoriqueEncheres($session->get('id_utilisateur'));
         return view('historique_encheres', $data);
     }
@@ -497,6 +524,40 @@ class Enchere extends BaseController
         return redirect()->to('Enchere/mesAchats');
     }
 
+    public function recuAchat($idAchat)
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+
+        $monmodel = new \App\Models\Modele();
+        $session = session();
+
+        $achat = $monmodel->getAchatDetail($idAchat);
+        if (!$achat) {
+            return redirect()->to('Enchere/mesAchats');
+        }
+
+        // Seul l'acheteur ou le secrétaire peut voir le reçu
+        if ($achat->id_utilisateur != $session->get('id_utilisateur') && $session->get('role') !== 'secretaire') {
+            return redirect()->to('Enchere/mesAchats');
+        }
+
+        // Construire l'objet acheteur pour la vue
+        $acheteur = (object) [
+            'nom' => $achat->acheteur_nom,
+            'prenom' => $achat->acheteur_prenom,
+            'email' => $achat->acheteur_email,
+            'adresse' => $achat->acheteur_adresse,
+            'telephone' => $achat->acheteur_telephone,
+        ];
+
+        $data['achat'] = $achat;
+        $data['acheteur'] = $acheteur;
+
+        return view('recu_achat', $data);
+    }
+
     // ==================== PROFIL ====================
     public function profil()
     {
@@ -527,7 +588,15 @@ class Enchere extends BaseController
         ];
 
         $newMdp = $this->request->getVar('nouveau_mot_de_passe');
-        if (!empty($newMdp) && strlen($newMdp) >= 8) {
+        if (!empty($newMdp)) {
+            // Validation mot de passe fort
+            if (strlen($newMdp) < 8 || !preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/', $newMdp)) {
+                $data = $this->init();
+                $monmodel2 = new \App\Models\Modele();
+                $data['utilisateur'] = $monmodel2->getUtilisateurParId($session->get('id_utilisateur'));
+                $data['erreur_mdp'] = 'Le mot de passe doit contenir au moins 8 caractères, 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial.';
+                return view('profil', $data);
+            }
             $updateData['mot_de_passe'] = password_hash($newMdp, PASSWORD_DEFAULT);
         }
 

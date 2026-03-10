@@ -64,6 +64,26 @@
         .lien a {
             color: #3498db;
         }
+
+        .erreur-msg {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .info-msg {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
     </style>
 </head>
 
@@ -71,6 +91,14 @@
     <div class="form-container">
         <h1>Inscription</h1>
         <p style="text-align: center; color: #7f8c8d;">Rejoignez la communauté EnchèreAPorter</p>
+
+        <div class="info-msg">
+            ⚠️ Seuls les habitants de la ville de <strong>Getcet</strong> (code postal <strong>99999</strong>) peuvent s'inscrire.
+        </div>
+
+        <?php if (isset($erreur)): ?>
+            <div class="erreur-msg"><?= $erreur; ?></div>
+        <?php endif; ?>
 
         <?= validation_list_errors() ?>
 
@@ -91,12 +119,16 @@
         <?php echo form_input(['name' => 'adresse', 'value' => set_value('adresse'), 'placeholder' => 'Votre adresse à Getcet']); ?>
         <br />
 
+        <?= form_label('Code postal * : '); ?>
+        <?php echo form_input(['name' => 'code_postal', 'value' => set_value('code_postal'), 'placeholder' => '99999', 'maxlength' => '5']); ?>
+        <br />
+
         <?= form_label('Téléphone : '); ?>
         <?php echo form_input(['name' => 'telephone', 'type' => 'tel', 'value' => set_value('telephone'), 'placeholder' => '06 12 34 56 78']); ?>
         <br />
 
-        <?= form_label('Mot de passe * (min. 8 caractères) : '); ?>
-        <?php echo form_password(['name' => 'mot_de_passe', 'placeholder' => 'Mot de passe sécurisé']); ?> <br />
+        <?= form_label('Mot de passe * (min. 8 car., 1 majuscule, 1 minuscule, 1 chiffre, 1 spécial) : '); ?>
+        <?php echo form_password(['name' => 'mot_de_passe', 'placeholder' => 'Ex: MonPass1!']); ?> <br />
 
         <?= form_label('Confirmer le mot de passe * : '); ?>
         <?php echo form_password(['name' => 'confirm_password', 'placeholder' => 'Confirmer le mot de passe']); ?>

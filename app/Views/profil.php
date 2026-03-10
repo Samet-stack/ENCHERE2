@@ -121,6 +121,16 @@
             color: #7f8c8d;
         }
 
+        .erreur-msg {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
         footer {
             background-color: #2c3e50;
             color: white;
@@ -151,6 +161,10 @@
             </p>
         </div>
 
+        <?php if (isset($erreur_mdp)): ?>
+            <div class="erreur-msg"><?= $erreur_mdp; ?></div>
+        <?php endif; ?>
+
         <?= form_open('Enchere/modifierProfil') ?>
 
         <?= form_label('Nom : '); ?>
@@ -173,8 +187,8 @@
 
         <hr style="margin: 15px 0;">
 
-        <?= form_label('Nouveau mot de passe (laisser vide pour ne pas changer) : '); ?>
-        <?php echo form_password(['name' => 'nouveau_mot_de_passe', 'placeholder' => 'Min. 8 caractères']); ?> <br />
+        <?= form_label('Nouveau mot de passe (1 maj., 1 min., 1 chiffre, 1 spécial, min. 8 car.) : '); ?>
+        <?php echo form_password(['name' => 'nouveau_mot_de_passe', 'placeholder' => 'Ex: MonPass1! (vide = pas de changement)']); ?> <br />
 
         <?php echo form_submit('modifier', 'Enregistrer les modifications'); ?>
         <?= form_close(); ?>

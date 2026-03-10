@@ -13,7 +13,7 @@ class AuthFilter implements FilterInterface
         $session = service('session');
 
         if (!$session->get('id_utilisateur')) {
-            return redirect()->to('/connexion')->with('error', 'Veuillez vous connecter pour accéder à cette page.');
+            return redirect()->to('/Enchere/connexion')->with('error', 'Veuillez vous connecter pour accéder à cette page.');
         }
     }
 

@@ -35,6 +35,7 @@ class Filters extends BaseFilters
         'pagecache' => PageCache::class ,
         'performance' => PerformanceMetrics::class ,
         'role' => \App\Filters\RoleFilter::class ,
+        'auth' => \App\Filters\AuthFilter::class ,
     ];
 
     /**
@@ -74,7 +75,7 @@ class Filters extends BaseFilters
     public array $globals = [
         'before' => [
             // 'honeypot',
-            // 'csrf',
+            'csrf',
             // 'invalidchars',
         ],
         'after' => [
@@ -107,5 +108,30 @@ class Filters extends BaseFilters
      *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [];
+    public array $filters = [
+        'auth' => [
+            'before' => [
+                'Enchere/listeVentes',
+                'Enchere/detailVente/*',
+                'Enchere/creerVente',
+                'Enchere/validerCreerVente',
+                'Enchere/inscrireVente/*',
+                'Enchere/cloturerVente/*',
+                'Enchere/qrcodeVente/*',
+                'Enchere/listeArticles',
+                'Enchere/creerArticle',
+                'Enchere/validerCreerArticle',
+                'Enchere/selectionnerArticle/*',
+                'Enchere/encherir/*',
+                'Enchere/annulerEnchere/*',
+                'Enchere/historiqueEncheres',
+                'Enchere/mesAchats',
+                'Enchere/confirmerAchat/*',
+                'Enchere/recuAchat/*',
+                'Enchere/profil',
+                'Enchere/modifierProfil',
+                'Enchere/dashboard',
+            ],
+        ],
+    ];
 }
