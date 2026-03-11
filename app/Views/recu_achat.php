@@ -1,5 +1,8 @@
-<html>
+<!DOCTYPE html>
+<html lang="fr">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reçu d'achat - EnchèreAPorter</title>
     <!-- REÇU IMPRIMABLE : utiliser Ctrl+P ou le bouton pour imprimer / sauvegarder en PDF -->
     <style>

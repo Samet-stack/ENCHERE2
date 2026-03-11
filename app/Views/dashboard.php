@@ -1,6 +1,9 @@
-<html>
+<!DOCTYPE html>
+<html lang="fr">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
         <?= $titre; ?>
     </title>
@@ -156,6 +159,14 @@
             margin: 10px 0 30px;
         }
 
+        @media (max-width: 768px) {
+            .stats-grid { flex-direction: column; }
+            .stat-card { min-width: auto; }
+            table { font-size: 13px; }
+            table th, table td { padding: 6px; }
+            .container { padding: 10px; }
+        }
+
         footer {
             background-color: #2c3e50;
             color: white;
@@ -309,6 +320,57 @@ else: ?>
             </div>
         <?php
 endif; ?>
+    </div>
+
+    <!-- Évolution des enchères (7 derniers jours) -->
+    <div class="container" style="margin-top: -10px;">
+        <h2>📈 Évolution des enchères (7 derniers jours)</h2>
+        <?php if (!empty($evolutionEncheres)): ?>
+            <table>
+                <tr>
+                    <th>Date</th>
+                    <th>Nombre d'enchères</th>
+                </tr>
+                <?php foreach ($evolutionEncheres as $jour): ?>
+                    <tr>
+                        <td><?= date('d/m/Y', strtotime($jour->jour)); ?></td>
+                        <td><span class="badge badge-success" style="font-size: 14px; padding: 6px 12px;"><?= $jour->total; ?></span></td>
+                    </tr>
+                <?php endforeach; ?>
+            </table>
+        <?php else: ?>
+            <div class="card">
+                <p style="color: #7f8c8d; text-align: center; margin: 0;">Aucune enchère sur les 7 derniers jours.</p>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Taux de participation par vente -->
+    <div class="container" style="margin-top: -10px;">
+        <h2>📊 Taux de participation par vente</h2>
+        <?php if (!empty($tauxParticipation)): ?>
+            <table>
+                <tr>
+                    <th>Vente</th>
+                    <th>Taux de participation</th>
+                </tr>
+                <?php foreach ($tauxParticipation as $vente): ?>
+                    <tr>
+                        <td><?= $vente->titre; ?></td>
+                        <td>
+                            <div style="background-color: #ecf0f1; border-radius: 10px; overflow: hidden; height: 24px; position: relative;">
+                                <div style="background-color: <?= $vente->taux >= 50 ? '#27ae60' : ($vente->taux >= 25 ? '#f39c12' : '#e74c3c'); ?>; height: 100%; width: <?= $vente->taux; ?>%; border-radius: 10px; transition: width 0.3s;"></div>
+                                <span style="position: absolute; top: 2px; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 13px;"><?= $vente->taux; ?>%</span>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </table>
+        <?php else: ?>
+            <div class="card">
+                <p style="color: #7f8c8d; text-align: center; margin: 0;">Aucune donnée de participation disponible.</p>
+            </div>
+        <?php endif; ?>
     </div>
 
     <footer>

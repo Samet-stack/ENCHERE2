@@ -1,6 +1,9 @@
-<html>
+<!DOCTYPE html>
+<html lang="fr">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $titre; ?></title>
     <style>
         body {
@@ -248,6 +251,16 @@
         .stat-label {
             color: #7f8c8d;
             margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .card-grid { flex-direction: column; }
+            .card-item { max-width: 100%; min-width: auto; }
+            .hero { padding: 20px; }
+            .hero h1 { font-size: 24px; }
+            .stats-grid { flex-direction: column; }
+            .stat-card { min-width: auto; }
+            .container { padding: 10px; }
         }
 
         footer {

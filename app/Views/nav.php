@@ -12,8 +12,10 @@
             <?= anchor('Enchere/dashboard', 'Dashboard'); ?>
         <?php endif; ?>
 
-        <?= anchor('Enchere/historiqueEncheres', 'Mes enchères'); ?>
-        <?= anchor('Enchere/mesAchats', 'Mes achats'); ?>
+        <?php if (session()->get('role') !== 'benevole'): ?>
+            <?= anchor('Enchere/historiqueEncheres', 'Mes enchères'); ?>
+            <?= anchor('Enchere/mesAchats', 'Mes achats'); ?>
+        <?php endif; ?>
 
         <span class="nav-right">
             <?= anchor('Enchere/profil', 'Profil (' . session()->get('prenom') . ')'); ?>

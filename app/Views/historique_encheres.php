@@ -1,6 +1,9 @@
-<html>
+<!DOCTYPE html>
+<html lang="fr">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
         <?= $titre; ?>
     </title>
@@ -115,6 +118,12 @@
             color: #721c24;
         }
 
+        @media (max-width: 768px) {
+            table { font-size: 13px; }
+            table th, table td { padding: 6px; }
+            .container { padding: 10px; }
+        }
+
         footer {
             background-color: #2c3e50;
             color: white;
@@ -163,7 +172,7 @@
                             <?php endif; ?>
                         </td>
                         <td>
-                            <?php if (!$enchere->est_annulee): ?>
+                            <?php if (!$enchere->est_annulee && $enchere->vente_etat === 'en_cours'): ?>
                                 <?= anchor('Enchere/annulerEnchere/' . $enchere->id_enchere, 'Annuler', ['class' => 'btn btn-danger', 'onclick' => "return confirm('Annuler cette enchère ?')"]); ?>
                             <?php else: ?>
                                 —

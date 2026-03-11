@@ -244,6 +244,11 @@ class Enchere extends BaseController
         $monmodel = new \App\Models\Modele();
         $session = session();
 
+        // Seuls les habitants peuvent s'inscrire aux ventes
+        if ($session->get('role') !== 'habitant') {
+            return redirect()->to('Enchere/detailVente/' . $idVente);
+        }
+
         $vente = $monmodel->getVenteParId($idVente);
         if (!$vente) {
             return redirect()->to('Enchere/listeVentes');
@@ -472,7 +477,11 @@ class Enchere extends BaseController
         $enchere = $monmodel->getEnchereParId($idEnchere);
 
         if ($enchere && $enchere->id_utilisateur == $session->get('id_utilisateur')) {
-            $monmodel->annulerEnchere($idEnchere);
+            // Vérifier que la vente est encore en cours avant d'annuler
+            $venteArticle = $monmodel->getVenteArticleDetail($enchere->id_vente_article);
+            if ($venteArticle && $venteArticle->vente_etat === 'en_cours') {
+                $monmodel->annulerEnchere($idEnchere);
+            }
         }
         return redirect()->to('Enchere/historiqueEncheres');
     }

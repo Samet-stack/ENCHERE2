@@ -1,6 +1,9 @@
-<html>
+<!DOCTYPE html>
+<html lang="fr">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
         <?= $titre; ?>
     </title>
@@ -139,6 +142,12 @@
         .filter-bar a:hover {
             background-color: #3498db;
             color: white;
+        }
+
+        @media (max-width: 768px) {
+            .card-grid { flex-direction: column; }
+            .card-item { max-width: 100%; min-width: auto; }
+            .container { padding: 10px; }
         }
 
         footer {

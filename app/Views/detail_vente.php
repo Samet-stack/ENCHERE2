@@ -1,6 +1,9 @@
-<html>
+<!DOCTYPE html>
+<html lang="fr">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
         <?= $titre; ?>
     </title>
@@ -196,6 +199,15 @@
             margin: 10px 0;
         }
 
+        @media (max-width: 768px) {
+            .sidebar { float: none; width: 100%; margin-left: 0; margin-bottom: 15px; }
+            .card-grid { flex-direction: column; }
+            .card-item { max-width: 100%; min-width: auto; }
+            table { font-size: 13px; }
+            table th, table td { padding: 6px; }
+            .container { padding: 10px; }
+        }
+
         footer {
             background-color: #2c3e50;
             color: white;
@@ -278,7 +290,7 @@
             </div>
 
             <!-- Inscription -->
-            <?php if (session()->get('id_utilisateur') && $vente->etat === 'a_venir'): ?>
+            <?php if (session()->get('id_utilisateur') && session()->get('role') === 'habitant' && $vente->etat === 'a_venir'): ?>
                 <div class="card">
                     <h3>Inscription</h3>
                     <?php if ($estInscrit): ?>
@@ -286,6 +298,12 @@
                     <?php else: ?>
                         <?= anchor('Enchere/inscrireVente/' . $vente->id_vente, "S'inscrire à cette vente", ['class' => 'btn btn-success']); ?>
                     <?php endif; ?>
+                </div>
+            <?php elseif (!session()->get('id_utilisateur') && $vente->etat === 'a_venir'): ?>
+                <div class="card">
+                    <h3>Inscription</h3>
+                    <p style="color: #7f8c8d;">Connectez-vous pour vous inscrire à cette vente.</p>
+                    <?= anchor('Enchere/connexion', 'Se connecter', ['class' => 'btn btn-success']); ?>
                 </div>
             <?php endif; ?>
 
