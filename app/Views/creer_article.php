@@ -97,7 +97,7 @@
         <?= validation_list_errors() ?>
 
         <?= form_open_multipart('Enchere/validerCreerArticle') ?>
-
+        <?= csrf_field() ?>
         <?= form_label('Libellé * : '); ?>
         <?php echo form_input(['name' => 'libelle', 'value' => set_value('libelle'), 'placeholder' => 'Ex: Veste en jean Levis']); ?>
         <br />
