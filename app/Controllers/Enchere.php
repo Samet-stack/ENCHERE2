@@ -361,7 +361,7 @@ class Enchere extends BaseController
         $rules = [
             'libelle' => 'required|max_length[255]',
             'etat' => 'required|in_list[bon,très bon,comme neuf]',
-            'prix_origine' => 'required|decimal',
+            'prix_origine' => 'required|numeric',
         ];
 
         if (!$this->validate($rules)) {
