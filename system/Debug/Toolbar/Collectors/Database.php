@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -82,6 +80,7 @@ class Database extends BaseCollector
      * @internal
      *
      * @return void
+     * @phpstan-return never|void
      */
     public static function collect(Query $query)
     {
@@ -104,7 +103,7 @@ class Database extends BaseCollector
             static::$queries[] = [
                 'query'     => $query,
                 'string'    => $queryString,
-                'duplicate' => in_array($queryString, array_column(static::$queries, 'string'), true),
+                'duplicate' => in_array($queryString, array_column(static::$queries, 'string', null), true),
                 'trace'     => $backtrace,
             ];
         }
@@ -147,7 +146,8 @@ class Database extends BaseCollector
      */
     public function display(): array
     {
-        return ['queries' => array_map(static function (array $query): array {
+        $data            = [];
+        $data['queries'] = array_map(static function (array $query) {
             $isDuplicate = $query['duplicate'] === true;
 
             $firstNonSystemLine = '';
@@ -162,7 +162,7 @@ class Database extends BaseCollector
                 }
 
                 // find the first trace line that does not originate from `system/`
-                if ($firstNonSystemLine === '' && ! str_contains($line['file'], 'SYSTEMPATH')) {
+                if ($firstNonSystemLine === '' && strpos($line['file'], 'SYSTEMPATH') === false) {
                     $firstNonSystemLine = $line['file'];
                 }
 
@@ -194,7 +194,9 @@ class Database extends BaseCollector
                 'trace-file' => $firstNonSystemLine,
                 'qid'        => md5($query['query'] . Time::now()->format('0.u00 U')),
             ];
-        }, static::$queries)];
+        }, static::$queries);
+
+        return $data;
     }
 
     /**
@@ -215,7 +217,7 @@ class Database extends BaseCollector
         $this->getConnections();
 
         $queryCount      = count(static::$queries);
-        $uniqueCount     = count(array_filter(static::$queries, static fn ($query): bool => $query['duplicate'] === false));
+        $uniqueCount     = count(array_filter(static::$queries, static fn ($query) => $query['duplicate'] === false));
         $connectionCount = count($this->connections);
 
         return sprintf(
@@ -225,7 +227,7 @@ class Database extends BaseCollector
             $uniqueCount,
             $uniqueCount > 1 ? 'of them' : '',
             $connectionCount,
-            $connectionCount > 1 ? 's' : '',
+            $connectionCount > 1 ? 's' : ''
         );
     }
 
@@ -234,7 +236,7 @@ class Database extends BaseCollector
      */
     public function isEmpty(): bool
     {
-        return static::$queries === [];
+        return empty(static::$queries);
     }
 
     /**
@@ -253,14 +255,5 @@ class Database extends BaseCollector
     private function getConnections(): void
     {
         $this->connections = \Config\Database::getConnections();
-    }
-
-    /**
-     * Reset collector state for worker mode.
-     * Clears collected queries between requests.
-     */
-    public function reset(): void
-    {
-        static::$queries = [];
     }
 }

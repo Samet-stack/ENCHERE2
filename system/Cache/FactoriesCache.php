@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -16,11 +14,17 @@ namespace CodeIgniter\Cache;
 use CodeIgniter\Cache\FactoriesCache\FileVarExportHandler;
 use CodeIgniter\Config\Factories;
 
-final readonly class FactoriesCache
+final class FactoriesCache
 {
-    private CacheInterface|FileVarExportHandler $cache;
+    /**
+     * @var CacheInterface|FileVarExportHandler
+     */
+    private $cache;
 
-    public function __construct(CacheInterface|FileVarExportHandler|null $cache = null)
+    /**
+     * @param CacheInterface|FileVarExportHandler|null $cache
+     */
+    public function __construct($cache = null)
     {
         $this->cache = $cache ?? new FileVarExportHandler();
     }
@@ -45,9 +49,7 @@ final readonly class FactoriesCache
     {
         $key = $this->getCacheKey($component);
 
-        $data = $this->cache->get($key);
-
-        if (! is_array($data) || $data === []) {
+        if (! $data = $this->cache->get($key)) {
             return false;
         }
 

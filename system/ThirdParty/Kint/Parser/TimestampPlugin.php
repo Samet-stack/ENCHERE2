@@ -27,15 +27,11 @@ declare(strict_types=1);
 
 namespace Kint\Parser;
 
-use DateTimeImmutable;
-use Kint\Value\AbstractValue;
-use Kint\Value\FixedWidthValue;
-use Kint\Value\Representation\StringRepresentation;
-use Kint\Value\StringValue;
+use Kint\Zval\Value;
 
-class TimestampPlugin extends AbstractPlugin implements PluginCompleteInterface
+class TimestampPlugin extends AbstractPlugin
 {
-    public static array $blacklist = [
+    public static $blacklist = [
         2147483648,
         2147483647,
         1073741824,
@@ -52,38 +48,30 @@ class TimestampPlugin extends AbstractPlugin implements PluginCompleteInterface
         return Parser::TRIGGER_SUCCESS;
     }
 
-    public function parseComplete(&$var, AbstractValue $v, int $trigger): AbstractValue
+    public function parse(&$var, Value &$o, int $trigger): void
     {
         if (\is_string($var) && !\ctype_digit($var)) {
-            return $v;
+            return;
         }
 
         if ($var < 0) {
-            return $v;
+            return;
         }
 
         if (\in_array($var, self::$blacklist, true)) {
-            return $v;
+            return;
         }
 
         $len = \strlen((string) $var);
 
         // Guess for anything between March 1973 and November 2286
-        if ($len < 9 || $len > 10) {
-            return $v;
+        if (9 === $len || 10 === $len) {
+            // If it's an int or string that's this short it probably has no other meaning
+            // Additionally it's highly unlikely the shortValue will be clipped for length
+            // If you're writing a plugin that interferes with this, just put your
+            // parser plugin further down the list so that it gets loaded afterwards.
+            $o->value->label = 'Timestamp';
+            $o->value->hints[] = 'timestamp';
         }
-
-        if (!$v instanceof StringValue && !$v instanceof FixedWidthValue) {
-            return $v;
-        }
-
-        if (!$dt = DateTimeImmutable::createFromFormat('U', (string) $var)) {
-            return $v;
-        }
-
-        $v->removeRepresentation('contents');
-        $v->addRepresentation(new StringRepresentation('Timestamp', $dt->format('c'), null, true));
-
-        return $v;
     }
 }

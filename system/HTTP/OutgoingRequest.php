@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -43,7 +41,7 @@ class OutgoingRequest extends Message implements OutgoingRequestInterface
         ?URI $uri = null,
         array $headers = [],
         $body = null,
-        string $version = '1.1',
+        string $version = '1.1'
     ) {
         $this->method = $method;
         $this->uri    = $uri;
@@ -64,17 +62,19 @@ class OutgoingRequest extends Message implements OutgoingRequestInterface
     {
         $host = $uri->getHost();
 
-        return $host . ($uri->getPort() > 0 ? ':' . $uri->getPort() : '');
+        return $host . ($uri->getPort() ? ':' . $uri->getPort() : '');
     }
 
     /**
-     * Retrieves the HTTP method of the request.
+     * Get the request method.
      *
-     * @return string Returns the request method (always uppercase)
+     * @param bool $upper Whether to return in upper or lower case.
+     *
+     * @deprecated The $upper functionality will be removed and this will revert to its PSR-7 equivalent
      */
-    public function getMethod(): string
+    public function getMethod(bool $upper = false): string
     {
-        return $this->method;
+        return ($upper) ? strtoupper($this->method) : strtolower($this->method);
     }
 
     /**

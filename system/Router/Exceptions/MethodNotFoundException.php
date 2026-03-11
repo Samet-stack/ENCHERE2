@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -13,11 +11,11 @@ declare(strict_types=1);
 
 namespace CodeIgniter\Router\Exceptions;
 
-use CodeIgniter\Exceptions\RuntimeException;
+use RuntimeException;
 
 /**
  * @internal
  */
-final class MethodNotFoundException extends RuntimeException implements ExceptionInterface
+final class MethodNotFoundException extends RuntimeException
 {
 }

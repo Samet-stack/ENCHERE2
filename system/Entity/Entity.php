@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -13,13 +11,11 @@ declare(strict_types=1);
 
 namespace CodeIgniter\Entity;
 
-use BackedEnum;
-use CodeIgniter\DataCaster\DataCaster;
 use CodeIgniter\Entity\Cast\ArrayCast;
 use CodeIgniter\Entity\Cast\BooleanCast;
+use CodeIgniter\Entity\Cast\CastInterface;
 use CodeIgniter\Entity\Cast\CSVCast;
 use CodeIgniter\Entity\Cast\DatetimeCast;
-use CodeIgniter\Entity\Cast\EnumCast;
 use CodeIgniter\Entity\Cast\FloatCast;
 use CodeIgniter\Entity\Cast\IntBoolCast;
 use CodeIgniter\Entity\Cast\IntegerCast;
@@ -30,11 +26,10 @@ use CodeIgniter\Entity\Cast\TimestampCast;
 use CodeIgniter\Entity\Cast\URICast;
 use CodeIgniter\Entity\Exceptions\CastException;
 use CodeIgniter\I18n\Time;
-use DateTimeInterface;
+use DateTime;
 use Exception;
 use JsonSerializable;
-use Traversable;
-use UnitEnum;
+use ReturnTypeWillChange;
 
 /**
  * Entity encapsulation, for use with CodeIgniter\Model
@@ -60,7 +55,8 @@ class Entity implements JsonSerializable
     /**
      * The date fields.
      *
-     * @var list<string>
+     * @var array<int, string>
+     * @phpstan-var list<string>
      */
     protected $dates = [
         'created_at',
@@ -77,14 +73,14 @@ class Entity implements JsonSerializable
     protected $casts = [];
 
     /**
-     * Custom convert handlers.
+     * Custom convert handlers
      *
      * @var array<string, string>
      */
     protected $castHandlers = [];
 
     /**
-     * Default convert handlers.
+     * Default convert handlers
      *
      * @var array<string, string>
      */
@@ -95,7 +91,6 @@ class Entity implements JsonSerializable
         'csv'       => CSVCast::class,
         'datetime'  => DatetimeCast::class,
         'double'    => FloatCast::class,
-        'enum'      => EnumCast::class,
         'float'     => FloatCast::class,
         'int'       => IntegerCast::class,
         'integer'   => IntegerCast::class,
@@ -110,7 +105,7 @@ class Entity implements JsonSerializable
     /**
      * Holds the current values of all class vars.
      *
-     * @var array<string, mixed>
+     * @var array
      */
     protected $attributes = [];
 
@@ -119,34 +114,20 @@ class Entity implements JsonSerializable
      * what's actually been changed and not accidentally write
      * nulls where we shouldn't.
      *
-     * @var array<string, mixed>
+     * @var array
      */
     protected $original = [];
 
     /**
-     * The data caster.
-     */
-    protected ?DataCaster $dataCaster = null;
-
-    /**
-     * Holds info whenever properties have to be casted.
+     * Holds info whenever properties have to be casted
      */
     private bool $_cast = true;
 
     /**
-     * Indicates whether all attributes are scalars (for optimization).
-     */
-    private bool $_onlyScalars = true;
-
-    /**
      * Allows filling in Entity parameters during construction.
-     *
-     * @param array<string, mixed> $data
      */
     public function __construct(?array $data = null)
     {
-        $this->dataCaster = $this->dataCaster();
-
         $this->syncOriginal();
 
         $this->fill($data);
@@ -157,7 +138,7 @@ class Entity implements JsonSerializable
      * properties, using any `setCamelCasedProperty()` methods
      * that may or may not exist.
      *
-     * @param array<string, array<int|string, mixed>|bool|float|int|object|string|null> $data
+     * @param array<string, array|bool|float|int|object|string|null> $data
      *
      * @return $this
      */
@@ -179,22 +160,19 @@ class Entity implements JsonSerializable
      * of this entity as an array. All values are accessed through the
      * __get() magic method so will have any casts, etc applied to them.
      *
-     * @param bool $onlyChanged If true, only return values that have changed since object creation.
+     * @param bool $onlyChanged If true, only return values that have changed since object creation
      * @param bool $cast        If true, properties will be cast.
      * @param bool $recursive   If true, inner entities will be cast as array as well.
-     *
-     * @return array<string, mixed>
      */
     public function toArray(bool $onlyChanged = false, bool $cast = true, bool $recursive = false): array
     {
-        $originalCast = $this->_cast;
-        $this->_cast  = $cast;
+        $this->_cast = $cast;
 
-        $keys = array_filter(array_keys($this->attributes), static fn ($key): bool => ! str_starts_with($key, '_'));
+        $keys = array_filter(array_keys($this->attributes), static fn ($key) => strpos($key, '_') !== 0);
 
         if (is_array($this->datamap)) {
             $keys = array_unique(
-                [...array_diff($keys, $this->datamap), ...array_keys($this->datamap)],
+                [...array_diff($keys, $this->datamap), ...array_keys($this->datamap)]
             );
         }
 
@@ -217,7 +195,7 @@ class Entity implements JsonSerializable
             }
         }
 
-        $this->_cast = $originalCast;
+        $this->_cast = true;
 
         return $return;
     }
@@ -225,116 +203,42 @@ class Entity implements JsonSerializable
     /**
      * Returns the raw values of the current attributes.
      *
-     * @param bool $onlyChanged If true, only return values that have changed since object creation.
+     * @param bool $onlyChanged If true, only return values that have changed since object creation
      * @param bool $recursive   If true, inner entities will be cast as array as well.
-     *
-     * @return array<string, mixed>
      */
     public function toRawArray(bool $onlyChanged = false, bool $recursive = false): array
     {
-        $convert = static function ($value) use (&$convert, $recursive) {
-            if (! $recursive) {
-                return $value;
-            }
-
-            if ($value instanceof self) {
-                // Always output full array for nested entities
-                return $value->toRawArray(false, true);
-            }
-
-            if (is_array($value)) {
-                $result = [];
-
-                foreach ($value as $k => $v) {
-                    $result[$k] = $convert($v);
-                }
-
-                return $result;
-            }
-
-            if (is_object($value) && is_callable([$value, 'toRawArray'])) {
-                return $value->toRawArray();
-            }
-
-            return $value;
-        };
-
-        // When returning everything
-        if (! $onlyChanged) {
-            return $recursive
-                ? array_map($convert, $this->attributes)
-                : $this->attributes;
-        }
-
-        // When filtering by changed values only
         $return = [];
 
-        foreach ($this->attributes as $key => $value) {
-            // Special handling for arrays of entities in recursive mode
-            // Skip hasChanged() and do per-entity comparison directly
-            if ($recursive && is_array($value) && $this->containsOnlyEntities($value)) {
-                $originalValue = $this->original[$key] ?? null;
-
-                if (! is_string($originalValue)) {
-                    // No original or invalid format, export all entities
-                    $converted = [];
-
-                    foreach ($value as $idx => $item) {
-                        $converted[$idx] = $item->toRawArray(false, true);
+        if (! $onlyChanged) {
+            if ($recursive) {
+                return array_map(static function ($value) use ($onlyChanged, $recursive) {
+                    if ($value instanceof self) {
+                        $value = $value->toRawArray($onlyChanged, $recursive);
+                    } elseif (is_callable([$value, 'toRawArray'])) {
+                        $value = $value->toRawArray();
                     }
-                    $return[$key] = $converted;
 
-                    continue;
-                }
-
-                // Decode original array structure for per-entity comparison
-                $originalArray = json_decode($originalValue, true);
-                $converted     = [];
-
-                foreach ($value as $idx => $item) {
-                    // Compare current entity against its original state
-                    $currentNormalized  = $this->normalizeValue($item);
-                    $originalNormalized = $originalArray[$idx] ?? null;
-
-                    // Only include if changed, new, or can't determine
-                    if ($originalNormalized === null || $currentNormalized !== $originalNormalized) {
-                        $converted[$idx] = $item->toRawArray(false, true);
-                    }
-                }
-
-                // Only include this property if at least one entity changed
-                if ($converted !== []) {
-                    $return[$key] = $converted;
-                }
-
-                continue;
+                    return $value;
+                }, $this->attributes);
             }
 
-            // For all other cases, use hasChanged()
+            return $this->attributes;
+        }
+
+        foreach ($this->attributes as $key => $value) {
             if (! $this->hasChanged($key)) {
                 continue;
             }
 
             if ($recursive) {
-                // Special handling for arrays (mixed or not all entities)
-                if (is_array($value)) {
-                    $converted = [];
-
-                    foreach ($value as $idx => $item) {
-                        $converted[$idx] = $item instanceof self ? $item->toRawArray(false, true) : $convert($item);
-                    }
-                    $return[$key] = $converted;
-
-                    continue;
+                if ($value instanceof self) {
+                    $value = $value->toRawArray($onlyChanged, $recursive);
+                } elseif (is_callable([$value, 'toRawArray'])) {
+                    $value = $value->toRawArray();
                 }
-
-                // default recursive conversion
-                $return[$key] = $convert($value);
-
-                continue;
             }
 
-            // non-recursive changed value
             $return[$key] = $value;
         }
 
@@ -344,24 +248,11 @@ class Entity implements JsonSerializable
     /**
      * Ensures our "original" values match the current values.
      *
-     * Objects and arrays are normalized and JSON-encoded for reliable change detection,
-     * while scalars are stored as-is for performance.
-     *
      * @return $this
      */
     public function syncOriginal()
     {
-        $this->original     = [];
-        $this->_onlyScalars = true;
-
-        foreach ($this->attributes as $key => $value) {
-            if (is_object($value) || is_array($value)) {
-                $this->original[$key] = json_encode($this->normalizeValue($value), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-                $this->_onlyScalars   = false;
-            } else {
-                $this->original[$key] = $value;
-            }
-        }
+        $this->original = $this->attributes;
 
         return $this;
     }
@@ -370,22 +261,14 @@ class Entity implements JsonSerializable
      * Checks a property to see if it has changed since the entity
      * was created. Or, without a parameter, checks if any
      * properties have changed.
+     *
+     * @param string|null $key class property
      */
     public function hasChanged(?string $key = null): bool
     {
         // If no parameter was given then check all attributes
         if ($key === null) {
-            if ($this->_onlyScalars) {
-                return $this->original !== $this->attributes;
-            }
-
-            foreach (array_keys($this->attributes) as $attributeKey) {
-                if ($this->hasChanged($attributeKey)) {
-                    return true;
-                }
-            }
-
-            return false;
+            return $this->original !== $this->attributes;
         }
 
         $dbColumn = $this->mapProperty($key);
@@ -400,107 +283,11 @@ class Entity implements JsonSerializable
             return true;
         }
 
-        // It was removed
-        if (array_key_exists($dbColumn, $this->original) && ! array_key_exists($dbColumn, $this->attributes)) {
-            return true;
-        }
-
-        $originalValue = $this->original[$dbColumn];
-        $currentValue  = $this->attributes[$dbColumn];
-
-        // If original is a string, it was JSON-encoded (object or array)
-        if (is_string($originalValue) && (is_object($currentValue) || is_array($currentValue))) {
-            return $originalValue !== json_encode($this->normalizeValue($currentValue), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        }
-
-        // For scalars, use direct comparison
-        return $originalValue !== $currentValue;
+        return $this->original[$dbColumn] !== $this->attributes[$dbColumn];
     }
 
     /**
-     * Checks if an array contains only Entity instances.
-     * This allows optimization for per-entity change tracking.
-     *
-     * @param array<int|string, mixed> $data
-     */
-    private function containsOnlyEntities(array $data): bool
-    {
-        if ($data === []) {
-            return false;
-        }
-
-        foreach ($data as $item) {
-            if (! $item instanceof self) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Recursively normalize a value for comparison.
-     * Converts objects and arrays to a JSON-encodable format.
-     */
-    private function normalizeValue(mixed $data): mixed
-    {
-        if (is_array($data)) {
-            $normalized = [];
-
-            foreach ($data as $key => $value) {
-                $normalized[$key] = $this->normalizeValue($value);
-            }
-
-            return $normalized;
-        }
-
-        if (is_object($data)) {
-            // Check for Entity instance (use raw values, recursive)
-            if ($data instanceof self) {
-                $objectData = $data->toRawArray(false, true);
-            } elseif ($data instanceof JsonSerializable) {
-                $objectData = $data->jsonSerialize();
-            } elseif (method_exists($data, 'toArray')) {
-                $objectData = $data->toArray();
-            } elseif ($data instanceof Traversable) {
-                $objectData = iterator_to_array($data);
-            } elseif ($data instanceof DateTimeInterface) {
-                return [
-                    '__class'    => $data::class,
-                    '__datetime' => $data->format(DATE_RFC3339_EXTENDED),
-                ];
-            } elseif ($data instanceof UnitEnum) {
-                return [
-                    '__class' => $data::class,
-                    '__enum'  => $data instanceof BackedEnum ? $data->value : $data->name,
-                ];
-            } else {
-                $objectData = get_object_vars($data);
-
-                // Fallback for value objects with __toString()
-                // when properties are not accessible
-                if ($objectData === [] && method_exists($data, '__toString')) {
-                    return [
-                        '__class'  => $data::class,
-                        '__string' => (string) $data,
-                    ];
-                }
-            }
-
-            return [
-                '__class' => $data::class,
-                '__data'  => $this->normalizeValue($objectData),
-            ];
-        }
-
-        // Return scalars and null as-is
-        return $data;
-    }
-
-    /**
-     * Set raw data array without any mutations.
-     *
-     * @param array<string, mixed> $data
+     * Set raw data array without any mutations
      *
      * @return $this
      */
@@ -514,18 +301,30 @@ class Entity implements JsonSerializable
     }
 
     /**
-     * Checks the datamap to see if this property name is being mapped,
-     * and returns the DB column name, if any, or the original property name.
+     * Set raw data array without any mutations
      *
-     * @return string Database column name.
+     * @return $this
+     *
+     * @deprecated Use injectRawData() instead.
+     */
+    public function setAttributes(array $data)
+    {
+        return $this->injectRawData($data);
+    }
+
+    /**
+     * Checks the datamap to see if this property name is being mapped,
+     * and returns the db column name, if any, or the original property name.
+     *
+     * @return string db column name
      */
     protected function mapProperty(string $key)
     {
-        if ($this->datamap === []) {
+        if (empty($this->datamap)) {
             return $key;
         }
 
-        if (array_key_exists($key, $this->datamap) && $this->datamap[$key] !== '') {
+        if (! empty($this->datamap[$key])) {
             return $this->datamap[$key];
         }
 
@@ -533,10 +332,10 @@ class Entity implements JsonSerializable
     }
 
     /**
-     * Converts the given string|timestamp|DateTimeInterface instance
+     * Converts the given string|timestamp|DateTime|Time instance
      * into the "CodeIgniter\I18n\Time" object.
      *
-     * @param DateTimeInterface|float|int|string $value
+     * @param DateTime|float|int|string|Time $value
      *
      * @return Time
      *
@@ -549,65 +348,86 @@ class Entity implements JsonSerializable
 
     /**
      * Provides the ability to cast an item as a specific data type.
-     * Add ? at the beginning of the type (i.e. ?string) to get `null`
-     * instead of casting $value when $value is null.
+     * Add ? at the beginning of $type  (i.e. ?string) to get NULL
+     * instead of casting $value if $value === null
      *
      * @param bool|float|int|string|null $value     Attribute value
      * @param string                     $attribute Attribute name
      * @param string                     $method    Allowed to "get" and "set"
      *
-     * @return array<int|string, mixed>|bool|float|int|object|string|null
+     * @return array|bool|float|int|object|string|null
      *
      * @throws CastException
      */
     protected function castAs($value, string $attribute, string $method = 'get')
     {
-        if ($this->dataCaster() instanceof DataCaster) {
-            return $this->dataCaster
-                // @TODO if $casts is readonly, we don't need the setTypes() method.
-                ->setTypes($this->casts)
-                ->castAs($value, $attribute, $method);
+        if (empty($this->casts[$attribute])) {
+            return $value;
         }
 
-        return $value;
+        $type = $this->casts[$attribute];
+
+        $isNullable = false;
+
+        if (strpos($type, '?') === 0) {
+            $isNullable = true;
+
+            if ($value === null) {
+                return null;
+            }
+
+            $type = substr($type, 1);
+        }
+
+        // In order not to create a separate handler for the
+        // json-array type, we transform the required one.
+        $type = $type === 'json-array' ? 'json[array]' : $type;
+
+        if (! in_array($method, ['get', 'set'], true)) {
+            throw CastException::forInvalidMethod($method);
+        }
+
+        $params = [];
+
+        // Attempt to retrieve additional parameters if specified
+        // type[param, param2,param3]
+        if (preg_match('/^(.+)\[(.+)\]$/', $type, $matches)) {
+            $type   = $matches[1];
+            $params = array_map('trim', explode(',', $matches[2]));
+        }
+
+        if ($isNullable) {
+            $params[] = 'nullable';
+        }
+
+        $type = trim($type, '[]');
+
+        $handlers = array_merge($this->defaultCastHandlers, $this->castHandlers);
+
+        if (empty($handlers[$type])) {
+            return $value;
+        }
+
+        if (! is_subclass_of($handlers[$type], CastInterface::class)) {
+            throw CastException::forInvalidInterface($handlers[$type]);
+        }
+
+        return $handlers[$type]::$method($value, $params);
     }
 
     /**
-     * Returns a DataCaster instance when casts are defined.
-     * If no casts are configured, no DataCaster is created and null is returned.
-     */
-    protected function dataCaster(): ?DataCaster
-    {
-        if ($this->casts === []) {
-            $this->dataCaster = null;
-
-            return null;
-        }
-
-        if (! $this->dataCaster instanceof DataCaster) {
-            $this->dataCaster = new DataCaster(
-                array_merge($this->defaultCastHandlers, $this->castHandlers),
-                null,
-                null,
-                false,
-            );
-        }
-
-        return $this->dataCaster;
-    }
-
-    /**
-     * Support for json_encode().
+     * Support for json_encode()
      *
-     * @return array<string, mixed>
+     * @return array
      */
-    public function jsonSerialize(): array
+    #[ReturnTypeWillChange]
+    public function jsonSerialize()
     {
         return $this->toArray();
     }
 
     /**
-     * Change the value of the private $_cast property.
+     * Change the value of the private $_cast property
      *
      * @return bool|Entity
      */
@@ -631,7 +451,7 @@ class Entity implements JsonSerializable
      *  $this->my_property = $p;
      *  $this->setMyProperty() = $p;
      *
-     * @param array<int|string, mixed>|bool|float|int|object|string|null $value
+     * @param array|bool|float|int|object|string|null $value
      *
      * @return void
      *
@@ -661,7 +481,7 @@ class Entity implements JsonSerializable
         }
 
         // If a "`set` + $key" method exists, it is also a setter.
-        if (method_exists($this, $method)) {
+        if (method_exists($this, $method) && $method !== 'setAttributes') {
             $this->{$method}($value);
 
             return;
@@ -682,9 +502,11 @@ class Entity implements JsonSerializable
      *  $p = $this->my_property
      *  $p = $this->getMyProperty()
      *
-     * @return array<int|string, mixed>|bool|float|int|object|string|null
+     * @return array|bool|float|int|object|string|null
      *
      * @throws Exception
+     *
+     * @params string $key class property
      */
     public function __get(string $key)
     {

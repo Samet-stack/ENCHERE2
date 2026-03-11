@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -13,13 +11,15 @@ declare(strict_types=1);
 
 namespace CodeIgniter\Exceptions;
 
+use RuntimeException;
+
 /**
  * Class FrameworkException
  *
  * A collection of exceptions thrown by the framework
  * that can only be determined at run time.
  */
-class FrameworkException extends RuntimeException
+class FrameworkException extends RuntimeException implements ExceptionInterface
 {
     use DebugTraceableTrait;
 
@@ -57,16 +57,14 @@ class FrameworkException extends RuntimeException
 
     /**
      * @return static
-     *
-     * @deprecated 4.5.0 No longer used.
      */
     public static function forMissingExtension(string $extension)
     {
-        if (str_contains($extension, 'intl')) {
+        if (strpos($extension, 'intl') !== false) {
             // @codeCoverageIgnoreStart
             $message = sprintf(
                 'The framework needs the following extension(s) installed and loaded: %s.',
-                $extension,
+                $extension
             );
             // @codeCoverageIgnoreEnd
         } else {

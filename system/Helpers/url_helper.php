@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -17,7 +15,7 @@ use CodeIgniter\HTTP\SiteURI;
 use CodeIgniter\HTTP\URI;
 use CodeIgniter\Router\Exceptions\RouterException;
 use Config\App;
-use Config\Hostnames;
+use Config\Services;
 
 // CodeIgniter URL Helpers
 
@@ -25,15 +23,13 @@ if (! function_exists('site_url')) {
     /**
      * Returns a site URL as defined by the App config.
      *
-     * @param array|string $relativePath URI string or array of URI segments.
-     * @param string|null  $scheme       URI scheme. E.g., http, ftp. If empty
-     *                                   string '' is set, a protocol-relative
-     *                                   link is returned.
-     * @param App|null     $config       Alternate configuration to use.
+     * @param array|string $relativePath URI string or array of URI segments
+     * @param string|null  $scheme       URI scheme. E.g., http, ftp
+     * @param App|null     $config       Alternate configuration to use
      */
     function site_url($relativePath = '', ?string $scheme = null, ?App $config = null): string
     {
-        $currentURI = service('request')->getUri();
+        $currentURI = Services::request()->getUri();
 
         assert($currentURI instanceof SiteURI);
 
@@ -46,14 +42,12 @@ if (! function_exists('base_url')) {
      * Returns the base URL as defined by the App config.
      * Base URLs are trimmed site URLs without the index page.
      *
-     * @param array|string $relativePath URI string or array of URI segments.
-     * @param string|null  $scheme       URI scheme. E.g., http, ftp. If empty
-     *                                   string '' is set, a protocol-relative
-     *                                   link is returned.
+     * @param array|string $relativePath URI string or array of URI segments
+     * @param string|null  $scheme       URI scheme. E.g., http, ftp
      */
     function base_url($relativePath = '', ?string $scheme = null): string
     {
-        $currentURI = service('request')->getUri();
+        $currentURI = Services::request()->getUri();
 
         assert($currentURI instanceof SiteURI);
 
@@ -73,7 +67,7 @@ if (! function_exists('current_url')) {
      */
     function current_url(bool $returnObject = false, ?IncomingRequest $request = null)
     {
-        $request ??= service('request');
+        $request ??= Services::request();
         /** @var CLIRequest|IncomingRequest $request */
         $uri = $request->getUri();
 
@@ -113,9 +107,9 @@ if (! function_exists('uri_string')) {
      */
     function uri_string(): string
     {
-        // The value of service('request')->getUri()->getPath() returns
+        // The value of Services::request()->getUri()->getPath() returns
         // full URI path.
-        $uri = service('request')->getUri();
+        $uri = Services::request()->getUri();
 
         $path = $uri instanceof SiteURI ? $uri->getRoutePath() : $uri->getPath();
 
@@ -212,8 +206,6 @@ if (! function_exists('anchor_popup')) {
             $windowName = '_blank';
         }
 
-        $atts = [];
-
         foreach (['width' => '800', 'height' => '600', 'scrollbars' => 'yes', 'menubar' => 'no', 'status' => 'yes', 'resizable' => 'yes', 'screenx' => '0', 'screeny' => '0'] as $key => $val) {
             $atts[$key] = $attributes[$key] ?? $val;
             unset($attributes[$key]);
@@ -298,7 +290,7 @@ if (! function_exists('safe_mailto')) {
             if ($ordinal < 128) {
                 $x[] = '|' . $ordinal;
             } else {
-                if ($temp === []) {
+                if (empty($temp)) {
                     $count = ($ordinal < 224) ? 2 : 3;
                 }
 
@@ -322,7 +314,7 @@ if (! function_exists('safe_mailto')) {
 
         // improve obfuscation by eliminating newlines & whitespace
         $cspNonce = csp_script_nonce();
-        $cspNonce = $cspNonce !== '' ? ' ' . $cspNonce : $cspNonce;
+        $cspNonce = $cspNonce ? ' ' . $cspNonce : $cspNonce;
         $output   = '<script' . $cspNonce . '>'
                 . 'var l=new Array();';
 
@@ -354,15 +346,7 @@ if (! function_exists('auto_link')) {
     function auto_link(string $str, string $type = 'both', bool $popup = false): string
     {
         // Find and replace any URLs.
-        if (
-            $type !== 'email'
-            && preg_match_all(
-                '#([a-z][a-z0-9+\-.]*://|www\.)[a-z0-9]+(-+[a-z0-9]+)*(\.[a-z0-9]+(-+[a-z0-9]+)*)+(/([^\s()<>;]+\w)?/?)?#i',
-                $str,
-                $matches,
-                PREG_OFFSET_CAPTURE | PREG_SET_ORDER,
-            ) >= 1
-        ) {
+        if ($type !== 'email' && preg_match_all('#(\w*://|www\.)[^\s()<>;]+\w#i', $str, $matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER)) {
             // Set our target HTML if using popup links.
             $target = ($popup) ? ' target="_blank"' : '';
 
@@ -381,15 +365,7 @@ if (! function_exists('auto_link')) {
         }
 
         // Find and replace any emails.
-        if (
-            $type !== 'url'
-            && preg_match_all(
-                '#([\w\.\-\+]+@[a-z0-9\-]+\.[a-z0-9\-\.]+[^[:punct:]\s])#i',
-                $str,
-                $matches,
-                PREG_OFFSET_CAPTURE,
-            ) >= 1
-        ) {
+        if ($type !== 'url' && preg_match_all('#([\w\.\-\+]+@[a-z0-9\-]+\.[a-z0-9\-\.]+[^[:punct:]\s])#i', $str, $matches, PREG_OFFSET_CAPTURE)) {
             foreach (array_reverse($matches[0]) as $match) {
                 if (filter_var($match[0], FILTER_VALIDATE_EMAIL) !== false) {
                     $str = substr_replace($str, safe_mailto($match[0]), $match[1], strlen($match[0]));
@@ -459,7 +435,7 @@ if (! function_exists('url_title')) {
             $str = preg_replace('#' . $key . '#iu', $val, $str);
         }
 
-        if ($lowercase) {
+        if ($lowercase === true) {
             $str = mb_strtolower($str);
         }
 
@@ -533,54 +509,5 @@ if (! function_exists('url_is')) {
         $currentPath = '/' . trim(uri_string(), '/ ');
 
         return (bool) preg_match("|^{$path}$|", $currentPath, $matches);
-    }
-}
-
-if (! function_exists('parse_subdomain')) {
-    /**
-     * Parses the subdomain from the current host name.
-     *
-     * @param string|null $host The hostname to parse. If null, uses the current request's host.
-     *
-     * @return string The subdomain, or an empty string if none exists.
-     */
-    function parse_subdomain(?string $host = null): string
-    {
-        if ($host === null) {
-            $host = service('request')->getUri()->getHost();
-        }
-
-        // Handle localhost and IP addresses - they don't have subdomains
-        if ($host === 'localhost' || filter_var($host, FILTER_VALIDATE_IP)) {
-            return '';
-        }
-
-        $parts     = explode('.', $host);
-        $partCount = count($parts);
-
-        // Need at least 3 parts for a subdomain (subdomain.domain.tld)
-        // e.g., api.example.com
-        if ($partCount < 3) {
-            return '';
-        }
-
-        // Check if we have a two-part TLD (e.g., co.uk, com.au)
-        $lastTwoParts = $parts[$partCount - 2] . '.' . $parts[$partCount - 1];
-
-        if (in_array($lastTwoParts, Hostnames::TWO_PART_TLDS, true)) {
-            // For two-part TLD, need at least 4 parts for subdomain
-            // e.g., api.example.co.uk (4 parts)
-            if ($partCount < 4) {
-                return ''; // No subdomain, just domain.co.uk
-            }
-
-            // Remove the two-part TLD and domain name (last 3 parts)
-            // e.g., admin.api.example.co.uk -> admin.api
-            return implode('.', array_slice($parts, 0, $partCount - 3));
-        }
-
-        // Standard TLD: Remove TLD and domain (last 2 parts)
-        // e.g., admin.api.example.com -> admin.api
-        return implode('.', array_slice($parts, 0, $partCount - 2));
     }
 }

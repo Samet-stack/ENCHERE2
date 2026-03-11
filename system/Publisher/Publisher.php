@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -13,12 +11,12 @@ declare(strict_types=1);
 
 namespace CodeIgniter\Publisher;
 
-use CodeIgniter\Autoloader\FileLocatorInterface;
-use CodeIgniter\Exceptions\RuntimeException;
+use CodeIgniter\Autoloader\FileLocator;
 use CodeIgniter\Files\FileCollection;
 use CodeIgniter\HTTP\URI;
 use CodeIgniter\Publisher\Exceptions\PublisherException;
 use Config\Publisher as PublisherConfig;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -42,7 +40,7 @@ class Publisher extends FileCollection
     /**
      * Array of discovered Publishers.
      *
-     * @var array<string, list<self>|null>
+     * @var array<string, self[]|null>
      */
     private static array $discovered = [];
 
@@ -62,7 +60,7 @@ class Publisher extends FileCollection
     /**
      * List of file published curing the last write operation.
      *
-     * @var list<string>
+     * @var string[]
      */
     private array $published = [];
 
@@ -72,9 +70,9 @@ class Publisher extends FileCollection
      *
      * @var array<string,string>
      */
-    private readonly array $restrictions;
+    private array $restrictions;
 
-    private readonly ContentReplacer $replacer;
+    private ContentReplacer $replacer;
 
     /**
      * Base path to use for the source.
@@ -97,42 +95,35 @@ class Publisher extends FileCollection
     /**
      * Discovers and returns all Publishers in the specified namespace directory.
      *
-     * @return list<self>
+     * @return self[]
      */
-    final public static function discover(string $directory = 'Publishers', string $namespace = ''): array
+    final public static function discover(string $directory = 'Publishers'): array
     {
-        $key = implode('.', [$namespace, $directory]);
-
-        if (isset(self::$discovered[$key])) {
-            return self::$discovered[$key];
+        if (isset(self::$discovered[$directory])) {
+            return self::$discovered[$directory];
         }
 
-        self::$discovered[$key] = [];
+        self::$discovered[$directory] = [];
 
-        /** @var FileLocatorInterface */
+        /** @var FileLocator $locator */
         $locator = service('locator');
 
-        $files = $namespace === ''
-            ? $locator->listFiles($directory)
-            : $locator->listNamespaceFiles($namespace, $directory);
-
-        if ([] === $files) {
+        if ([] === $files = $locator->listFiles($directory)) {
             return [];
         }
 
         // Loop over each file checking to see if it is a Publisher
         foreach (array_unique($files) as $file) {
-            $className = $locator->findQualifiedNameFromPath($file);
+            $className = $locator->getClassname($file);
 
-            if ($className !== false && class_exists($className) && is_a($className, self::class, true)) {
-                /** @var class-string<self> $className */
-                self::$discovered[$key][] = new $className();
+            if ($className !== '' && class_exists($className) && is_a($className, self::class, true)) {
+                self::$discovered[$directory][] = new $className();
             }
         }
 
-        sort(self::$discovered[$key]);
+        sort(self::$discovered[$directory]);
 
-        return self::$discovered[$key];
+        return self::$discovered[$directory];
     }
 
     /**
@@ -176,7 +167,7 @@ class Publisher extends FileCollection
 
         // Make sure the destination is allowed
         foreach (array_keys($this->restrictions) as $directory) {
-            if (str_starts_with($this->destination, $directory)) {
+            if (strpos($this->destination, $directory) === 0) {
                 return;
             }
         }
@@ -261,7 +252,7 @@ class Publisher extends FileCollection
     /**
      * Returns the files published by the last write operation.
      *
-     * @return list<string>
+     * @return string[]
      */
     final public function getPublished(): array
     {
@@ -275,7 +266,7 @@ class Publisher extends FileCollection
     /**
      * Verifies and adds paths to the list.
      *
-     * @param list<string> $paths
+     * @param string[] $paths
      *
      * @return $this
      */
@@ -303,7 +294,7 @@ class Publisher extends FileCollection
     /**
      * Downloads and stages files from an array of URIs.
      *
-     * @param list<string> $uris
+     * @param string[] $uris
      *
      * @return $this
      */
@@ -479,7 +470,7 @@ class Publisher extends FileCollection
     {
         // Verify this is an allowed file for its destination
         foreach ($this->restrictions as $directory => $pattern) {
-            if (str_starts_with($to, $directory) && self::matchFiles([$to], $pattern) === []) {
+            if (strpos($to, $directory) === 0 && self::matchFiles([$to], $pattern) === []) {
                 throw PublisherException::forFileNotAllowed($from, $directory, $pattern);
             }
         }

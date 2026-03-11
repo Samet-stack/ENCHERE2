@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -23,6 +21,7 @@ use Exception;
 use IntlCalendar;
 use IntlDateFormatter;
 use Locale;
+use ReturnTypeWillChange;
 
 /**
  * This trait has properties and methods for Time and TimeLegacy.
@@ -31,7 +30,7 @@ use Locale;
 trait TimeTrait
 {
     /**
-     * @var DateTimeZone|string
+     * @var DateTimeZone
      */
     protected $timezone;
 
@@ -72,18 +71,18 @@ trait TimeTrait
      */
     public function __construct(?string $time = null, $timezone = null, ?string $locale = null)
     {
-        $this->locale = in_array($locale, [null, '', '0'], true) ? Locale::getDefault() : $locale;
+        $this->locale = $locale ?: Locale::getDefault();
 
         $time ??= '';
 
         // If a test instance has been provided, use it instead.
-        if ($time === '' && static::$testNow instanceof static) {
+        if ($time === '' && static::$testNow instanceof self) {
             if ($timezone !== null) {
                 $testNow = static::$testNow->setTimezone($timezone);
-                $time    = $testNow->format('Y-m-d H:i:s.u');
+                $time    = $testNow->format('Y-m-d H:i:s');
             } else {
                 $timezone = static::$testNow->getTimezone();
-                $time     = static::$testNow->format('Y-m-d H:i:s.u');
+                $time     = static::$testNow->format('Y-m-d H:i:s');
             }
         }
 
@@ -96,7 +95,7 @@ trait TimeTrait
         if ($time !== '' && static::hasRelativeKeywords($time)) {
             $instance = new DateTime('now', $this->timezone);
             $instance->modify($time);
-            $time = $instance->format('Y-m-d H:i:s.u');
+            $time = $instance->format('Y-m-d H:i:s');
         }
 
         parent::__construct($time, $this->timezone);
@@ -107,13 +106,13 @@ trait TimeTrait
      *
      * @param DateTimeZone|string|null $timezone
      *
-     * @return static
+     * @return self
      *
      * @throws Exception
      */
     public static function now($timezone = null, ?string $locale = null)
     {
-        return new static(null, $timezone, $locale);
+        return new self(null, $timezone, $locale);
     }
 
     /**
@@ -124,13 +123,13 @@ trait TimeTrait
      *
      * @param DateTimeZone|string|null $timezone
      *
-     * @return static
+     * @return self
      *
      * @throws Exception
      */
     public static function parse(string $datetime, $timezone = null, ?string $locale = null)
     {
-        return new static($datetime, $timezone, $locale);
+        return new self($datetime, $timezone, $locale);
     }
 
     /**
@@ -138,13 +137,13 @@ trait TimeTrait
      *
      * @param DateTimeZone|string|null $timezone
      *
-     * @return static
+     * @return self
      *
      * @throws Exception
      */
     public static function today($timezone = null, ?string $locale = null)
     {
-        return new static(date('Y-m-d 00:00:00'), $timezone, $locale);
+        return new self(date('Y-m-d 00:00:00'), $timezone, $locale);
     }
 
     /**
@@ -152,13 +151,13 @@ trait TimeTrait
      *
      * @param DateTimeZone|string|null $timezone
      *
-     * @return static
+     * @return self
      *
      * @throws Exception
      */
     public static function yesterday($timezone = null, ?string $locale = null)
     {
-        return new static(date('Y-m-d 00:00:00', strtotime('-1 day')), $timezone, $locale);
+        return new self(date('Y-m-d 00:00:00', strtotime('-1 day')), $timezone, $locale);
     }
 
     /**
@@ -166,13 +165,13 @@ trait TimeTrait
      *
      * @param DateTimeZone|string|null $timezone
      *
-     * @return static
+     * @return self
      *
      * @throws Exception
      */
     public static function tomorrow($timezone = null, ?string $locale = null)
     {
-        return new static(date('Y-m-d 00:00:00', strtotime('+1 day')), $timezone, $locale);
+        return new self(date('Y-m-d 00:00:00', strtotime('+1 day')), $timezone, $locale);
     }
 
     /**
@@ -181,7 +180,7 @@ trait TimeTrait
      *
      * @param DateTimeZone|string|null $timezone
      *
-     * @return static
+     * @return self
      *
      * @throws Exception
      */
@@ -195,7 +194,7 @@ trait TimeTrait
      *
      * @param DateTimeZone|string|null $timezone
      *
-     * @return static
+     * @return self
      *
      * @throws Exception
      */
@@ -209,49 +208,42 @@ trait TimeTrait
      *
      * @param DateTimeZone|string|null $timezone
      *
-     * @return static
+     * @return self
      *
      * @throws Exception
      */
-    public static function create(
-        ?int $year = null,
-        ?int $month = null,
-        ?int $day = null,
-        ?int $hour = null,
-        ?int $minutes = null,
-        ?int $seconds = null,
-        $timezone = null,
-        ?string $locale = null,
-    ) {
+    public static function create(?int $year = null, ?int $month = null, ?int $day = null, ?int $hour = null, ?int $minutes = null, ?int $seconds = null, $timezone = null, ?string $locale = null)
+    {
         $year ??= date('Y');
         $month ??= date('m');
         $day ??= date('d');
-        $hour ??= 0;
-        $minutes ??= 0;
-        $seconds ??= 0;
+        $hour    = empty($hour) ? 0 : $hour;
+        $minutes = empty($minutes) ? 0 : $minutes;
+        $seconds = empty($seconds) ? 0 : $seconds;
 
-        return new static(date('Y-m-d H:i:s', strtotime("{$year}-{$month}-{$day} {$hour}:{$minutes}:{$seconds}")), $timezone, $locale);
+        return new self(date('Y-m-d H:i:s', strtotime("{$year}-{$month}-{$day} {$hour}:{$minutes}:{$seconds}")), $timezone, $locale);
     }
 
     /**
      * Provides a replacement for DateTime's own createFromFormat function, that provides
      * more flexible timeZone handling
      *
-     * @psalm-external-mutation-free
-     *
      * @param string                   $format
      * @param string                   $datetime
      * @param DateTimeZone|string|null $timezone
      *
+     * @return self
+     *
      * @throws Exception
      */
-    public static function createFromFormat($format, $datetime, $timezone = null): static
+    #[ReturnTypeWillChange]
+    public static function createFromFormat($format, $datetime, $timezone = null)
     {
         if (! $date = parent::createFromFormat($format, $datetime)) {
             throw I18nException::forInvalidFormat($format);
         }
 
-        return new static($date->format('Y-m-d H:i:s.u'), $timezone);
+        return new self($date->format('Y-m-d H:i:s'), $timezone);
     }
 
     /**
@@ -259,12 +251,13 @@ trait TimeTrait
      *
      * @param DateTimeZone|string|null $timezone
      *
+     * @return self
+     *
      * @throws Exception
      */
-    public static function createFromTimestamp(float|int $timestamp, $timezone = null, ?string $locale = null): static
+    public static function createFromTimestamp(int $timestamp, $timezone = null, ?string $locale = null)
     {
-        $time = new static(sprintf('@%.6f', $timestamp), 'UTC', $locale);
-
+        $time = new self(gmdate('Y-m-d H:i:s', $timestamp), 'UTC', $locale);
         $timezone ??= 'UTC';
 
         return $time->setTimezone($timezone);
@@ -273,22 +266,22 @@ trait TimeTrait
     /**
      * Takes an instance of DateTimeInterface and returns an instance of Time with it's same values.
      *
-     * @return static
+     * @return self
      *
      * @throws Exception
      */
     public static function createFromInstance(DateTimeInterface $dateTime, ?string $locale = null)
     {
-        $date     = $dateTime->format('Y-m-d H:i:s.u');
+        $date     = $dateTime->format('Y-m-d H:i:s');
         $timezone = $dateTime->getTimezone();
 
-        return new static($date, $timezone, $locale);
+        return new self($date, $timezone, $locale);
     }
 
     /**
      * Takes an instance of DateTime and returns an instance of Time with it's same values.
      *
-     * @return static
+     * @return self
      *
      * @throws Exception
      *
@@ -298,7 +291,7 @@ trait TimeTrait
      */
     public static function instance(DateTime $dateTime, ?string $locale = null)
     {
-        return static::createFromInstance($dateTime, $locale);
+        return self::createFromInstance($dateTime, $locale);
     }
 
     /**
@@ -310,11 +303,10 @@ trait TimeTrait
      */
     public function toDateTime()
     {
-        return DateTime::createFromFormat(
-            'Y-m-d H:i:s.u',
-            $this->format('Y-m-d H:i:s.u'),
-            $this->getTimezone(),
-        );
+        $dateTime = new DateTime('', $this->getTimezone());
+        $dateTime->setTimestamp(parent::getTimestamp());
+
+        return $dateTime;
     }
 
     // --------------------------------------------------------------------
@@ -343,9 +335,9 @@ trait TimeTrait
 
         // Convert to a Time instance
         if (is_string($datetime)) {
-            $datetime = new static($datetime, $timezone, $locale);
-        } elseif ($datetime instanceof DateTimeInterface && ! $datetime instanceof static) {
-            $datetime = new static($datetime->format('Y-m-d H:i:s.u'), $timezone);
+            $datetime = new self($datetime, $timezone, $locale);
+        } elseif ($datetime instanceof DateTimeInterface && ! $datetime instanceof self) {
+            $datetime = new self($datetime->format('Y-m-d H:i:s'), $timezone);
         }
 
         static::$testNow = $datetime;
@@ -473,7 +465,7 @@ trait TimeTrait
     public function getAge()
     {
         // future dates have no age
-        return max(0, $this->difference(static::now())->getYears());
+        return max(0, $this->difference(self::now())->getYears());
     }
 
     /**
@@ -530,7 +522,7 @@ trait TimeTrait
      *
      * @param int|string $value
      *
-     * @return static
+     * @return self
      *
      * @throws Exception
      */
@@ -544,14 +536,14 @@ trait TimeTrait
      *
      * @param int|string $value
      *
-     * @return static
+     * @return self
      *
      * @throws Exception
      */
     public function setMonth($value)
     {
         if (is_numeric($value) && ($value < 1 || $value > 12)) {
-            throw I18nException::forInvalidMonth((string) $value);
+            throw I18nException::forInvalidMonth($value);
         }
 
         if (is_string($value) && ! is_numeric($value)) {
@@ -566,20 +558,20 @@ trait TimeTrait
      *
      * @param int|string $value
      *
-     * @return static
+     * @return self
      *
      * @throws Exception
      */
     public function setDay($value)
     {
         if ($value < 1 || $value > 31) {
-            throw I18nException::forInvalidDay((string) $value);
+            throw I18nException::forInvalidDay($value);
         }
 
         $date    = $this->getYear() . '-' . $this->getMonth();
         $lastDay = date('t', strtotime($date));
         if ($value > $lastDay) {
-            throw I18nException::forInvalidOverDay($lastDay, (string) $value);
+            throw I18nException::forInvalidOverDay($lastDay, $value);
         }
 
         return $this->setValue('day', $value);
@@ -590,14 +582,14 @@ trait TimeTrait
      *
      * @param int|string $value
      *
-     * @return static
+     * @return self
      *
      * @throws Exception
      */
     public function setHour($value)
     {
         if ($value < 0 || $value > 23) {
-            throw I18nException::forInvalidHour((string) $value);
+            throw I18nException::forInvalidHour($value);
         }
 
         return $this->setValue('hour', $value);
@@ -608,14 +600,14 @@ trait TimeTrait
      *
      * @param int|string $value
      *
-     * @return static
+     * @return self
      *
      * @throws Exception
      */
     public function setMinute($value)
     {
         if ($value < 0 || $value > 59) {
-            throw I18nException::forInvalidMinutes((string) $value);
+            throw I18nException::forInvalidMinutes($value);
         }
 
         return $this->setValue('minute', $value);
@@ -626,14 +618,14 @@ trait TimeTrait
      *
      * @param int|string $value
      *
-     * @return static
+     * @return self
      *
      * @throws Exception
      */
     public function setSecond($value)
     {
         if ($value < 0 || $value > 59) {
-            throw I18nException::forInvalidSeconds((string) $value);
+            throw I18nException::forInvalidSeconds($value);
         }
 
         return $this->setValue('second', $value);
@@ -644,7 +636,7 @@ trait TimeTrait
      *
      * @param int $value
      *
-     * @return static
+     * @return self
      *
      * @throws Exception
      */
@@ -654,7 +646,7 @@ trait TimeTrait
 
         ${$name} = $value;
 
-        return static::create(
+        return self::create(
             (int) $year,
             (int) $month,
             (int) $day,
@@ -662,7 +654,7 @@ trait TimeTrait
             (int) $minute,
             (int) $second,
             $this->getTimezoneName(),
-            $this->locale,
+            $this->locale
         );
     }
 
@@ -671,14 +663,33 @@ trait TimeTrait
      *
      * @param DateTimeZone|string $timezone
      *
+     * @return self
+     *
      * @throws Exception
      */
-    public function setTimezone($timezone): static
+    #[ReturnTypeWillChange]
+    public function setTimezone($timezone)
     {
         $timezone = $timezone instanceof DateTimeZone ? $timezone : new DateTimeZone($timezone);
-        $dateTime = $this->toDateTime()->setTimezone($timezone);
 
-        return static::createFromInstance($dateTime, $this->locale);
+        return self::createFromInstance($this->toDateTime()->setTimezone($timezone), $this->locale);
+    }
+
+    /**
+     * Returns a new instance with the date set to the new timestamp.
+     *
+     * @param int $timestamp
+     *
+     * @return self
+     *
+     * @throws Exception
+     */
+    #[ReturnTypeWillChange]
+    public function setTimestamp($timestamp)
+    {
+        $time = date('Y-m-d H:i:s', $timestamp);
+
+        return self::parse($time, $this->timezone, $this->locale);
     }
 
     // --------------------------------------------------------------------
@@ -743,39 +754,6 @@ trait TimeTrait
         $time = clone $this;
 
         return $time->add(DateInterval::createFromDateString("{$months} months"));
-    }
-
-    /**
-     * Returns a new Time instance with $months calendar months added to the time.
-     */
-    public function addCalendarMonths(int $months): static
-    {
-        $time = clone $this;
-
-        $year  = (int) $time->getYear();
-        $month = (int) $time->getMonth();
-        $day   = (int) $time->getDay();
-
-        // Adjust total months since year 0
-        $totalMonths = ($year * 12 + $month - 1) + $months;
-
-        // Recalculate year and month
-        $newYear  = intdiv($totalMonths, 12);
-        $newMonth = $totalMonths % 12 + 1;
-
-        // Get last day of new month
-        $lastDayOfMonth = cal_days_in_month(CAL_GREGORIAN, $newMonth, $newYear);
-        $correctedDay   = min($day, $lastDayOfMonth);
-
-        return static::create($newYear, $newMonth, $correctedDay, (int) $this->getHour(), (int) $this->getMinute(), (int) $this->getSecond(), $this->getTimezone(), $this->locale);
-    }
-
-    /**
-     * Returns a new Time instance with $months calendar months subtracted from the time
-     */
-    public function subCalendarMonths(int $months): static
-    {
-        return $this->addCalendarMonths(-$months);
     }
 
     /**
@@ -952,9 +930,9 @@ trait TimeTrait
 
         $ourTime = $this->toDateTime()
             ->setTimezone(new DateTimeZone('UTC'))
-            ->format('Y-m-d H:i:s.u');
+            ->format('Y-m-d H:i:s');
 
-        return $testTime->format('Y-m-d H:i:s.u') === $ourTime;
+        return $testTime->format('Y-m-d H:i:s') === $ourTime;
     }
 
     /**
@@ -967,15 +945,15 @@ trait TimeTrait
     public function sameAs($testTime, ?string $timezone = null): bool
     {
         if ($testTime instanceof DateTimeInterface) {
-            $testTime = $testTime->format('Y-m-d H:i:s.u O');
+            $testTime = $testTime->format('Y-m-d H:i:s');
         } elseif (is_string($testTime)) {
-            $timezone = in_array($timezone, [null, '', '0'], true) ? $this->timezone : $timezone;
+            $timezone = $timezone ?: $this->timezone;
             $timezone = $timezone instanceof DateTimeZone ? $timezone : new DateTimeZone($timezone);
             $testTime = new DateTime($testTime, $timezone);
-            $testTime = $testTime->format('Y-m-d H:i:s.u O');
+            $testTime = $testTime->format('Y-m-d H:i:s');
         }
 
-        $ourTime = $this->format('Y-m-d H:i:s.u O');
+        $ourTime = $this->toDateTimeString();
 
         return $testTime === $ourTime;
     }
@@ -990,16 +968,10 @@ trait TimeTrait
      */
     public function isBefore($testTime, ?string $timezone = null): bool
     {
-        $testTime = $this->getUTCObject($testTime, $timezone);
+        $testTime = $this->getUTCObject($testTime, $timezone)->getTimestamp();
+        $ourTime  = $this->getTimestamp();
 
-        $testTimestamp = $testTime->getTimestamp();
-        $ourTimestamp  = $this->getTimestamp();
-
-        if ($ourTimestamp === $testTimestamp) {
-            return $this->format('u') < $testTime->format('u');
-        }
-
-        return $ourTimestamp < $testTimestamp;
+        return $ourTime < $testTime;
     }
 
     /**
@@ -1012,36 +984,10 @@ trait TimeTrait
      */
     public function isAfter($testTime, ?string $timezone = null): bool
     {
-        $testTime = $this->getUTCObject($testTime, $timezone);
+        $testTime = $this->getUTCObject($testTime, $timezone)->getTimestamp();
+        $ourTime  = $this->getTimestamp();
 
-        $testTimestamp = $testTime->getTimestamp();
-        $ourTimestamp  = $this->getTimestamp();
-
-        if ($ourTimestamp === $testTimestamp) {
-            return $this->format('u') > $testTime->format('u');
-        }
-
-        return $ourTimestamp > $testTimestamp;
-    }
-
-    /**
-     * Determines if the current instance's time is in the past.
-     *
-     * @throws Exception
-     */
-    public function isPast(): bool
-    {
-        return $this->isBefore(static::now($this->timezone));
-    }
-
-    /**
-     * Determines if the current instance's time is in the future.
-     *
-     * @throws Exception
-     */
-    public function isFuture(): bool
-    {
-        return $this->isAfter(static::now($this->timezone));
+        return $ourTime > $testTime;
     }
 
     // --------------------------------------------------------------------
@@ -1062,7 +1008,7 @@ trait TimeTrait
      */
     public function humanize()
     {
-        $now  = IntlCalendar::fromDateTime(self::now($this->timezone)->toDateTime());
+        $now  = IntlCalendar::fromDateTime(self::now($this->timezone));
         $time = $this->getCalendar()->getTime();
 
         $years   = $now->fieldDifference($time, IntlCalendar::FIELD_YEAR);
@@ -1114,21 +1060,8 @@ trait TimeTrait
      */
     public function difference($testTime, ?string $timezone = null)
     {
-        if (is_string($testTime)) {
-            $timezone = ($timezone !== null) ? new DateTimeZone($timezone) : $this->timezone;
-            $testTime = new DateTime($testTime, $timezone);
-        } elseif ($testTime instanceof static) {
-            $testTime = $testTime->toDateTime();
-        }
-
-        assert($testTime instanceof DateTime);
-
-        if ($this->timezone->getOffset($this) !== $testTime->getTimezone()->getOffset($this)) {
-            $testTime = $this->getUTCObject($testTime, $timezone);
-            $ourTime  = $this->getUTCObject($this);
-        } else {
-            $ourTime = $this->toDateTime();
-        }
+        $testTime = $this->getUTCObject($testTime, $timezone);
+        $ourTime  = $this->getUTCObject($this);
 
         return new TimeDifference($ourTime, $testTime);
     }
@@ -1148,10 +1081,10 @@ trait TimeTrait
      */
     public function getUTCObject($time, ?string $timezone = null)
     {
-        if ($time instanceof static) {
+        if ($time instanceof self) {
             $time = $time->toDateTime();
         } elseif (is_string($time)) {
-            $timezone = in_array($timezone, [null, '', '0'], true) ? $this->timezone : $timezone;
+            $timezone = $timezone ?: $this->timezone;
             $timezone = $timezone instanceof DateTimeZone ? $timezone : new DateTimeZone($timezone);
             $time     = new DateTime($time, $timezone);
         }
@@ -1176,7 +1109,7 @@ trait TimeTrait
      */
     public function getCalendar()
     {
-        return IntlCalendar::fromDateTime($this->toDateTime());
+        return IntlCalendar::fromDateTime($this);
     }
 
     /**
@@ -1211,7 +1144,7 @@ trait TimeTrait
      *
      * @param string $name
      *
-     * @return array|bool|DateTimeInterface|DateTimeZone|int|IntlCalendar|self|string|null
+     * @return array|bool|DateTimeInterface|DateTimeZone|int|intlCalendar|self|string|null
      */
     public function __get($name)
     {
@@ -1249,8 +1182,6 @@ trait TimeTrait
         $timezone = $this->timezone;
 
         $this->timezone = new DateTimeZone($timezone);
-
-        // @phpstan-ignore-next-line `$this->date` is a special property for PHP internal use.
         parent::__construct($this->date, $this->timezone);
     }
 }

@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -14,12 +12,13 @@ declare(strict_types=1);
 namespace CodeIgniter\Format\Exceptions;
 
 use CodeIgniter\Exceptions\DebugTraceableTrait;
-use CodeIgniter\Exceptions\RuntimeException;
+use CodeIgniter\Exceptions\ExceptionInterface;
+use RuntimeException;
 
 /**
  * FormatException
  */
-class FormatException extends RuntimeException
+class FormatException extends RuntimeException implements ExceptionInterface
 {
     use DebugTraceableTrait;
 
@@ -37,7 +36,7 @@ class FormatException extends RuntimeException
      * Thrown in JSONFormatter when the json_encode produces
      * an error code other than JSON_ERROR_NONE and JSON_ERROR_RECURSION.
      *
-     * @param string|null $error The error message
+     * @param string $error The error message
      *
      * @return static
      */

@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -21,10 +19,9 @@ if (! function_exists('ul')) {
     /**
      * Unordered List
      *
-     * Generates an HTML unordered list from a single or
-     * multidimensional array.
+     * Generates an HTML unordered list from an single or
+     * multi-dimensional array.
      *
-     * @param array               $list       List entries
      * @param array|object|string $attributes HTML attributes string, array, object
      */
     function ul(array $list, $attributes = ''): string
@@ -37,9 +34,8 @@ if (! function_exists('ol')) {
     /**
      * Ordered List
      *
-     * Generates an HTML ordered list from a single or multidimensional array.
+     * Generates an HTML ordered list from an single or multi-dimensional array.
      *
-     * @param array               $list       List entries
      * @param array|object|string $attributes HTML attributes string, array, object
      */
     function ol(array $list, $attributes = ''): string
@@ -52,10 +48,10 @@ if (! function_exists('_list')) {
     /**
      * Generates the list
      *
-     * Generates an HTML ordered list from a single or multidimensional array.
+     * Generates an HTML ordered list from an single or multi-dimensional array.
      *
-     * @param array               $list       List entries
-     * @param array|object|string $attributes HTML attributes string, array, object
+     * @param array               $list
+     * @param array|object|string $attributes string, array, object
      */
     function _list(string $type = 'ul', $list = [], $attributes = '', int $depth = 0): string
     {
@@ -74,9 +70,9 @@ if (! function_exists('_list')) {
                 $out .= $val;
             } else {
                 $out .= $key
-                    . "\n"
-                    . _list($type, $val, '', $depth + 4)
-                    . str_repeat(' ', $depth + 2);
+                        . "\n"
+                        . _list($type, $val, '', $depth + 4)
+                        . str_repeat(' ', $depth + 2);
             }
 
             $out .= "</li>\n";
@@ -94,7 +90,7 @@ if (! function_exists('img')) {
      * Generates an image element
      *
      * @param array|string        $src        Image source URI, or array of attributes and values
-     * @param bool                $indexPage  Should `Config\App::$indexPage` be added to the source path
+     * @param bool                $indexPage  Whether to treat $src as a routed URI string
      * @param array|object|string $attributes Additional HTML attributes
      */
     function img($src = '', bool $indexPage = false, $attributes = ''): string
@@ -112,8 +108,8 @@ if (! function_exists('img')) {
         $img = '<img';
 
         // Check for a relative URI
-        if (preg_match('#^([a-z]+:)?//#i', $src['src']) !== 1 && ! str_starts_with($src['src'], 'data:')) {
-            if ($indexPage) {
+        if (! preg_match('#^([a-z]+:)?//#i', $src['src']) && strpos($src['src'], 'data:') !== 0) {
+            if ($indexPage === true) {
                 $img .= ' src="' . site_url($src['src']) . '"';
             } else {
                 $img .= ' src="' . slash_item('baseURL') . $src['src'] . '"';
@@ -183,7 +179,7 @@ if (! function_exists('doctype')) {
         $config   = new DocTypes();
         $doctypes = $config->list;
 
-        return $doctypes[$type] ?? '';
+        return $doctypes[$type] ?? false;
     }
 }
 
@@ -194,20 +190,20 @@ if (! function_exists('script_tag')) {
      * Generates link to a JS file
      *
      * @param array|string $src       Script source or an array of attributes
-     * @param bool         $indexPage Should `Config\App::$indexPage` be added to the JS path
+     * @param bool         $indexPage Should indexPage be added to the JS path
      */
     function script_tag($src = '', bool $indexPage = false): string
     {
         $cspNonce = csp_script_nonce();
-        $cspNonce = $cspNonce !== '' ? ' ' . $cspNonce : $cspNonce;
+        $cspNonce = $cspNonce ? ' ' . $cspNonce : $cspNonce;
         $script   = '<script' . $cspNonce . ' ';
         if (! is_array($src)) {
             $src = ['src' => $src];
         }
 
         foreach ($src as $k => $v) {
-            if ($k === 'src' && preg_match('#^([a-z]+:)?//#i', $v) !== 1) {
-                if ($indexPage) {
+            if ($k === 'src' && ! preg_match('#^([a-z]+:)?//#i', $v)) {
+                if ($indexPage === true) {
                     $script .= 'src="' . site_url($v) . '" ';
                 } else {
                     $script .= 'src="' . slash_item('baseURL') . $v . '" ';
@@ -229,7 +225,7 @@ if (! function_exists('link_tag')) {
      * Generates link tag
      *
      * @param array<string, bool|string>|string $href      Stylesheet href or an array
-     * @param bool                              $indexPage Should `Config\App::$indexPage` be added to the CSS path.
+     * @param bool                              $indexPage should indexPage be added to the CSS path.
      */
     function link_tag(
         $href = '',
@@ -238,7 +234,7 @@ if (! function_exists('link_tag')) {
         string $title = '',
         string $media = '',
         bool $indexPage = false,
-        string $hreflang = '',
+        string $hreflang = ''
     ): string {
         $attributes = [];
         // extract fields if needed
@@ -252,7 +248,7 @@ if (! function_exists('link_tag')) {
             $href      = $href['href'] ?? '';
         }
 
-        if (preg_match('#^([a-z]+:)?//#i', $href) !== 1) {
+        if (! preg_match('#^([a-z]+:)?//#i', $href)) {
             $attributes['href'] = $indexPage ? site_url($href) : slash_item('baseURL') . $href;
         } else {
             $attributes['href'] = $href;
@@ -290,7 +286,6 @@ if (! function_exists('video')) {
      * @param array|string $src                Either a source string or an array of sources
      * @param string       $unsupportedMessage The message to display if the media tag is not supported by the browser
      * @param string       $attributes         HTML attributes
-     * @param bool         $indexPage          Should `Config\App::$indexPage` be added to the source path
      */
     function video($src, string $unsupportedMessage = '', string $attributes = '', array $tracks = [], bool $indexPage = false): string
     {
@@ -302,7 +297,7 @@ if (! function_exists('video')) {
 
         if (_has_protocol($src)) {
             $video .= ' src="' . $src . '"';
-        } elseif ($indexPage) {
+        } elseif ($indexPage === true) {
             $video .= ' src="' . site_url($src) . '"';
         } else {
             $video .= ' src="' . slash_item('baseURL') . $src . '"';
@@ -318,7 +313,7 @@ if (! function_exists('video')) {
             $video .= _space_indent() . $track . "\n";
         }
 
-        if ($unsupportedMessage !== '') {
+        if (! empty($unsupportedMessage)) {
             $video .= _space_indent()
                     . $unsupportedMessage
                     . "\n";
@@ -337,7 +332,6 @@ if (! function_exists('audio')) {
      * @param array|string $src                Either a source string or an array of sources
      * @param string       $unsupportedMessage The message to display if the media tag is not supported by the browser.
      * @param string       $attributes         HTML attributes
-     * @param bool         $indexPage          Should `Config\App::$indexPage` be added to the source path
      */
     function audio($src, string $unsupportedMessage = '', string $attributes = '', array $tracks = [], bool $indexPage = false): string
     {
@@ -349,7 +343,7 @@ if (! function_exists('audio')) {
 
         if (_has_protocol($src)) {
             $audio .= ' src="' . $src . '"';
-        } elseif ($indexPage) {
+        } elseif ($indexPage === true) {
             $audio .= ' src="' . site_url($src) . '"';
         } else {
             $audio .= ' src="' . slash_item('baseURL') . $src . '"';
@@ -365,7 +359,7 @@ if (! function_exists('audio')) {
             $audio .= "\n" . _space_indent() . $track;
         }
 
-        if ($unsupportedMessage !== '') {
+        if (! empty($unsupportedMessage)) {
             $audio .= "\n" . _space_indent() . $unsupportedMessage . "\n";
         }
 
@@ -383,7 +377,7 @@ if (! function_exists('_media')) {
     {
         $media = '<' . $name;
 
-        if ($attributes === '') {
+        if (empty($attributes)) {
             $media .= '>';
         } else {
             $media .= ' ' . $attributes . '>';
@@ -399,7 +393,7 @@ if (! function_exists('_media')) {
             $media .= _space_indent() . $track . "\n";
         }
 
-        if ($unsupportedMessage !== '') {
+        if (! empty($unsupportedMessage)) {
             $media .= _space_indent() . $unsupportedMessage . "\n";
         }
 
@@ -417,18 +411,17 @@ if (! function_exists('source')) {
      * @param string $src        The path of the media resource
      * @param string $type       The MIME-type of the resource with optional codecs parameters
      * @param string $attributes HTML attributes
-     * @param bool   $indexPage  Should `Config\App::$indexPage` be added to the source path
      */
     function source(string $src, string $type = 'unknown', string $attributes = '', bool $indexPage = false): string
     {
         if (! _has_protocol($src)) {
-            $src = $indexPage ? site_url($src) : slash_item('baseURL') . $src;
+            $src = $indexPage === true ? site_url($src) : slash_item('baseURL') . $src;
         }
 
         $source = '<source src="' . $src
                 . '" type="' . $type . '"';
 
-        if ($attributes !== '') {
+        if (! empty($attributes)) {
             $source .= ' ' . $attributes;
         }
 
@@ -443,10 +436,7 @@ if (! function_exists('track')) {
      * Generates a track element to specify timed tracks. The tracks are
      * formatted in WebVTT format.
      *
-     * @param string $src         The path of the .VTT file
-     * @param string $kind        How the text track is meant to be used
-     * @param string $srcLanguage Language of the track text data
-     * @param string $label       A user-readable title of the text track
+     * @param string $src The path of the .VTT file
      */
     function track(string $src, string $kind, string $srcLanguage, string $label): string
     {
@@ -469,18 +459,17 @@ if (! function_exists('object')) {
      * @param string $data       A resource URL
      * @param string $type       Content-type of the resource
      * @param string $attributes HTML attributes
-     * @param bool   $indexPage  Should `Config\App::$indexPage` be added to the data path
      */
     function object(string $data, string $type = 'unknown', string $attributes = '', array $params = [], bool $indexPage = false): string
     {
         if (! _has_protocol($data)) {
-            $data = $indexPage ? site_url($data) : slash_item('baseURL') . $data;
+            $data = $indexPage === true ? site_url($data) : slash_item('baseURL') . $data;
         }
 
         $object = '<object data="' . $data . '" '
                 . $attributes . '>';
 
-        if ($params !== []) {
+        if (! empty($params)) {
             $object .= "\n";
         }
 
@@ -522,12 +511,11 @@ if (! function_exists('embed')) {
      * @param string $src        The path of the resource to embed
      * @param string $type       MIME-type
      * @param string $attributes HTML attributes
-     * @param bool   $indexPage  Should `Config\App::$indexPage` be added to the source path
      */
     function embed(string $src, string $type = 'unknown', string $attributes = '', bool $indexPage = false): string
     {
         if (! _has_protocol($src)) {
-            $src = $indexPage ? site_url($src) : slash_item('baseURL') . $src;
+            $src = $indexPage === true ? site_url($src) : slash_item('baseURL') . $src;
         }
 
         return '<embed src="' . $src

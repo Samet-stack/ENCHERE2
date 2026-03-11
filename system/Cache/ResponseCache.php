@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -13,12 +11,11 @@ declare(strict_types=1);
 
 namespace CodeIgniter\Cache;
 
-use CodeIgniter\Exceptions\RuntimeException;
 use CodeIgniter\HTTP\CLIRequest;
-use CodeIgniter\HTTP\Header;
 use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\ResponseInterface;
 use Config\Cache as CacheConfig;
+use Exception;
 
 /**
  * Web Page Caching
@@ -38,21 +35,29 @@ final class ResponseCache
      *    array('q') = Enabled, but only take into account the specified list
      *                 of query parameters.
      *
-     * @var bool|list<string>
+     * @var bool|string[]
      */
-    private array|bool $cacheQueryString = false;
+    private $cacheQueryString = false;
 
     /**
-     * Cache time to live (TTL) in seconds.
+     * Cache time to live.
+     *
+     * @var int seconds
      */
     private int $ttl = 0;
 
-    public function __construct(CacheConfig $config, private readonly CacheInterface $cache)
+    private CacheInterface $cache;
+
+    public function __construct(CacheConfig $config, CacheInterface $cache)
     {
         $this->cacheQueryString = $config->cacheQueryString;
+        $this->cache            = $cache;
     }
 
-    public function setTtl(int $ttl): self
+    /**
+     * @return $this
+     */
+    public function setTtl(int $ttl)
     {
         $this->ttl = $ttl;
 
@@ -62,9 +67,11 @@ final class ResponseCache
     /**
      * Generates the cache key to use from the current request.
      *
+     * @param CLIRequest|IncomingRequest $request
+     *
      * @internal for testing purposes only
      */
-    public function generateCacheKey(CLIRequest|IncomingRequest $request): string
+    public function generateCacheKey($request): string
     {
         if ($request instanceof CLIRequest) {
             return md5($request->getPath());
@@ -72,17 +79,19 @@ final class ResponseCache
 
         $uri = clone $request->getUri();
 
-        $query = (bool) $this->cacheQueryString
+        $query = $this->cacheQueryString
             ? $uri->getQuery(is_array($this->cacheQueryString) ? ['only' => $this->cacheQueryString] : [])
             : '';
 
-        return md5($request->getMethod() . ':' . $uri->setFragment('')->setQuery($query));
+        return md5($uri->setFragment('')->setQuery($query));
     }
 
     /**
      * Caches the response.
+     *
+     * @param CLIRequest|IncomingRequest $request
      */
-    public function make(CLIRequest|IncomingRequest $request, ResponseInterface $response): bool
+    public function make($request, ResponseInterface $response): bool
     {
         if ($this->ttl === 0) {
             return true;
@@ -90,36 +99,25 @@ final class ResponseCache
 
         $headers = [];
 
-        foreach ($response->headers() as $name => $value) {
-            if ($value instanceof Header) {
-                $headers[$name] = $value->getValueLine();
-            } else {
-                foreach ($value as $header) {
-                    $headers[$name][] = $header->getValueLine();
-                }
-            }
+        foreach ($response->headers() as $header) {
+            $headers[$header->getName()] = $header->getValueLine();
         }
 
         return $this->cache->save(
             $this->generateCacheKey($request),
-            serialize([
-                'headers' => $headers,
-                'output'  => $response->getBody(),
-                'status'  => $response->getStatusCode(),
-                'reason'  => $response->getReasonPhrase(),
-            ]),
-            $this->ttl,
+            serialize(['headers' => $headers, 'output' => $response->getBody()]),
+            $this->ttl
         );
     }
 
     /**
      * Gets the cached response for the request.
+     *
+     * @param CLIRequest|IncomingRequest $request
      */
-    public function get(CLIRequest|IncomingRequest $request, ResponseInterface $response): ?ResponseInterface
+    public function get($request, ResponseInterface $response): ?ResponseInterface
     {
-        $cachedResponse = $this->cache->get($this->generateCacheKey($request));
-
-        if (is_string($cachedResponse) && $cachedResponse !== '') {
+        if ($cachedResponse = $this->cache->get($this->generateCacheKey($request))) {
             $cachedResponse = unserialize($cachedResponse);
 
             if (
@@ -127,13 +125,11 @@ final class ResponseCache
                 || ! isset($cachedResponse['output'])
                 || ! isset($cachedResponse['headers'])
             ) {
-                throw new RuntimeException('Error unserializing page cache');
+                throw new Exception('Error unserializing page cache');
             }
 
             $headers = $cachedResponse['headers'];
             $output  = $cachedResponse['output'];
-            $status  = $cachedResponse['status'] ?? 200;
-            $reason  = $cachedResponse['reason'] ?? '';
 
             // Clear all default headers
             foreach (array_keys($response->headers()) as $key) {
@@ -146,8 +142,6 @@ final class ResponseCache
             }
 
             $response->setBody($output);
-
-            $response->setStatusCode($status, $reason);
 
             return $response;
         }

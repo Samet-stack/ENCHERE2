@@ -28,11 +28,11 @@ declare(strict_types=1);
 namespace Kint\Renderer\Text;
 
 use Kint\Renderer\TextRenderer;
-use Kint\Value\AbstractValue;
+use Kint\Zval\Value;
 
 interface PluginInterface
 {
     public function __construct(TextRenderer $r);
 
-    public function render(AbstractValue $v): ?string;
+    public function render(Value $o): ?string;
 }

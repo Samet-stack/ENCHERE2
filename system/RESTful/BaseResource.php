@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -61,7 +59,7 @@ abstract class BaseResource extends Controller
      */
     public function setModel($which = null)
     {
-        if ($which !== null) {
+        if ($which) {
             $this->model     = is_object($which) ? $which : null;
             $this->modelName = is_object($which) ? null : $which;
         }
@@ -71,7 +69,7 @@ abstract class BaseResource extends Controller
         }
 
         if (! empty($this->model) && empty($this->modelName)) {
-            $this->modelName = $this->model::class;
+            $this->modelName = get_class($this->model);
         }
     }
 }

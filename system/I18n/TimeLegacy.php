@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -14,7 +12,6 @@ declare(strict_types=1);
 namespace CodeIgniter\I18n;
 
 use DateTime;
-use Exception;
 
 /**
  * Legacy Time class.
@@ -23,24 +20,7 @@ use Exception;
  * This is not immutable! Some methods are immutable,
  * but some methods can alter the state.
  *
- * @property int    $age         read-only
- * @property string $day         read-only
- * @property string $dayOfWeek   read-only
- * @property string $dayOfYear   read-only
- * @property bool   $dst         read-only
- * @property string $hour        read-only
- * @property bool   $local       read-only
- * @property string $minute      read-only
- * @property string $month       read-only
- * @property string $quarter     read-only
- * @property string $second      read-only
- * @property int    $timestamp   read-only
- * @property bool   $utc         read-only
- * @property string $weekOfMonth read-only
- * @property string $weekOfYear  read-only
- * @property string $year        read-only
- *
- * @phpstan-consistent-constructor
+ * @property string $date
  *
  * @deprecated Use Time instead.
  * @see \CodeIgniter\I18n\TimeLegacyTest
@@ -48,18 +28,4 @@ use Exception;
 class TimeLegacy extends DateTime
 {
     use TimeTrait;
-
-    /**
-     * Returns a new instance with the date set to the new timestamp.
-     *
-     * @param int $timestamp
-     *
-     * @throws Exception
-     */
-    public function setTimestamp($timestamp): static
-    {
-        $time = date('Y-m-d H:i:s', $timestamp);
-
-        return static::parse($time, $this->timezone, $this->locale);
-    }
 }

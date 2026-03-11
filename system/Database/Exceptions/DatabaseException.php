@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -14,9 +12,9 @@ declare(strict_types=1);
 namespace CodeIgniter\Database\Exceptions;
 
 use CodeIgniter\Exceptions\HasExitCodeInterface;
-use CodeIgniter\Exceptions\RuntimeException;
+use Error;
 
-class DatabaseException extends RuntimeException implements ExceptionInterface, HasExitCodeInterface
+class DatabaseException extends Error implements ExceptionInterface, HasExitCodeInterface
 {
     public function getExitCode(): int
     {

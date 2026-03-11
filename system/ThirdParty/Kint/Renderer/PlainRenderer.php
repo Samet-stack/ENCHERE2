@@ -27,38 +27,46 @@ declare(strict_types=1);
 
 namespace Kint\Renderer;
 
-use Kint\Utils;
-use Kint\Value\AbstractValue;
+use Kint\Kint;
+use Kint\Zval\BlobValue;
+use Kint\Zval\Value;
 
 class PlainRenderer extends TextRenderer
 {
-    use AssetRendererTrait;
-
-    public static array $pre_render_sources = [
+    public static $pre_render_sources = [
         'script' => [
-            [self::class, 'renderJs'],
+            ['Kint\\Renderer\\PlainRenderer', 'renderJs'],
+            ['Kint\\Renderer\\Text\\MicrotimePlugin', 'renderJs'],
         ],
         'style' => [
-            [self::class, 'renderCss'],
+            ['Kint\\Renderer\\PlainRenderer', 'renderCss'],
         ],
         'raw' => [],
     ];
 
     /**
-     * Output htmlentities instead of utf8.
+     * Path to the CSS file to load by default.
+     *
+     * @var string
      */
-    public static bool $disable_utf8 = false;
+    public static $theme = 'plain.css';
 
-    public static bool $needs_pre_render = true;
+    /**
+     * Output htmlentities instead of utf8.
+     *
+     * @var bool
+     */
+    public static $disable_utf8 = false;
 
-    public static bool $always_pre_render = false;
+    public static $needs_pre_render = true;
 
-    protected bool $force_pre_render = false;
+    public static $always_pre_render = false;
+
+    protected $force_pre_render = false;
 
     public function __construct()
     {
         parent::__construct();
-        self::$theme ??= 'plain.css';
         $this->setForcePreRender(self::$always_pre_render);
     }
 
@@ -66,7 +74,7 @@ class PlainRenderer extends TextRenderer
     {
         parent::setCallInfo($info);
 
-        if (\in_array('@', $info['modifiers'], true)) {
+        if (\in_array('@', $this->call_info['modifiers'], true)) {
             $this->setForcePreRender(true);
         }
     }
@@ -110,13 +118,13 @@ class PlainRenderer extends TextRenderer
         return '<u>'.$string.'</u>';
     }
 
-    public function renderTitle(AbstractValue $v): string
+    public function renderTitle(Value $o): string
     {
         if (self::$disable_utf8) {
-            return $this->utf8ToHtmlentity(parent::renderTitle($v));
+            return $this->utf8ToHtmlentity(parent::renderTitle($o));
         }
 
-        return parent::renderTitle($v);
+        return parent::renderTitle($o);
     }
 
     public function preRender(): string
@@ -136,18 +144,10 @@ class PlainRenderer extends TextRenderer
 
                 switch ($type) {
                     case 'script':
-                        $output .= '<script class="kint-plain-script"';
-                        if (null !== self::$js_nonce) {
-                            $output .= ' nonce="'.\htmlspecialchars(self::$js_nonce).'"';
-                        }
-                        $output .= '>'.$contents.'</script>';
+                        $output .= '<script class="kint-plain-script">'.$contents.'</script>';
                         break;
                     case 'style':
-                        $output .= '<style class="kint-plain-style"';
-                        if (null !== self::$css_nonce) {
-                            $output .= ' nonce="'.\htmlspecialchars(self::$css_nonce).'"';
-                        }
-                        $output .= '>'.$contents.'</style>';
+                        $output .= '<style class="kint-plain-style">'.$contents.'</style>';
                         break;
                     default:
                         $output .= $contents;
@@ -174,20 +174,26 @@ class PlainRenderer extends TextRenderer
 
     public function ideLink(string $file, int $line): string
     {
-        $path = $this->escape(Utils::shortenPath($file)).':'.$line;
-        $ideLink = self::getFileLink($file, $line);
+        $path = $this->escape(Kint::shortenPath($file)).':'.$line;
+        $ideLink = Kint::getIdeLink($file, $line);
 
-        if (null === $ideLink) {
+        if (!$ideLink) {
             return $path;
         }
 
-        return '<a href="'.$this->escape($ideLink).'">'.$path.'</a>';
+        $class = '';
+
+        if (\preg_match('/https?:\\/\\//i', $ideLink)) {
+            $class = 'class="kint-ide-link" ';
+        }
+
+        return '<a '.$class.'href="'.$this->escape($ideLink).'">'.$path.'</a>';
     }
 
     public function escape(string $string, $encoding = false): string
     {
         if (false === $encoding) {
-            $encoding = Utils::detectEncoding($string);
+            $encoding = BlobValue::detectEncoding($string);
         }
 
         $original_encoding = $encoding;
@@ -213,5 +219,19 @@ class PlainRenderer extends TextRenderer
             ['&#9484;', '&#9552;', '&#9488;', '&#9474;', '&#9492;', '&#9472;', '&#9496;'],
             $string
         );
+    }
+
+    protected static function renderJs(): string
+    {
+        return \file_get_contents(KINT_DIR.'/resources/compiled/shared.js').\file_get_contents(KINT_DIR.'/resources/compiled/plain.js');
+    }
+
+    protected static function renderCss(): string
+    {
+        if (\file_exists(KINT_DIR.'/resources/compiled/'.self::$theme)) {
+            return \file_get_contents(KINT_DIR.'/resources/compiled/'.self::$theme);
+        }
+
+        return \file_get_contents(self::$theme);
     }
 }

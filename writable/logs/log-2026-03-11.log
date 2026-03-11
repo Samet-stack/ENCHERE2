@@ -1,0 +1,551 @@
+ERROR - 2026-03-11 12:07:50 --> Error connecting to the database: mysqli_sql_exception: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:184
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php(184): mysqli->real_connect('172.16.203.111', 'sio', Object(SensitiveParameterValue), 'enchere_a_porte...', 3306, '', 0)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#2 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#3 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#4 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#7 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:229
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#2 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#3 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#4 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#8 {main}
+CRITICAL - 2026-03-11 12:07:50 --> Unable to connect to the database.
+Main connection [MySQLi]: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu
+in SYSTEMPATH\Database\BaseConnection.php on line 428.
+ 1 SYSTEMPATH\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+ 2 APPPATH\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente, titre FROM ventes WHERE etat=\'a_venir\' AND date_debut <= \'2026-03-11 12:07:40\'')
+ 3 APPPATH\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+ 4 SYSTEMPATH\CodeIgniter.php(942): App\Controllers\Enchere->index()
+ 5 SYSTEMPATH\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+ 6 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-11 12:07:51 --> Error connecting to the database: mysqli_sql_exception: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:184
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php(184): mysqli->real_connect('172.16.203.111', 'sio', Object(SensitiveParameterValue), 'enchere_a_porte...', 3306, '', 0)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#2 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#3 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#4 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#7 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:229
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#2 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#3 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#4 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#8 {main}
+CRITICAL - 2026-03-11 12:07:51 --> Unable to connect to the database.
+Main connection [MySQLi]: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu
+in SYSTEMPATH\Database\BaseConnection.php on line 428.
+ 1 SYSTEMPATH\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+ 2 APPPATH\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente, titre FROM ventes WHERE etat=\'a_venir\' AND date_debut <= \'2026-03-11 12:07:41\'')
+ 3 APPPATH\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+ 4 SYSTEMPATH\CodeIgniter.php(942): App\Controllers\Enchere->index()
+ 5 SYSTEMPATH\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+ 6 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-11 12:07:51 --> Error connecting to the database: mysqli_sql_exception: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:184
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php(184): mysqli->real_connect('172.16.203.111', 'sio', Object(SensitiveParameterValue), 'enchere_a_porte...', 3306, '', 0)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#2 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#3 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#4 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#7 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:229
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#2 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#3 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#4 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#8 {main}
+CRITICAL - 2026-03-11 12:07:51 --> Unable to connect to the database.
+Main connection [MySQLi]: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu
+in SYSTEMPATH\Database\BaseConnection.php on line 428.
+ 1 SYSTEMPATH\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+ 2 APPPATH\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente, titre FROM ventes WHERE etat=\'a_venir\' AND date_debut <= \'2026-03-11 12:07:41\'')
+ 3 APPPATH\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+ 4 SYSTEMPATH\CodeIgniter.php(942): App\Controllers\Enchere->index()
+ 5 SYSTEMPATH\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+ 6 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-11 12:07:51 --> Error connecting to the database: mysqli_sql_exception: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:184
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php(184): mysqli->real_connect('172.16.203.111', 'sio', Object(SensitiveParameterValue), 'enchere_a_porte...', 3306, '', 0)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#2 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#3 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#4 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#7 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:229
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#2 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#3 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#4 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#8 {main}
+CRITICAL - 2026-03-11 12:07:51 --> Unable to connect to the database.
+Main connection [MySQLi]: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu
+in SYSTEMPATH\Database\BaseConnection.php on line 428.
+ 1 SYSTEMPATH\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+ 2 APPPATH\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente, titre FROM ventes WHERE etat=\'a_venir\' AND date_debut <= \'2026-03-11 12:07:41\'')
+ 3 APPPATH\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+ 4 SYSTEMPATH\CodeIgniter.php(942): App\Controllers\Enchere->index()
+ 5 SYSTEMPATH\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+ 6 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-11 12:07:51 --> Error connecting to the database: mysqli_sql_exception: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:184
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php(184): mysqli->real_connect('172.16.203.111', 'sio', Object(SensitiveParameterValue), 'enchere_a_porte...', 3306, '', 0)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#2 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#3 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#4 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#7 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:229
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#2 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#3 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#4 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#8 {main}
+CRITICAL - 2026-03-11 12:07:51 --> Unable to connect to the database.
+Main connection [MySQLi]: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu
+in SYSTEMPATH\Database\BaseConnection.php on line 428.
+ 1 SYSTEMPATH\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+ 2 APPPATH\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente, titre FROM ventes WHERE etat=\'a_venir\' AND date_debut <= \'2026-03-11 12:07:41\'')
+ 3 APPPATH\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+ 4 SYSTEMPATH\CodeIgniter.php(942): App\Controllers\Enchere->index()
+ 5 SYSTEMPATH\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+ 6 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-11 12:07:52 --> Error connecting to the database: mysqli_sql_exception: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:184
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php(184): mysqli->real_connect('172.16.203.111', 'sio', Object(SensitiveParameterValue), 'enchere_a_porte...', 3306, '', 0)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#2 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#3 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#4 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#7 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:229
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#2 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#3 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#4 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#8 {main}
+CRITICAL - 2026-03-11 12:07:52 --> Unable to connect to the database.
+Main connection [MySQLi]: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu
+in SYSTEMPATH\Database\BaseConnection.php on line 428.
+ 1 SYSTEMPATH\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+ 2 APPPATH\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente, titre FROM ventes WHERE etat=\'a_venir\' AND date_debut <= \'2026-03-11 12:07:42\'')
+ 3 APPPATH\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+ 4 SYSTEMPATH\CodeIgniter.php(942): App\Controllers\Enchere->index()
+ 5 SYSTEMPATH\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+ 6 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-11 12:07:52 --> Error connecting to the database: mysqli_sql_exception: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:184
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php(184): mysqli->real_connect('172.16.203.111', 'sio', Object(SensitiveParameterValue), 'enchere_a_porte...', 3306, '', 0)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#2 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#3 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#4 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#7 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:229
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#2 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#3 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#4 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#8 {main}
+CRITICAL - 2026-03-11 12:07:52 --> Unable to connect to the database.
+Main connection [MySQLi]: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu
+in SYSTEMPATH\Database\BaseConnection.php on line 428.
+ 1 SYSTEMPATH\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+ 2 APPPATH\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente, titre FROM ventes WHERE etat=\'a_venir\' AND date_debut <= \'2026-03-11 12:07:42\'')
+ 3 APPPATH\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+ 4 SYSTEMPATH\CodeIgniter.php(942): App\Controllers\Enchere->index()
+ 5 SYSTEMPATH\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+ 6 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-11 12:07:52 --> Error connecting to the database: mysqli_sql_exception: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:184
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php(184): mysqli->real_connect('172.16.203.111', 'sio', Object(SensitiveParameterValue), 'enchere_a_porte...', 3306, '', 0)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#2 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#3 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#4 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#7 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:229
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#2 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#3 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#4 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#8 {main}
+CRITICAL - 2026-03-11 12:07:52 --> Unable to connect to the database.
+Main connection [MySQLi]: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu
+in SYSTEMPATH\Database\BaseConnection.php on line 428.
+ 1 SYSTEMPATH\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+ 2 APPPATH\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente, titre FROM ventes WHERE etat=\'a_venir\' AND date_debut <= \'2026-03-11 12:07:42\'')
+ 3 APPPATH\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+ 4 SYSTEMPATH\CodeIgniter.php(942): App\Controllers\Enchere->index()
+ 5 SYSTEMPATH\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+ 6 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-11 12:07:52 --> Error connecting to the database: mysqli_sql_exception: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:184
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php(184): mysqli->real_connect('172.16.203.111', 'sio', Object(SensitiveParameterValue), 'enchere_a_porte...', 3306, '', 0)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#2 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#3 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#4 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#7 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:229
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#2 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#3 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#4 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#8 {main}
+CRITICAL - 2026-03-11 12:07:52 --> Unable to connect to the database.
+Main connection [MySQLi]: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu
+in SYSTEMPATH\Database\BaseConnection.php on line 428.
+ 1 SYSTEMPATH\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+ 2 APPPATH\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente, titre FROM ventes WHERE etat=\'a_venir\' AND date_debut <= \'2026-03-11 12:07:42\'')
+ 3 APPPATH\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+ 4 SYSTEMPATH\CodeIgniter.php(942): App\Controllers\Enchere->index()
+ 5 SYSTEMPATH\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+ 6 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-11 12:07:52 --> Error connecting to the database: mysqli_sql_exception: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:184
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php(184): mysqli->real_connect('172.16.203.111', 'sio', Object(SensitiveParameterValue), 'enchere_a_porte...', 3306, '', 0)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#2 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#3 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#4 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#7 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:229
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#2 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#3 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#4 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#8 {main}
+CRITICAL - 2026-03-11 12:07:52 --> Unable to connect to the database.
+Main connection [MySQLi]: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu
+in SYSTEMPATH\Database\BaseConnection.php on line 428.
+ 1 SYSTEMPATH\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+ 2 APPPATH\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente, titre FROM ventes WHERE etat=\'a_venir\' AND date_debut <= \'2026-03-11 12:07:42\'')
+ 3 APPPATH\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+ 4 SYSTEMPATH\CodeIgniter.php(942): App\Controllers\Enchere->index()
+ 5 SYSTEMPATH\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+ 6 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-11 12:07:53 --> Error connecting to the database: mysqli_sql_exception: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:184
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php(184): mysqli->real_connect('172.16.203.111', 'sio', Object(SensitiveParameterValue), 'enchere_a_porte...', 3306, '', 0)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#2 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#3 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#4 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#7 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:229
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#2 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#3 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#4 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#8 {main}
+CRITICAL - 2026-03-11 12:07:53 --> Unable to connect to the database.
+Main connection [MySQLi]: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu
+in SYSTEMPATH\Database\BaseConnection.php on line 428.
+ 1 SYSTEMPATH\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+ 2 APPPATH\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente, titre FROM ventes WHERE etat=\'a_venir\' AND date_debut <= \'2026-03-11 12:07:43\'')
+ 3 APPPATH\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+ 4 SYSTEMPATH\CodeIgniter.php(942): App\Controllers\Enchere->index()
+ 5 SYSTEMPATH\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+ 6 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-11 12:07:53 --> Error connecting to the database: mysqli_sql_exception: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:184
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php(184): mysqli->real_connect('172.16.203.111', 'sio', Object(SensitiveParameterValue), 'enchere_a_porte...', 3306, '', 0)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#2 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#3 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#4 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#7 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:229
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#2 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#3 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#4 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#8 {main}
+CRITICAL - 2026-03-11 12:07:53 --> Unable to connect to the database.
+Main connection [MySQLi]: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu
+in SYSTEMPATH\Database\BaseConnection.php on line 428.
+ 1 SYSTEMPATH\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+ 2 APPPATH\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente, titre FROM ventes WHERE etat=\'a_venir\' AND date_debut <= \'2026-03-11 12:07:43\'')
+ 3 APPPATH\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+ 4 SYSTEMPATH\CodeIgniter.php(942): App\Controllers\Enchere->index()
+ 5 SYSTEMPATH\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+ 6 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-11 12:07:54 --> Error connecting to the database: mysqli_sql_exception: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:184
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php(184): mysqli->real_connect('172.16.203.111', 'sio', Object(SensitiveParameterValue), 'enchere_a_porte...', 3306, '', 0)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#2 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#3 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#4 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#7 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:229
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#2 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#3 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#4 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#8 {main}
+CRITICAL - 2026-03-11 12:07:54 --> Unable to connect to the database.
+Main connection [MySQLi]: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu
+in SYSTEMPATH\Database\BaseConnection.php on line 428.
+ 1 SYSTEMPATH\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+ 2 APPPATH\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente, titre FROM ventes WHERE etat=\'a_venir\' AND date_debut <= \'2026-03-11 12:07:44\'')
+ 3 APPPATH\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+ 4 SYSTEMPATH\CodeIgniter.php(942): App\Controllers\Enchere->index()
+ 5 SYSTEMPATH\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+ 6 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-11 12:07:57 --> Error connecting to the database: mysqli_sql_exception: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:184
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php(184): mysqli->real_connect('172.16.203.111', 'sio', Object(SensitiveParameterValue), 'enchere_a_porte...', 3306, '', 0)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#2 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#3 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#4 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#7 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:229
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#2 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#3 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#4 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#8 {main}
+CRITICAL - 2026-03-11 12:07:57 --> Unable to connect to the database.
+Main connection [MySQLi]: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu
+in SYSTEMPATH\Database\BaseConnection.php on line 428.
+ 1 SYSTEMPATH\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+ 2 APPPATH\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente, titre FROM ventes WHERE etat=\'a_venir\' AND date_debut <= \'2026-03-11 12:07:47\'')
+ 3 APPPATH\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+ 4 SYSTEMPATH\CodeIgniter.php(942): App\Controllers\Enchere->index()
+ 5 SYSTEMPATH\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+ 6 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-11 12:07:57 --> Error connecting to the database: mysqli_sql_exception: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:184
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php(184): mysqli->real_connect('172.16.203.111', 'sio', Object(SensitiveParameterValue), 'enchere_a_porte...', 3306, '', 0)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#2 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#3 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#4 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#7 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu in C:\xampp\htdocs\ENCHERE2\system\Database\MySQLi\Connection.php:229
+Stack trace:
+#0 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(392): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#1 C:\xampp\htdocs\ENCHERE2\system\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+#2 C:\xampp\htdocs\ENCHERE2\app\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente...')
+#3 C:\xampp\htdocs\ENCHERE2\app\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+#4 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(942): App\Controllers\Enchere->index()
+#5 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+#6 C:\xampp\htdocs\ENCHERE2\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\ENCHERE2\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#8 {main}
+CRITICAL - 2026-03-11 12:07:57 --> Unable to connect to the database.
+Main connection [MySQLi]: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu
+in SYSTEMPATH\Database\BaseConnection.php on line 428.
+ 1 SYSTEMPATH\Database\BaseConnection.php(575): CodeIgniter\Database\BaseConnection->initialize()
+ 2 APPPATH\Models\Modele.php(189): CodeIgniter\Database\BaseConnection->query('SELECT id_vente, titre FROM ventes WHERE etat=\'a_venir\' AND date_debut <= \'2026-03-11 12:07:47\'')
+ 3 APPPATH\Controllers\Enchere.php(24): App\Models\Modele->mettreAJourStatutsVentes()
+ 4 SYSTEMPATH\CodeIgniter.php(942): App\Controllers\Enchere->index()
+ 5 SYSTEMPATH\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+ 6 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+INFO - 2026-03-11 12:19:30 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:19:36 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:19:36 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:20:04 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:20:39 --> CSRF token verified.
+INFO - 2026-03-11 12:20:39 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:21:07 --> CSRF token verified.
+INFO - 2026-03-11 12:21:07 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:21:07 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:21:17 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:24:21 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:24:23 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:24:23 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:24:24 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:24:24 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:24:25 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:24:26 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:25:41 --> CSRF token verified.
+INFO - 2026-03-11 12:25:41 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:25:41 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+CRITICAL - 2026-03-11 12:25:42 --> Undefined variable $evolutionEncheres
+in APPPATH\Views\dashboard.php on line 438.
+ 1 APPPATH\Views\dashboard.php(438): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $evolutionEncheres', 'C:\\xampp\\htdocs\\ENCHERE2\\app\\Views\\dashboard.php', 438)
+ 2 SYSTEMPATH\View\View.php(228): include('C:\\xampp\\htdocs\\ENCHERE2\\app\\Views\\dashboard.php')
+ 3 SYSTEMPATH\View\View.php(231): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1190): CodeIgniter\View\View->render('dashboard', [], true)
+ 5 APPPATH\Controllers\Enchere.php(637): view('dashboard', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(942): App\Controllers\Enchere->dashboard()
+ 7 SYSTEMPATH\CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Enchere))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+INFO - 2026-03-11 12:27:13 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:27:34 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:27:51 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:27:56 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:28:05 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:28:08 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:28:13 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:28:25 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:28:30 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+INFO - 2026-03-11 12:28:35 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.

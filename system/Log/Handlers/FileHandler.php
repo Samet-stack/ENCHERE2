@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -45,22 +43,18 @@ class FileHandler extends BaseHandler
     protected $filePermissions;
 
     /**
-     * @param array{handles?: list<string>, path?: string, fileExtension?: string, filePermissions?: int} $config
+     * Constructor
      */
     public function __construct(array $config = [])
     {
         parent::__construct($config);
 
-        $defaults = ['path' => WRITEPATH . 'logs/', 'fileExtension' => 'log', 'filePermissions' => 0644];
-        $config   = [...$defaults, ...$config];
+        $this->path = empty($config['path']) ? WRITEPATH . 'logs/' : $config['path'];
 
-        $this->path = $config['path'] === '' ? $defaults['path'] : $config['path'];
+        $this->fileExtension = empty($config['fileExtension']) ? 'log' : $config['fileExtension'];
+        $this->fileExtension = ltrim($this->fileExtension, '.');
 
-        $this->fileExtension = $config['fileExtension'] === ''
-            ? $defaults['fileExtension']
-            : ltrim($config['fileExtension'], '.');
-
-        $this->filePermissions = $config['filePermissions'];
+        $this->filePermissions = $config['filePermissions'] ?? 0644;
     }
 
     /**
@@ -80,7 +74,6 @@ class FileHandler extends BaseHandler
 
         $msg = '';
 
-        $newfile = false;
         if (! is_file($filepath)) {
             $newfile = true;
 
@@ -95,7 +88,7 @@ class FileHandler extends BaseHandler
         }
 
         // Instantiating DateTime with microseconds appended to initial date is needed for proper support of this format
-        if (str_contains($this->dateFormat, 'u')) {
+        if (strpos($this->dateFormat, 'u') !== false) {
             $microtimeFull  = microtime(true);
             $microtimeShort = sprintf('%06d', ($microtimeFull - floor($microtimeFull)) * 1_000_000);
             $date           = new DateTime(date('Y-m-d H:i:s.' . $microtimeShort, (int) $microtimeFull));
@@ -112,15 +105,17 @@ class FileHandler extends BaseHandler
 
         for ($written = 0, $length = strlen($msg); $written < $length; $written += $result) {
             if (($result = fwrite($fp, substr($msg, $written))) === false) {
-                // if we get this far, we'll never see this during unit testing
-                break; // @codeCoverageIgnore
+                // if we get this far, we'll never see this during travis-ci
+                // @codeCoverageIgnoreStart
+                break;
+                // @codeCoverageIgnoreEnd
             }
         }
 
         flock($fp, LOCK_UN);
         fclose($fp);
 
-        if ($newfile) {
+        if (isset($newfile) && $newfile === true) {
             chmod($filepath, $this->filePermissions);
         }
 

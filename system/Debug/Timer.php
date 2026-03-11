@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -13,7 +11,7 @@ declare(strict_types=1);
 
 namespace CodeIgniter\Debug;
 
-use CodeIgniter\Exceptions\RuntimeException;
+use RuntimeException;
 
 /**
  * Class Timer
@@ -46,7 +44,7 @@ class Timer
     public function start(string $name, ?float $time = null)
     {
         $this->timers[strtolower($name)] = [
-            'start' => empty($time) ? microtime(true) : $time,
+            'start' => ! empty($time) ? $time : microtime(true),
             'end'   => null,
         ];
 
@@ -135,10 +133,10 @@ class Timer
      * Executes callable and measures its time.
      * Returns its return value if any.
      *
-     * @param string            $name     The name of the timer
-     * @param callable(): mixed $callable callable to be executed
+     * @param string $name The name of the timer
+     * @phpstan-param callable(): mixed $callable callable to be executed
      *
-     * @return mixed
+     * @return array|bool|float|int|object|resource|string|null
      */
     public function record(string $name, callable $callable)
     {

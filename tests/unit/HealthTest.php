@@ -2,6 +2,7 @@
 
 use CodeIgniter\Test\CIUnitTestCase;
 use Config\App;
+use Config\Services;
 use Tests\Support\Libraries\ConfigReader;
 
 /**
@@ -9,14 +10,14 @@ use Tests\Support\Libraries\ConfigReader;
  */
 final class HealthTest extends CIUnitTestCase
 {
-    public function testIsDefinedAppPath(): void
+    public function testIsDefinedAppPath()
     {
         $this->assertTrue(defined('APPPATH'));
     }
 
-    public function testBaseUrlHasBeenSet(): void
+    public function testBaseUrlHasBeenSet()
     {
-        $validation = service('validation');
+        $validation = Services::validation();
 
         $env = false;
 
@@ -32,7 +33,7 @@ final class HealthTest extends CIUnitTestCase
             $config = new App();
             $this->assertTrue(
                 $validation->check($config->baseURL, 'valid_url'),
-                'baseURL "' . $config->baseURL . '" in .env is not valid URL',
+                'baseURL "' . $config->baseURL . '" in .env is not valid URL'
             );
         }
 
@@ -43,7 +44,7 @@ final class HealthTest extends CIUnitTestCase
         // BaseURL in app/Config/App.php is a valid URL?
         $this->assertTrue(
             $validation->check($reader->baseURL, 'valid_url'),
-            'baseURL "' . $reader->baseURL . '" in app/Config/App.php is not valid URL',
+            'baseURL "' . $reader->baseURL . '" in app/Config/App.php is not valid URL'
         );
     }
 }

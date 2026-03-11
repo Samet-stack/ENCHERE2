@@ -27,79 +27,63 @@ declare(strict_types=1);
 
 namespace Kint\Renderer;
 
+use Kint\Kint;
+use Kint\Renderer\Rich\PluginInterface;
 use Kint\Renderer\Rich\TabPluginInterface;
 use Kint\Renderer\Rich\ValuePluginInterface;
 use Kint\Utils;
-use Kint\Value\AbstractValue;
-use Kint\Value\Context\ClassDeclaredContext;
-use Kint\Value\Context\ContextInterface;
-use Kint\Value\Context\PropertyContext;
-use Kint\Value\InstanceValue;
-use Kint\Value\Representation;
-use Kint\Value\Representation\ContainerRepresentation;
-use Kint\Value\Representation\RepresentationInterface;
-use Kint\Value\Representation\StringRepresentation;
-use Kint\Value\Representation\ValueRepresentation;
-use Kint\Value\StringValue;
+use Kint\Zval\BlobValue;
+use Kint\Zval\InstanceValue;
+use Kint\Zval\Representation\Representation;
+use Kint\Zval\Value;
 
 /**
- * @psalm-import-type Encoding from StringValue
+ * @psalm-import-type Encoding from BlobValue
+ * @psalm-import-type PluginMap from AbstractRenderer
  */
 class RichRenderer extends AbstractRenderer
 {
-    use AssetRendererTrait;
-
     /**
      * RichRenderer value plugins should implement ValuePluginInterface.
      *
-     * @psalm-var class-string<ValuePluginInterface>[]
+     * @psalm-var PluginMap
      */
-    public static array $value_plugins = [
-        'array_limit' => Rich\LockPlugin::class,
-        'blacklist' => Rich\LockPlugin::class,
+    public static $value_plugins = [
+        'array_limit' => Rich\ArrayLimitPlugin::class,
+        'blacklist' => Rich\BlacklistPlugin::class,
         'callable' => Rich\CallablePlugin::class,
         'color' => Rich\ColorPlugin::class,
-        'depth_limit' => Rich\LockPlugin::class,
-        'recursion' => Rich\LockPlugin::class,
+        'depth_limit' => Rich\DepthLimitPlugin::class,
+        'recursion' => Rich\RecursionPlugin::class,
+        'simplexml_element' => Rich\SimpleXMLElementPlugin::class,
         'trace_frame' => Rich\TraceFramePlugin::class,
     ];
 
     /**
      * RichRenderer tab plugins should implement TabPluginInterface.
      *
-     * @psalm-var array<string, class-string<TabPluginInterface>>
+     * @psalm-var PluginMap
      */
-    public static array $tab_plugins = [
+    public static $tab_plugins = [
         'binary' => Rich\BinaryPlugin::class,
-        'callable' => Rich\CallableDefinitionPlugin::class,
         'color' => Rich\ColorPlugin::class,
+        'method_definition' => Rich\MethodDefinitionPlugin::class,
         'microtime' => Rich\MicrotimePlugin::class,
-        'profiling' => Rich\ProfilePlugin::class,
         'source' => Rich\SourcePlugin::class,
         'table' => Rich\TablePlugin::class,
+        'timestamp' => Rich\TimestampPlugin::class,
     ];
 
-    public static array $pre_render_sources = [
+    public static $pre_render_sources = [
         'script' => [
             [self::class, 'renderJs'],
+            [Rich\MicrotimePlugin::class, 'renderJs'],
         ],
         'style' => [
             [self::class, 'renderCss'],
         ],
         'raw' => [],
     ];
-
-    /**
-     * The maximum length of a string before it is truncated.
-     *
-     * Falsey to disable
-     */
-    public static int $strlen_max = 80;
-
-    /**
-     * Timestamp to print in footer in date() format.
-     */
-    public static ?string $timestamp = null;
 
     /**
      * Whether or not to render access paths.
@@ -111,49 +95,81 @@ class RichRenderer extends AbstractRenderer
      * If this is an unacceptably large amount and your browser is groaning
      * under the weight of the access paths - your first order of buisiness
      * should be to get a new browser. Failing that, use this to turn them off.
+     *
+     * @var bool
      */
-    public static bool $access_paths = true;
+    public static $access_paths = true;
+
+    /**
+     * The maximum length of a string before it is truncated.
+     *
+     * Falsey to disable
+     *
+     * @var int
+     */
+    public static $strlen_max = 80;
+
+    /**
+     * Path to the CSS file to load by default.
+     *
+     * @var string
+     */
+    public static $theme = 'original.css';
 
     /**
      * Assume types and sizes don't need to be escaped.
      *
      * Turn this off if you use anything but ascii in your class names,
      * but it'll cause a slowdown of around 10%
+     *
+     * @var bool
      */
-    public static bool $escape_types = false;
+    public static $escape_types = false;
 
     /**
      * Move all dumps to a folder at the bottom of the body.
+     *
+     * @var bool
      */
-    public static bool $folder = false;
+    public static $folder = false;
 
-    public static bool $needs_pre_render = true;
-    public static bool $always_pre_render = false;
+    /**
+     * Sort mode for object properties.
+     *
+     * @var int
+     */
+    public static $sort = self::SORT_NONE;
 
-    protected array $plugin_objs = [];
-    protected bool $expand = false;
-    protected bool $force_pre_render = false;
-    protected bool $use_folder = false;
+    public static $needs_pre_render = true;
+    public static $needs_folder_render = true;
+
+    public static $always_pre_render = false;
+
+    public static $js_nonce = null;
+    public static $css_nonce = null;
+
+    protected $plugin_objs = [];
+    protected $expand = false;
+    protected $force_pre_render = false;
+    protected $use_folder = false;
 
     public function __construct()
     {
-        parent::__construct();
-        self::$theme ??= 'original.css';
-        $this->use_folder = self::$folder;
-        $this->force_pre_render = self::$always_pre_render;
+        $this->setUseFolder(self::$folder);
+        $this->setForcePreRender(self::$always_pre_render);
     }
 
     public function setCallInfo(array $info): void
     {
         parent::setCallInfo($info);
 
-        if (\in_array('!', $info['modifiers'], true)) {
-            $this->expand = true;
-            $this->use_folder = false;
+        if (\in_array('!', $this->call_info['modifiers'], true)) {
+            $this->setExpand(true);
+            $this->setUseFolder(false);
         }
 
-        if (\in_array('@', $info['modifiers'], true)) {
-            $this->force_pre_render = true;
+        if (\in_array('@', $this->call_info['modifiers'], true)) {
+            $this->setForcePreRender(true);
         }
     }
 
@@ -162,56 +178,82 @@ class RichRenderer extends AbstractRenderer
         parent::setStatics($statics);
 
         if (!empty($statics['expanded'])) {
-            $this->expand = true;
+            $this->setExpand(true);
         }
 
         if (!empty($statics['return'])) {
-            $this->force_pre_render = true;
+            $this->setForcePreRender(true);
         }
+    }
+
+    public function setExpand(bool $expand): void
+    {
+        $this->expand = $expand;
+    }
+
+    public function getExpand(): bool
+    {
+        return $this->expand;
+    }
+
+    public function setForcePreRender(bool $force_pre_render): void
+    {
+        $this->force_pre_render = $force_pre_render;
+    }
+
+    public function getForcePreRender(): bool
+    {
+        return $this->force_pre_render;
+    }
+
+    public function setUseFolder(bool $use_folder): void
+    {
+        $this->use_folder = $use_folder;
+    }
+
+    public function getUseFolder(): bool
+    {
+        return $this->use_folder;
     }
 
     public function shouldPreRender(): bool
     {
-        return $this->force_pre_render || self::$needs_pre_render;
+        return $this->getForcePreRender() || self::$needs_pre_render;
     }
 
-    public function render(AbstractValue $v): string
+    public function shouldFolderRender(): bool
     {
-        $render_spl_ids_stash = $this->render_spl_ids;
+        return $this->getUseFolder() && ($this->getForcePreRender() || self::$needs_folder_render);
+    }
 
-        if ($this->render_spl_ids && $v->flags & AbstractValue::FLAG_GENERATED) {
-            $this->render_spl_ids = false;
-        }
-
-        if ($plugin = $this->getValuePlugin($v)) {
-            $output = $plugin->renderValue($v);
+    public function render(Value $o): string
+    {
+        if (($plugin = $this->getPlugin(self::$value_plugins, $o->hints)) && $plugin instanceof ValuePluginInterface) {
+            $output = $plugin->renderValue($o);
             if (null !== $output && \strlen($output)) {
-                if (!$this->render_spl_ids && $render_spl_ids_stash) {
-                    $this->render_spl_ids = true;
-                }
-
                 return $output;
             }
         }
 
-        $children = $this->renderChildren($v);
-        $header = $this->renderHeaderWrapper($v->getContext(), (bool) \strlen($children), $this->renderHeader($v));
-
-        if (!$this->render_spl_ids && $render_spl_ids_stash) {
-            $this->render_spl_ids = true;
-        }
+        $children = $this->renderChildren($o);
+        $header = $this->renderHeaderWrapper($o, (bool) \strlen($children), $this->renderHeader($o));
 
         return '<dl>'.$header.$children.'</dl>';
     }
 
-    public function renderHeaderWrapper(ContextInterface $c, bool $has_children, string $contents): string
+    public function renderNothing(): string
+    {
+        return '<dl><dt><var>No argument</var></dt></dl>';
+    }
+
+    public function renderHeaderWrapper(Value $o, bool $has_children, string $contents): string
     {
         $out = '<dt';
 
         if ($has_children) {
             $out .= ' class="kint-parent';
 
-            if ($this->expand) {
+            if ($this->getExpand()) {
                 $out .= ' kint-show';
             }
 
@@ -220,16 +262,15 @@ class RichRenderer extends AbstractRenderer
 
         $out .= '>';
 
-        if (self::$access_paths && $c->getDepth() > 0 && null !== ($ap = $c->getAccessPath())) {
-            $out .= '<span class="kint-access-path-trigger" title="Show access path"></span>';
+        if (self::$access_paths && $o->depth > 0 && ($ap = $o->getAccessPath())) {
+            $out .= '<span class="kint-access-path-trigger" title="Show access path">&rlarr;</span>';
         }
 
         if ($has_children) {
-            if (0 === $c->getDepth()) {
-                if (!$this->use_folder) {
-                    $out .= '<span class="kint-folder-trigger" title="Move to folder"></span>';
-                }
-                $out .= '<span class="kint-search-trigger" title="Show search box"></span>';
+            $out .= '<span class="kint-popup-trigger" title="Open in new window">&boxbox;</span>';
+
+            if (0 === $o->depth) {
+                $out .= '<span class="kint-search-trigger" title="Show search box">&telrec;</span>';
                 $out .= '<input type="text" class="kint-search" value="">';
             }
 
@@ -245,52 +286,49 @@ class RichRenderer extends AbstractRenderer
         return $out.'</dt>';
     }
 
-    public function renderHeader(AbstractValue $v): string
+    public function renderHeader(Value $o): string
     {
-        $c = $v->getContext();
-
         $output = '';
 
-        if ($c instanceof ClassDeclaredContext) {
-            $output .= '<var>'.$c->getModifiers().'</var> ';
+        if (null !== ($s = $o->getModifiers())) {
+            $output .= '<var>'.$s.'</var> ';
         }
 
-        $output .= '<dfn>'.$this->escape($v->getDisplayName()).'</dfn> ';
+        if (null !== ($s = $o->getName())) {
+            $output .= '<dfn>'.$this->escape($s).'</dfn> ';
 
-        if ($c instanceof PropertyContext && null !== ($s = $c->getHooks())) {
-            $output .= '<var>'.$this->escape($s).'</var> ';
+            if ($s = $o->getOperator()) {
+                $output .= $this->escape($s, 'ASCII').' ';
+            }
         }
 
-        if (null !== ($s = $c->getOperator())) {
-            $output .= $this->escape($s, 'ASCII').' ';
+        if (null !== ($s = $o->getType())) {
+            if (self::$escape_types) {
+                $s = $this->escape($s);
+            }
+
+            if ($o->reference) {
+                $s = '&amp;'.$s;
+            }
+
+            $output .= '<var>'.$s.'</var>';
+
+            if ($o instanceof InstanceValue && isset($o->spl_object_id)) {
+                $output .= '#'.((int) $o->spl_object_id);
+            }
+
+            $output .= ' ';
         }
 
-        $s = $v->getDisplayType();
-        if (self::$escape_types) {
-            $s = $this->escape($s);
-        }
-
-        if ($c->isRef()) {
-            $s = '&amp;'.$s;
-        }
-
-        $output .= '<var>'.$s.'</var>';
-
-        if ($v instanceof InstanceValue && $this->shouldRenderObjectIds()) {
-            $output .= '#'.$v->getSplObjectId();
-        }
-
-        $output .= ' ';
-
-        if (null !== ($s = $v->getDisplaySize())) {
+        if (null !== ($s = $o->getSize())) {
             if (self::$escape_types) {
                 $s = $this->escape($s);
             }
             $output .= '('.$s.') ';
         }
 
-        if (null !== ($s = $v->getDisplayValue())) {
-            $s = (string) \preg_replace('/\\s+/', ' ', $s);
+        if (null !== ($s = $o->getValueShort())) {
+            $s = \preg_replace('/\\s+/', ' ', $s);
 
             if (self::$strlen_max) {
                 $s = Utils::truncateString($s, self::$strlen_max);
@@ -302,13 +340,13 @@ class RichRenderer extends AbstractRenderer
         return \trim($output);
     }
 
-    public function renderChildren(AbstractValue $v): string
+    public function renderChildren(Value $o): string
     {
         $contents = [];
         $tabs = [];
 
-        foreach ($v->getRepresentations() as $rep) {
-            $result = $this->renderTab($v, $rep);
+        foreach ($o->getRepresentations() as $rep) {
+            $result = $this->renderTab($o, $rep);
             if (\strlen($result)) {
                 $contents[] = $result;
                 $tabs[] = $rep;
@@ -322,7 +360,7 @@ class RichRenderer extends AbstractRenderer
         $output = '<dd>';
 
         if (1 === \count($tabs) && $tabs[0]->labelIsImplicit()) {
-            $output .= (string) \reset($contents);
+            $output .= \reset($contents);
         } else {
             $output .= '<ul class="kint-tabs">';
 
@@ -390,14 +428,22 @@ class RichRenderer extends AbstractRenderer
             }
 
             // Don't pre-render on every dump
-            if (!$this->force_pre_render) {
+            if (!$this->getForcePreRender()) {
                 self::$needs_pre_render = false;
+            }
+        }
+
+        if ($this->shouldFolderRender()) {
+            $output .= $this->renderFolder();
+
+            if (!$this->getForcePreRender()) {
+                self::$needs_folder_render = false;
             }
         }
 
         $output .= '<div class="kint-rich';
 
-        if ($this->use_folder) {
+        if ($this->getUseFolder()) {
             $output .= ' kint-file';
         }
 
@@ -412,34 +458,47 @@ class RichRenderer extends AbstractRenderer
             return '</div>';
         }
 
-        $output = '<footer';
+        $output = '<footer>';
+        $output .= '<span class="kint-popup-trigger" title="Open in new window">&boxbox;</span> ';
 
-        if ($this->expand) {
-            $output .= ' class="kint-show"';
-        }
-
-        $output .= '>';
-
-        if (!$this->use_folder) {
-            $output .= '<span class="kint-folder-trigger" title="Move to folder">&mapstodown;</span>';
-        }
-
-        if (!empty($this->trace) && \count($this->trace) > 1) {
+        if (!empty($this->call_info['trace']) && \count($this->call_info['trace']) > 1) {
             $output .= '<nav></nav>';
         }
 
-        $output .= $this->calledFrom();
+        if (isset($this->call_info['callee']['file'])) {
+            $output .= 'Called from '.$this->ideLink(
+                $this->call_info['callee']['file'],
+                $this->call_info['callee']['line']
+            );
+        }
 
-        if (!empty($this->trace) && \count($this->trace) > 1) {
+        if (
+            isset($this->call_info['callee']['function']) &&
+            (
+                !empty($this->call_info['callee']['class']) ||
+                !\in_array(
+                    $this->call_info['callee']['function'],
+                    ['include', 'include_once', 'require', 'require_once'],
+                    true
+                )
+            )
+        ) {
+            $output .= ' [';
+            $output .= $this->call_info['callee']['class'] ?? '';
+            $output .= $this->call_info['callee']['type'] ?? '';
+            $output .= $this->call_info['callee']['function'].'()]';
+        }
+
+        if (!empty($this->call_info['trace']) && \count($this->call_info['trace']) > 1) {
             $output .= '<ol>';
-            foreach ($this->trace as $index => $step) {
+            foreach ($this->call_info['trace'] as $index => $step) {
                 if (!$index) {
                     continue;
                 }
 
                 $output .= '<li>'.$this->ideLink($step['file'], $step['line']); // closing tag not required
-                if (isset($step['function']) &&
-                    !\in_array($step['function'], ['include', 'include_once', 'require', 'require_once'], true)
+                if (isset($step['function'])
+                    && !\in_array($step['function'], ['include', 'include_once', 'require', 'require_once'], true)
                 ) {
                     $output .= ' [';
                     $output .= $step['class'] ?? '';
@@ -457,11 +516,13 @@ class RichRenderer extends AbstractRenderer
 
     /**
      * @psalm-param Encoding $encoding
+     *
+     * @param mixed $encoding
      */
     public function escape(string $string, $encoding = false): string
     {
         if (false === $encoding) {
-            $encoding = Utils::detectEncoding($string);
+            $encoding = BlobValue::detectEncoding($string);
         }
 
         $original_encoding = $encoding;
@@ -482,142 +543,113 @@ class RichRenderer extends AbstractRenderer
 
     public function ideLink(string $file, int $line): string
     {
-        $path = $this->escape(Utils::shortenPath($file)).':'.$line;
-        $ideLink = self::getFileLink($file, $line);
+        $path = $this->escape(Kint::shortenPath($file)).':'.$line;
+        $ideLink = Kint::getIdeLink($file, $line);
 
-        if (null === $ideLink) {
+        if (!$ideLink) {
             return $path;
         }
 
-        return '<a href="'.$this->escape($ideLink).'">'.$path.'</a>';
+        $class = '';
+
+        if (\preg_match('/https?:\\/\\//i', $ideLink)) {
+            $class = 'class="kint-ide-link" ';
+        }
+
+        return '<a '.$class.'href="'.$this->escape($ideLink).'">'.$path.'</a>';
     }
 
-    protected function calledFrom(): string
+    protected function renderTab(Value $o, Representation $rep): string
     {
-        $output = '';
-
-        if (isset($this->callee['file'])) {
-            $output .= ' '.$this->ideLink(
-                $this->callee['file'],
-                $this->callee['line']
-            );
-        }
-
-        if (
-            isset($this->callee['function']) &&
-            (
-                !empty($this->callee['class']) ||
-                !\in_array(
-                    $this->callee['function'],
-                    ['include', 'include_once', 'require', 'require_once'],
-                    true
-                )
-            )
-        ) {
-            $output .= ' [';
-            $output .= $this->callee['class'] ?? '';
-            $output .= $this->callee['type'] ?? '';
-            $output .= $this->callee['function'].'()]';
-        }
-
-        if ('' !== $output) {
-            $output = 'Called from'.$output;
-        }
-
-        if (null !== self::$timestamp) {
-            $output .= ' '.\date(self::$timestamp);
-        }
-
-        return $output;
-    }
-
-    protected function renderTab(AbstractValue $v, RepresentationInterface $rep): string
-    {
-        if ($plugin = $this->getTabPlugin($rep)) {
-            $output = $plugin->renderTab($rep, $v);
-            if (null !== $output) {
+        if (($plugin = $this->getPlugin(self::$tab_plugins, $rep->hints)) && $plugin instanceof TabPluginInterface) {
+            $output = $plugin->renderTab($rep);
+            if (null !== $output && \strlen($output)) {
                 return $output;
             }
         }
 
-        if ($rep instanceof ValueRepresentation) {
-            return $this->render($rep->getValue());
-        }
-
-        if ($rep instanceof ContainerRepresentation) {
+        if (\is_array($rep->contents)) {
             $output = '';
 
-            foreach ($rep->getContents() as $obj) {
-                $output .= $this->render($obj);
+            if ($o instanceof InstanceValue && 'properties' === $rep->getName()) {
+                foreach (self::sortProperties($rep->contents, self::$sort) as $obj) {
+                    $output .= $this->render($obj);
+                }
+            } else {
+                foreach ($rep->contents as $obj) {
+                    $output .= $this->render($obj);
+                }
             }
 
             return $output;
         }
 
-        if ($rep instanceof StringRepresentation) {
-            // If we're dealing with the content representation
-            if ($v instanceof StringValue && $rep->getValue() === $v->getValue()) {
-                // Only show the contents if:
-                if (\preg_match('/(:?[\\r\\n\\t\\f\\v]| {2})/', $rep->getValue())) {
-                    // We have unrepresentable whitespace (Without whitespace preservation)
+        if (\is_string($rep->contents)) {
+            $show_contents = false;
+
+            // If it is the value representation of a string and its whitespace
+            // was truncated in the header, always display the full string
+            if ('string' !== $o->type || $o->value !== $rep) {
+                $show_contents = true;
+            } else {
+                if (\preg_match('/(:?[\\r\\n\\t\\f\\v]| {2})/', $rep->contents)) {
                     $show_contents = true;
-                } elseif (self::$strlen_max && Utils::strlen($v->getDisplayValue()) > self::$strlen_max) {
-                    // We had to truncate getDisplayValue
+                } elseif (self::$strlen_max && null !== ($vs = $o->getValueShort()) && BlobValue::strlen($vs) > self::$strlen_max) {
                     $show_contents = true;
-                } else {
+                }
+
+                if (empty($o->encoding)) {
                     $show_contents = false;
                 }
-            } else {
-                $show_contents = true;
             }
 
             if ($show_contents) {
-                return '<pre>'.$this->escape($rep->getValue())."\n</pre>";
+                return '<pre>'.$this->escape($rep->contents)."\n</pre>";
             }
+        }
+
+        if ($rep->contents instanceof Value) {
+            return $this->render($rep->contents);
         }
 
         return '';
     }
 
-    protected function getValuePlugin(AbstractValue $v): ?ValuePluginInterface
+    /**
+     * @psalm-param PluginMap $plugins
+     * @psalm-param string[] $hints
+     */
+    protected function getPlugin(array $plugins, array $hints): ?PluginInterface
     {
-        $hint = $v->getHint();
+        if ($plugins = $this->matchPlugins($plugins, $hints)) {
+            $plugin = \end($plugins);
 
-        if (null === $hint || !isset(self::$value_plugins[$hint])) {
-            return null;
+            if (!isset($this->plugin_objs[$plugin]) && \is_subclass_of($plugin, PluginInterface::class)) {
+                $this->plugin_objs[$plugin] = new $plugin($this);
+            }
+
+            return $this->plugin_objs[$plugin];
         }
 
-        $plugin = self::$value_plugins[$hint];
-
-        if (!\is_a($plugin, ValuePluginInterface::class, true)) {
-            return null;
-        }
-
-        if (!isset($this->plugin_objs[$plugin])) {
-            $this->plugin_objs[$plugin] = new $plugin($this);
-        }
-
-        return $this->plugin_objs[$plugin];
+        return null;
     }
 
-    protected function getTabPlugin(RepresentationInterface $r): ?TabPluginInterface
+    protected static function renderJs(): string
     {
-        $hint = $r->getHint();
+        return \file_get_contents(KINT_DIR.'/resources/compiled/shared.js').\file_get_contents(KINT_DIR.'/resources/compiled/rich.js');
+    }
 
-        if (null === $hint || !isset(self::$tab_plugins[$hint])) {
-            return null;
+    protected static function renderCss(): string
+    {
+        if (\file_exists(KINT_DIR.'/resources/compiled/'.self::$theme)) {
+            return \file_get_contents(KINT_DIR.'/resources/compiled/'.self::$theme);
         }
 
-        $plugin = self::$tab_plugins[$hint];
+        return \file_get_contents(self::$theme);
+    }
 
-        if (!\is_a($plugin, TabPluginInterface::class, true)) {
-            return null;
-        }
-
-        if (!isset($this->plugin_objs[$plugin])) {
-            $this->plugin_objs[$plugin] = new $plugin($this);
-        }
-
-        return $this->plugin_objs[$plugin];
+    protected static function renderFolder(): string
+    {
+        return '<div class="kint-rich kint-folder"><dl><dt class="kint-parent"><nav></nav>Kint</dt><dd class="kint-foldout"></dd></dl></div>';
     }
 }

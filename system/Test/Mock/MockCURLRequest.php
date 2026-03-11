@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -14,30 +12,19 @@ declare(strict_types=1);
 namespace CodeIgniter\Test\Mock;
 
 use CodeIgniter\HTTP\CURLRequest;
-use CodeIgniter\HTTP\URI;
 
 /**
+ * Class MockCURLRequest
+ *
  * Simply allows us to not actually call cURL during the
  * test runs. Instead, we can set the desired output
  * and get back the set options.
  */
 class MockCURLRequest extends CURLRequest
 {
-    /**
-     * @var array<int, mixed>
-     */
     public $curl_options;
-
-    /**
-     * @var string
-     */
     protected $output = '';
 
-    /**
-     * @param string $output
-     *
-     * @return $this
-     */
     public function setOutput($output)
     {
         $this->output = $output;
@@ -45,33 +32,23 @@ class MockCURLRequest extends CURLRequest
         return $this;
     }
 
-    /**
-     * @param array<int, mixed> $curlOptions
-     */
     protected function sendRequest(array $curlOptions = []): string
     {
         $this->response = clone $this->responseOrig;
 
+        // Save so we can access later.
         $this->curl_options = $curlOptions;
 
         return $this->output;
     }
 
-    /**
-     * for testing purposes only
-     *
-     * @return URI
-     */
+    // for testing purposes only
     public function getBaseURI()
     {
         return $this->baseURI;
     }
 
-    /**
-     * for testing purposes only
-     *
-     * @return float
-     */
+    // for testing purposes only
     public function getDelay()
     {
         return $this->delay;

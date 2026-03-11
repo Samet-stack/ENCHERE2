@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -17,8 +15,14 @@ use CodeIgniter\Entity\Exceptions\CastException;
 use JsonException;
 use stdClass;
 
+/**
+ * Class JsonCast
+ */
 class JsonCast extends BaseCast
 {
+    /**
+     * {@inheritDoc}
+     */
     public static function get($value, array $params = [])
     {
         $associative = in_array('array', $params, true);

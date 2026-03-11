@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -14,10 +12,7 @@ declare(strict_types=1);
 namespace CodeIgniter\Security;
 
 use CodeIgniter\Cookie\Cookie;
-use CodeIgniter\Exceptions\InvalidArgumentException;
-use CodeIgniter\Exceptions\LogicException;
 use CodeIgniter\HTTP\IncomingRequest;
-use CodeIgniter\HTTP\Method;
 use CodeIgniter\HTTP\Request;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\I18n\Time;
@@ -25,8 +20,10 @@ use CodeIgniter\Security\Exceptions\SecurityException;
 use CodeIgniter\Session\Session;
 use Config\Cookie as CookieConfig;
 use Config\Security as SecurityConfig;
+use Config\Services;
 use ErrorException;
-use SensitiveParameter;
+use InvalidArgumentException;
+use LogicException;
 
 /**
  * Class Security
@@ -161,7 +158,7 @@ class Security implements SecurityInterface
      */
     protected $samesite = Cookie::SAMESITE_LAX;
 
-    private readonly IncomingRequest $request;
+    private IncomingRequest $request;
 
     /**
      * CSRF Cookie Name without Prefix
@@ -207,7 +204,7 @@ class Security implements SecurityInterface
             $this->configureSession();
         }
 
-        $this->request      = service('request');
+        $this->request      = Services::request();
         $this->hashInCookie = $this->request->getCookie($this->cookieName);
 
         $this->restoreHash();
@@ -223,7 +220,7 @@ class Security implements SecurityInterface
 
     private function configureSession(): void
     {
-        $this->session = service('session');
+        $this->session = Services::session();
     }
 
     private function configureCookie(CookieConfig $cookie): void
@@ -234,7 +231,47 @@ class Security implements SecurityInterface
     }
 
     /**
-     * CSRF verification.
+     * CSRF Verify
+     *
+     * @return $this|false
+     *
+     * @throws SecurityException
+     *
+     * @deprecated Use `CodeIgniter\Security\Security::verify()` instead of using this method.
+     *
+     * @codeCoverageIgnore
+     */
+    public function CSRFVerify(RequestInterface $request)
+    {
+        return $this->verify($request);
+    }
+
+    /**
+     * Returns the CSRF Token.
+     *
+     * @deprecated Use `CodeIgniter\Security\Security::getHash()` instead of using this method.
+     *
+     * @codeCoverageIgnore
+     */
+    public function getCSRFHash(): ?string
+    {
+        return $this->getHash();
+    }
+
+    /**
+     * Returns the CSRF Token Name.
+     *
+     * @deprecated Use `CodeIgniter\Security\Security::getTokenName()` instead of using this method.
+     *
+     * @codeCoverageIgnore
+     */
+    public function getCSRFTokenName(): string
+    {
+        return $this->getTokenName();
+    }
+
+    /**
+     * CSRF Verify
      *
      * @return $this
      *
@@ -243,8 +280,8 @@ class Security implements SecurityInterface
     public function verify(RequestInterface $request)
     {
         // Protects POST, PUT, DELETE, PATCH
-        $method           = $request->getMethod();
-        $methodsToProtect = [Method::POST, Method::PUT, Method::DELETE, Method::PATCH];
+        $method           = strtoupper($request->getMethod());
+        $methodsToProtect = ['POST', 'PUT', 'DELETE', 'PATCH'];
         if (! in_array($method, $methodsToProtect, true)) {
             return $this;
         }
@@ -254,7 +291,7 @@ class Security implements SecurityInterface
         try {
             $token = ($postedToken !== null && $this->config->tokenRandomize)
                 ? $this->derandomize($postedToken) : $postedToken;
-        } catch (InvalidArgumentException) {
+        } catch (InvalidArgumentException $e) {
             $token = null;
         }
 
@@ -281,11 +318,10 @@ class Security implements SecurityInterface
     {
         assert($request instanceof Request);
 
-        $superglobals = service('superglobals');
-        if ($superglobals->post($this->config->tokenName) !== null) {
+        if (isset($_POST[$this->config->tokenName])) {
             // We kill this since we're done and we don't want to pollute the POST array.
-            $superglobals->unsetPost($this->config->tokenName);
-            $request->setGlobal('post', $superglobals->getPostArray());
+            unset($_POST[$this->config->tokenName]);
+            $request->setGlobal('post', $_POST);
         } else {
             $body = $request->getBody() ?? '';
             $json = json_decode($body);
@@ -309,13 +345,13 @@ class Security implements SecurityInterface
         // Does the token exist in POST, HEADER or optionally php:://input - json data or PUT, DELETE, PATCH - raw data.
 
         if ($tokenValue = $request->getPost($this->config->tokenName)) {
-            return is_string($tokenValue) ? $tokenValue : null;
+            return $tokenValue;
         }
 
-        if ($request->hasHeader($this->config->headerName)) {
-            $tokenValue = $request->header($this->config->headerName)->getValue();
-
-            return (is_string($tokenValue) && $tokenValue !== '') ? $tokenValue : null;
+        if ($request->hasHeader($this->config->headerName)
+            && $request->header($this->config->headerName)->getValue() !== ''
+            && $request->header($this->config->headerName)->getValue() !== []) {
+            return $request->header($this->config->headerName)->getValue();
         }
 
         $body = (string) $request->getBody();
@@ -323,15 +359,12 @@ class Security implements SecurityInterface
         if ($body !== '') {
             $json = json_decode($body);
             if ($json !== null && json_last_error() === JSON_ERROR_NONE) {
-                $tokenValue = $json->{$this->config->tokenName} ?? null;
-
-                return is_string($tokenValue) ? $tokenValue : null;
+                return $json->{$this->config->tokenName} ?? null;
             }
 
             parse_str($body, $parsed);
-            $tokenValue = $parsed[$this->config->tokenName] ?? null;
 
-            return is_string($tokenValue) ? $tokenValue : null;
+            return $parsed[$this->config->tokenName] ?? null;
         }
 
         return null;
@@ -373,16 +406,16 @@ class Security implements SecurityInterface
      *
      * @throws InvalidArgumentException "hex2bin(): Hexadecimal input string must have an even length"
      */
-    protected function derandomize(#[SensitiveParameter] string $token): string
+    protected function derandomize(string $token): string
     {
         $key   = substr($token, -static::CSRF_HASH_BYTES * 2);
         $value = substr($token, 0, static::CSRF_HASH_BYTES * 2);
 
         try {
-            return bin2hex((string) hex2bin($value) ^ (string) hex2bin($key));
+            return bin2hex(hex2bin($value) ^ hex2bin($key));
         } catch (ErrorException $e) {
             // "hex2bin(): Hexadecimal input string must have an even length"
-            throw new InvalidArgumentException($e->getMessage(), $e->getCode(), $e);
+            throw new InvalidArgumentException($e->getMessage());
         }
     }
 
@@ -411,6 +444,18 @@ class Security implements SecurityInterface
     }
 
     /**
+     * Check if CSRF cookie is expired.
+     *
+     * @deprecated
+     *
+     * @codeCoverageIgnore
+     */
+    public function isExpired(): bool
+    {
+        return $this->cookie->isExpired();
+    }
+
+    /**
      * Check if request should be redirect on failure.
      */
     public function shouldRedirect(): bool
@@ -427,18 +472,61 @@ class Security implements SecurityInterface
      *
      * If it is acceptable for the user input to include relative paths,
      * e.g. file/in/some/approved/folder.txt, you can set the second optional
-     * parameter, $relativePath to TRUE.
-     *
-     * @deprecated 4.6.2 Use `sanitize_filename()` instead
+     * parameter, $relative_path to TRUE.
      *
      * @param string $str          Input file name
      * @param bool   $relativePath Whether to preserve paths
      */
     public function sanitizeFilename(string $str, bool $relativePath = false): string
     {
-        helper('security');
+        // List of sanitize filename strings
+        $bad = [
+            '../',
+            '<!--',
+            '-->',
+            '<',
+            '>',
+            "'",
+            '"',
+            '&',
+            '$',
+            '#',
+            '{',
+            '}',
+            '[',
+            ']',
+            '=',
+            ';',
+            '?',
+            '%20',
+            '%22',
+            '%3c',
+            '%253c',
+            '%3e',
+            '%0e',
+            '%28',
+            '%29',
+            '%2528',
+            '%26',
+            '%24',
+            '%3f',
+            '%3b',
+            '%3d',
+        ];
 
-        return sanitize_filename($str, $relativePath);
+        if (! $relativePath) {
+            $bad[] = './';
+            $bad[] = '/';
+        }
+
+        $str = remove_invisible_characters($str, false);
+
+        do {
+            $old = $str;
+            $str = str_replace($bad, '', $str);
+        } while ($old !== $str);
+
+        return stripslashes($str);
     }
 
     /**
@@ -492,11 +580,45 @@ class Security implements SecurityInterface
             $this->hash,
             [
                 'expires' => $this->config->expires === 0 ? 0 : Time::now()->getTimestamp() + $this->config->expires,
-            ],
+            ]
         );
 
-        $response = service('response');
+        $response = Services::response();
         $response->setCookie($this->cookie);
+    }
+
+    /**
+     * CSRF Send Cookie
+     *
+     * @return false|Security
+     *
+     * @deprecated Set cookies to Response object instead.
+     */
+    protected function sendCookie(RequestInterface $request)
+    {
+        assert($request instanceof IncomingRequest);
+
+        if ($this->cookie->isSecure() && ! $request->isSecure()) {
+            return false;
+        }
+
+        $this->doSendCookie();
+        log_message('info', 'CSRF cookie sent.');
+
+        return $this;
+    }
+
+    /**
+     * Actual dispatching of cookies.
+     * Extracted for this to be unit tested.
+     *
+     * @codeCoverageIgnore
+     *
+     * @deprecated Set cookies to Response object instead.
+     */
+    protected function doSendCookie(): void
+    {
+        cookies([$this->cookie], false)->dispatch();
     }
 
     private function saveHashInSession(): void

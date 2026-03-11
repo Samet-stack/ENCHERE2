@@ -27,30 +27,24 @@ declare(strict_types=1);
 
 namespace Kint\Parser;
 
-use Kint\Value\AbstractValue;
-use Kint\Value\Context\ContextInterface;
-use Kint\Value\InstanceValue;
-use Psr\Container\ContainerInterface;
-use Psr\EventDispatcher\EventDispatcherInterface;
+use Kint\Zval\InstanceValue;
+use Kint\Zval\Value;
 
-class BlacklistPlugin extends AbstractPlugin implements PluginBeginInterface
+class BlacklistPlugin extends AbstractPlugin
 {
     /**
      * List of classes and interfaces to blacklist.
      *
-     * @var class-string[]
+     * @var array
      */
-    public static array $blacklist = [];
+    public static $blacklist = [];
 
     /**
      * List of classes and interfaces to blacklist except when dumped directly.
      *
-     * @var class-string[]
+     * @var array
      */
-    public static array $shallow_blacklist = [
-        ContainerInterface::class,
-        EventDispatcherInterface::class,
-    ];
+    public static $shallow_blacklist = ['Psr\\Container\\ContainerInterface'];
 
     public function getTypes(): array
     {
@@ -62,35 +56,45 @@ class BlacklistPlugin extends AbstractPlugin implements PluginBeginInterface
         return Parser::TRIGGER_BEGIN;
     }
 
-    public function parseBegin(&$var, ContextInterface $c): ?AbstractValue
+    public function parse(&$var, Value &$o, int $trigger): void
     {
         foreach (self::$blacklist as $class) {
             if ($var instanceof $class) {
-                return $this->blacklistValue($var, $c);
+                $this->blacklistValue($var, $o);
+
+                return;
             }
         }
 
-        if ($c->getDepth() <= 0) {
-            return null;
+        if ($o->depth <= 0) {
+            return;
         }
 
         foreach (self::$shallow_blacklist as $class) {
             if ($var instanceof $class) {
-                return $this->blacklistValue($var, $c);
+                $this->blacklistValue($var, $o);
+
+                return;
             }
         }
-
-        return null;
     }
 
     /**
      * @param object &$var
      */
-    protected function blacklistValue(&$var, ContextInterface $c): InstanceValue
+    protected function blacklistValue(&$var, Value &$o): void
     {
-        $object = new InstanceValue($c, \get_class($var), \spl_object_hash($var), \spl_object_id($var));
-        $object->flags |= AbstractValue::FLAG_BLACKLIST;
+        $object = new InstanceValue();
+        $object->transplant($o);
+        $object->classname = \get_class($var);
+        $object->spl_object_hash = \spl_object_hash($var);
+        $object->clearRepresentations();
+        $object->value = null;
+        $object->size = null;
+        $object->hints[] = 'blacklist';
 
-        return $object;
+        $o = $object;
+
+        $this->parser->haltParse();
     }
 }

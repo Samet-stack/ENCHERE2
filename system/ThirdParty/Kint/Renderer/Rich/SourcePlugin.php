@@ -27,23 +27,22 @@ declare(strict_types=1);
 
 namespace Kint\Renderer\Rich;
 
-use Kint\Value\AbstractValue;
-use Kint\Value\Representation\RepresentationInterface;
-use Kint\Value\Representation\SourceRepresentation;
+use Kint\Zval\Representation\Representation;
+use Kint\Zval\Representation\SourceRepresentation;
 
 class SourcePlugin extends AbstractPlugin implements TabPluginInterface
 {
-    public function renderTab(RepresentationInterface $r, AbstractValue $v): ?string
+    public function renderTab(Representation $r): ?string
     {
-        if (!$r instanceof SourceRepresentation) {
+        if (!($r instanceof SourceRepresentation) || empty($r->source)) {
             return null;
         }
 
-        $source = $r->getSourceLines();
+        $source = $r->source;
 
         // Trim empty lines from the start and end of the source
         foreach ($source as $linenum => $line) {
-            if (\strlen(\trim($line)) || $linenum === $r->getLine()) {
+            if (\strlen(\trim($line)) || $linenum === $r->line) {
                 break;
             }
 
@@ -51,7 +50,7 @@ class SourcePlugin extends AbstractPlugin implements TabPluginInterface
         }
 
         foreach (\array_reverse($source, true) as $linenum => $line) {
-            if (\strlen(\trim($line)) || $linenum === $r->getLine()) {
+            if (\strlen(\trim($line)) || $linenum === $r->line) {
                 break;
             }
 
@@ -61,7 +60,7 @@ class SourcePlugin extends AbstractPlugin implements TabPluginInterface
         $output = '';
 
         foreach ($source as $linenum => $line) {
-            if ($linenum === $r->getLine()) {
+            if ($linenum === $r->line) {
                 $output .= '<div class="kint-highlight">'.$this->renderer->escape($line)."\n".'</div>';
             } else {
                 $output .= '<div>'.$this->renderer->escape($line)."\n".'</div>';
@@ -69,12 +68,14 @@ class SourcePlugin extends AbstractPlugin implements TabPluginInterface
         }
 
         if ($output) {
+            \reset($source);
+
             $data = '';
-            if ($r->showFileName()) {
-                $data = ' data-kint-filename="'.$this->renderer->escape($r->getFileName()).'"';
+            if ($r->showfilename) {
+                $data = ' data-kint-filename="'.$this->renderer->escape($r->filename).'"';
             }
 
-            return '<div><pre class="kint-source"'.$data.' style="counter-reset: kint-l '.((int) \array_key_first($source) - 1).';">'.$output.'</pre></div><div></div>';
+            return '<div><pre class="kint-source"'.$data.' style="counter-reset: kint-l '.((int) \key($source) - 1).';">'.$output.'</pre></div><div></div>';
         }
 
         return null;

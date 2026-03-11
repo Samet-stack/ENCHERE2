@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -18,16 +16,9 @@ use CodeIgniter\Config\BaseService;
 
 class MockServices extends BaseService
 {
-    /**
-     * @var array<non-empty-string, non-empty-string>
-     */
     public $psr4 = [
         'Tests/Support' => TESTPATH . '_support/',
     ];
-
-    /**
-     * @var array<class-string, string>
-     */
     public $classmap = [];
 
     public function __construct()

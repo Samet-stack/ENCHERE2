@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -56,6 +54,9 @@ class GDHandler extends BaseHandler
         // Rotate it!
         $destImg = imagerotate($srcImg, $angle, $white);
 
+        // Kill the file handles
+        imagedestroy($srcImg);
+
         $this->resource = $destImg;
 
         return true;
@@ -83,6 +84,9 @@ class GDHandler extends BaseHandler
 
         imagefilledrectangle($dest, 0, 0, $this->width, $this->height, $matte);
         imagecopy($dest, $srcImg, 0, 0, 0, 0, $this->width, $this->height);
+
+        // Kill the file handles
+        imagedestroy($srcImg);
 
         $this->resource = $dest;
 
@@ -186,6 +190,7 @@ class GDHandler extends BaseHandler
 
         $copy($dest, $src, 0, 0, (int) $this->xAxis, (int) $this->yAxis, $this->width, $this->height, $origWidth, $origHeight);
 
+        imagedestroy($src);
         $this->resource = $dest;
 
         return $this;
@@ -199,13 +204,11 @@ class GDHandler extends BaseHandler
      * Example:
      *    $image->resize(100, 200, true)
      *          ->save();
-     *
-     * @param non-empty-string|null $target
      */
     public function save(?string $target = null, int $quality = 90): bool
     {
         $original = $target;
-        $target   = ($target === null || $target === '') ? $this->image()->getPathname() : $target;
+        $target   = empty($target) ? $this->image()->getPathname() : $target;
 
         // If no new resource has been created, then we're
         // simply copy the existing one.
@@ -224,7 +227,6 @@ class GDHandler extends BaseHandler
 
         // for png and webp we can actually preserve transparency
         if (in_array($this->image()->imageType, $this->supportTransparency, true)) {
-            imagepalettetotruecolor($this->resource);
             imagealphablending($this->resource, false);
             imagesavealpha($this->resource, true);
         }
@@ -274,7 +276,7 @@ class GDHandler extends BaseHandler
                 throw ImageException::forInvalidImageCreate();
         }
 
-        $this->resource = null;
+        imagedestroy($this->resource);
 
         chmod($target, $this->filePermissions);
 
@@ -315,7 +317,7 @@ class GDHandler extends BaseHandler
             // if valid image type, make corresponding image resource
             $this->resource = $this->getImageResource(
                 $this->image()->getPathname(),
-                $this->image()->imageType,
+                $this->image()->imageType
             );
         }
     }
@@ -464,7 +466,7 @@ class GDHandler extends BaseHandler
 
         // shorthand hex, #f00
         if (strlen($color) === 3) {
-            $color = implode('', array_map(str_repeat(...), str_split($color), [2, 2, 2]));
+            $color = implode('', array_map('str_repeat', str_split($color), [2, 2, 2]));
         }
 
         $color = str_split(substr($color, 0, 6), 2);

@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -13,19 +11,17 @@ declare(strict_types=1);
 
 namespace CodeIgniter\HTTP;
 
-use CodeIgniter\Exceptions\BadMethodCallException;
-use CodeIgniter\Exceptions\InvalidArgumentException;
+use BadMethodCallException;
 use CodeIgniter\HTTP\Exceptions\HTTPException;
 use Config\App;
-use SensitiveParameter;
-use Stringable;
+use InvalidArgumentException;
 
 /**
  * Abstraction for a uniform resource identifier (URI).
  *
  * @see \CodeIgniter\HTTP\URITest
  */
-class URI implements Stringable
+class URI
 {
     /**
      * Sub-delimiters used in query strings and fragments.
@@ -58,7 +54,7 @@ class URI implements Stringable
      *
      * Starts at 1 instead of 0
      *
-     * @var array<int, string>
+     * @var array
      */
     protected $segments = [];
 
@@ -72,35 +68,35 @@ class URI implements Stringable
     /**
      * URI User Info
      *
-     * @var string|null
+     * @var string
      */
     protected $user;
 
     /**
      * URI User Password
      *
-     * @var string|null
+     * @var string
      */
     protected $password;
 
     /**
      * URI Host
      *
-     * @var string|null
+     * @var string
      */
     protected $host;
 
     /**
      * URI Port
      *
-     * @var int|null
+     * @var int
      */
     protected $port;
 
     /**
      * URI path.
      *
-     * @var string|null
+     * @var string
      */
     protected $path;
 
@@ -114,19 +110,14 @@ class URI implements Stringable
     /**
      * The query string.
      *
-     * @var array<string, string>
+     * @var array
      */
     protected $query = [];
 
     /**
      * Default schemes/ports.
      *
-     * @var array{
-     *  http: int,
-     *  https: int,
-     *  ftp: int,
-     *  sftp: int,
-     * }
+     * @var array
      */
     protected $defaultPorts = [
         'http'  => 80,
@@ -169,29 +160,28 @@ class URI implements Stringable
         ?string $authority = null,
         ?string $path = null,
         ?string $query = null,
-        ?string $fragment = null,
+        ?string $fragment = null
     ): string {
         $uri = '';
-
-        if ((string) $scheme !== '') {
+        if (! empty($scheme)) {
             $uri .= $scheme . '://';
         }
 
-        if ((string) $authority !== '') {
+        if (! empty($authority)) {
             $uri .= $authority;
         }
 
-        if ((string) $path !== '') {
-            $uri .= str_ends_with($uri, '/')
-                ? ltrim($path, '/')
-                : '/' . ltrim($path, '/');
+        if (isset($path) && $path !== '') {
+            $uri .= substr($uri, -1, 1) !== '/'
+                ? '/' . ltrim($path, '/')
+                : ltrim($path, '/');
         }
 
-        if ((string) $query !== '') {
+        if ($query !== '' && $query !== null) {
             $uri .= '?' . $query;
         }
 
-        if ((string) $fragment !== '') {
+        if ($fragment !== '' && $fragment !== null) {
             $uri .= '#' . $fragment;
         }
 
@@ -238,12 +228,12 @@ class URI implements Stringable
         $output = trim($output, '/ ');
 
         // Add leading slash if necessary
-        if (str_starts_with($path, '/')) {
+        if (strpos($path, '/') === 0) {
             $output = '/' . $output;
         }
 
         // Add trailing slash if necessary
-        if ($output !== '/' && str_ends_with($path, '/')) {
+        if ($output !== '/' && substr($path, -1, 1) === '/') {
             $output .= '/';
         }
 
@@ -262,7 +252,9 @@ class URI implements Stringable
      */
     public function __construct(?string $uri = null)
     {
-        $this->setURI($uri);
+        if ($uri !== null) {
+            $this->setURI($uri);
+        }
     }
 
     /**
@@ -306,23 +298,21 @@ class URI implements Stringable
      */
     public function setURI(?string $uri = null)
     {
-        if ($uri === null) {
-            return $this;
-        }
+        if ($uri !== null) {
+            $parts = parse_url($uri);
 
-        $parts = parse_url($uri);
+            if ($parts === false) {
+                if ($this->silent) {
+                    return $this;
+                }
 
-        if (is_array($parts)) {
+                throw HTTPException::forUnableToParseURI($uri);
+            }
+
             $this->applyParts($parts);
-
-            return $this;
         }
 
-        if ($this->silent) {
-            return $this;
-        }
-
-        throw HTTPException::forUnableToParseURI($uri);
+        return $this;
     }
 
     /**
@@ -366,18 +356,19 @@ class URI implements Stringable
      */
     public function getAuthority(bool $ignorePort = false): string
     {
-        if ((string) $this->host === '') {
+        if (empty($this->host)) {
             return '';
         }
 
         $authority = $this->host;
 
-        if ((string) $this->getUserInfo() !== '') {
+        if (! empty($this->getUserInfo())) {
             $authority = $this->getUserInfo() . '@' . $authority;
         }
 
-        // Don't add port if it's a standard port for this scheme
-        if ((int) $this->port !== 0 && ! $ignorePort && $this->port !== ($this->defaultPorts[$this->scheme] ?? null)) {
+        // Don't add port if it's a standard port for
+        // this scheme
+        if (! empty($this->port) && ! $ignorePort && $this->port !== $this->defaultPorts[$this->scheme]) {
             $authority .= ':' . $this->port;
         }
 
@@ -410,7 +401,7 @@ class URI implements Stringable
     {
         $userInfo = $this->user;
 
-        if ($this->showPassword === true && (string) $this->password !== '') {
+        if ($this->showPassword === true && ! empty($this->password)) {
             $userInfo .= ':' . $this->password;
         }
 
@@ -502,8 +493,6 @@ class URI implements Stringable
 
     /**
      * Retrieve the query string
-     *
-     * @param array{except?: list<string>|string, only?: list<string>|string} $options
      */
     public function getQuery(array $options = []): string
     {
@@ -533,7 +522,7 @@ class URI implements Stringable
             $vars = $temp;
         }
 
-        return $vars === [] ? '' : http_build_query($vars);
+        return empty($vars) ? '' : http_build_query($vars);
     }
 
     /**
@@ -546,8 +535,6 @@ class URI implements Stringable
 
     /**
      * Returns the segments of the path as an array.
-     *
-     * @return array<int, string>
      */
     public function getSegments(): array
     {
@@ -612,8 +599,9 @@ class URI implements Stringable
         $number--;
 
         $this->segments[$number] = $value;
+        $this->refreshPath();
 
-        return $this->refreshPath();
+        return $this;
     }
 
     /**
@@ -647,15 +635,13 @@ class URI implements Stringable
             $this->getAuthority(),
             $path, // Absolute URIs should use a "/" for an empty path
             $this->getQuery(),
-            $this->getFragment(),
+            $this->getFragment()
         );
     }
 
     /**
      * Change the path (and scheme) assuming URIs with the same host as baseURL
      * should be relative to the project's configuration.
-     *
-     * @return array{string, string}
      *
      * @deprecated This method will be deleted.
      */
@@ -666,14 +652,14 @@ class URI implements Stringable
         $baseUri = new self($config->baseURL);
 
         if (
-            str_starts_with($this->getScheme(), 'http')
+            substr($this->getScheme(), 0, 4) === 'http'
             && $this->getHost() === $baseUri->getHost()
         ) {
             // Check for additional segments
             $basePath = trim($baseUri->getPath(), '/') . '/';
             $trimPath = ltrim($path, '/');
 
-            if ($basePath !== '/' && ! str_starts_with($trimPath, $basePath)) {
+            if ($basePath !== '/' && strpos($trimPath, $basePath) !== 0) {
                 $path = $basePath . $trimPath;
             }
 
@@ -701,7 +687,7 @@ class URI implements Stringable
             $parts['path'] = $this->getPath();
         }
 
-        if (! isset($parts['host']) && $parts['path'] !== '') {
+        if (empty($parts['host']) && $parts['path'] !== '') {
             $parts['host'] = $parts['path'];
             unset($parts['path']);
         }
@@ -769,7 +755,7 @@ class URI implements Stringable
      *
      * @TODO PSR-7: Should be `withUserInfo($user, $password = null)`.
      */
-    public function setUserInfo(string $user, #[SensitiveParameter] string $pass)
+    public function setUserInfo(string $user, string $pass)
     {
         $this->user     = trim($user);
         $this->password = trim($pass);
@@ -804,17 +790,17 @@ class URI implements Stringable
             return $this;
         }
 
-        if ($port > 0 && $port <= 65535) {
-            $this->port = $port;
+        if ($port <= 0 || $port > 65535) {
+            if ($this->silent) {
+                return $this;
+            }
 
-            return $this;
+            throw HTTPException::forInvalidPort($port);
         }
 
-        if ($this->silent) {
-            return $this;
-        }
+        $this->port = $port;
 
-        throw HTTPException::forInvalidPort($port);
+        return $this;
     }
 
     /**
@@ -876,7 +862,7 @@ class URI implements Stringable
 
         $tempPath = trim($this->path, '/');
 
-        $this->segments = $tempPath === '' ? [] : explode('/', $tempPath);
+        $this->segments = ($tempPath === '') ? [] : explode('/', $tempPath);
 
         return $this;
     }
@@ -891,7 +877,7 @@ class URI implements Stringable
      */
     public function setQuery(string $query)
     {
-        if (str_contains($query, '#')) {
+        if (strpos($query, '#') !== false) {
             if ($this->silent) {
                 return $this;
             }
@@ -900,7 +886,7 @@ class URI implements Stringable
         }
 
         // Can't have leading ?
-        if ($query !== '' && str_starts_with($query, '?')) {
+        if (! empty($query) && strpos($query, '?') === 0) {
             $query = substr($query, 1);
         }
 
@@ -1022,18 +1008,18 @@ class URI implements Stringable
         $path = self::removeDotSegments($path);
 
         // Fix up some leading slash edge cases...
-        if (str_starts_with($orig, './')) {
+        if (strpos($orig, './') === 0) {
             $path = '/' . $path;
         }
-        if (str_starts_with($orig, '../')) {
+        if (strpos($orig, '../') === 0) {
             $path = '/' . $path;
         }
 
         // Encode characters
         $path = preg_replace_callback(
             '/(?:[^' . static::CHAR_UNRESERVED . ':@&=\+\$,\/;%]+|%(?![A-Fa-f0-9]{2}))/',
-            static fn (array $matches): string => rawurlencode($matches[0]),
-            $path,
+            static fn (array $matches) => rawurlencode($matches[0]),
+            $path
         );
 
         return $path;
@@ -1042,48 +1028,35 @@ class URI implements Stringable
     /**
      * Saves our parts from a parse_url call.
      *
-     * @param array{
-     *  host?: string,
-     *  user?: string,
-     *  path?: string,
-     *  query?: string,
-     *  fragment?: string,
-     *  scheme?: string,
-     *  port?: int,
-     *  pass?: string,
-     * } $parts
-     *
      * @return void
      */
     protected function applyParts(array $parts)
     {
-        if (isset($parts['host']) && $parts['host'] !== '') {
+        if (! empty($parts['host'])) {
             $this->host = $parts['host'];
         }
-
-        if (isset($parts['user']) && $parts['user'] !== '') {
+        if (! empty($parts['user'])) {
             $this->user = $parts['user'];
         }
-
         if (isset($parts['path']) && $parts['path'] !== '') {
             $this->path = $this->filterPath($parts['path']);
         }
-
-        if (isset($parts['query']) && $parts['query'] !== '') {
+        if (! empty($parts['query'])) {
             $this->setQuery($parts['query']);
         }
-
-        if (isset($parts['fragment']) && $parts['fragment'] !== '') {
+        if (! empty($parts['fragment'])) {
             $this->fragment = $parts['fragment'];
         }
 
+        // Scheme
         if (isset($parts['scheme'])) {
             $this->setScheme(rtrim($parts['scheme'], ':/'));
         } else {
             $this->setScheme('http');
         }
 
-        if (isset($parts['port'])) {
+        // Port
+        if (isset($parts['port']) && $parts['port'] !== null) {
             // Valid port numbers are enforced by earlier parse_url or setPort()
             $this->port = $parts['port'];
         }
@@ -1092,10 +1065,11 @@ class URI implements Stringable
             $this->password = $parts['pass'];
         }
 
+        // Populate our segments array
         if (isset($parts['path']) && $parts['path'] !== '') {
             $tempPath = trim($parts['path'], '/');
 
-            $this->segments = $tempPath === '' ? [] : explode('/', $tempPath);
+            $this->segments = ($tempPath === '') ? [] : explode('/', $tempPath);
         }
     }
 
@@ -1123,7 +1097,7 @@ class URI implements Stringable
         $transformed = clone $relative;
 
         // 5.2.2 Transform References in a non-strict method (no scheme)
-        if ($relative->getAuthority() !== '') {
+        if (! empty($relative->getAuthority())) {
             $transformed
                 ->setAuthority($relative->getAuthority())
                 ->setPath($relative->getPath())
@@ -1138,7 +1112,7 @@ class URI implements Stringable
                     $transformed->setQuery($this->getQuery());
                 }
             } else {
-                if (str_starts_with($relative->getPath(), '/')) {
+                if (strpos($relative->getPath(), '/') === 0) {
                     $transformed->setPath($relative->getPath());
                 } else {
                     $transformed->setPath($this->mergePaths($this, $relative));
@@ -1165,7 +1139,7 @@ class URI implements Stringable
      */
     protected function mergePaths(self $base, self $reference): string
     {
-        if ($base->getAuthority() !== '' && $base->getPath() === '') {
+        if (! empty($base->getAuthority()) && $base->getPath() === '') {
             return '/' . ltrim($reference->getPath(), '/ ');
         }
 
@@ -1184,26 +1158,23 @@ class URI implements Stringable
     /**
      * This is equivalent to the native PHP parse_str() function.
      * This version allows the dot to be used as a key of the query string.
-     *
-     * @return array<string, string>
      */
     protected function parseStr(string $query): array
     {
         $return = [];
         $query  = explode('&', $query);
 
-        $params = array_map(static fn (string $chunk): ?string => preg_replace_callback(
+        $params = array_map(static fn (string $chunk) => preg_replace_callback(
             '/^(?<key>[^&=]+?)(?:\[[^&=]*\])?=(?<value>[^&=]+)/',
-            static fn (array $match): string => str_replace($match['key'], bin2hex($match['key']), $match[0]),
-            urldecode($chunk),
+            static fn (array $match) => str_replace($match['key'], bin2hex($match['key']), $match[0]),
+            urldecode($chunk)
         ), $query);
 
         $params = implode('&', $params);
         parse_str($params, $result);
 
         foreach ($result as $key => $value) {
-            // Array key might be int
-            $return[hex2bin((string) $key)] = $value;
+            $return[hex2bin($key)] = $value;
         }
 
         return $return;

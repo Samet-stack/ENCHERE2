@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -14,14 +12,13 @@ declare(strict_types=1);
 namespace CodeIgniter\HTTP;
 
 use Config\UserAgents;
-use Stringable;
 
 /**
  * Abstraction for an HTTP user agent
  *
  * @see \CodeIgniter\HTTP\UserAgentTest
  */
-class UserAgent implements Stringable
+class UserAgent
 {
     /**
      * Current user-agent
@@ -109,10 +106,8 @@ class UserAgent implements Stringable
     {
         $this->config = $config ?? config(UserAgents::class);
 
-        $userAgent = service('superglobals')->server('HTTP_USER_AGENT');
-
-        if ($userAgent !== null) {
-            $this->agent = trim($userAgent);
+        if (isset($_SERVER['HTTP_USER_AGENT'])) {
+            $this->agent = trim($_SERVER['HTTP_USER_AGENT']);
             $this->compileData();
         }
     }
@@ -127,7 +122,7 @@ class UserAgent implements Stringable
         }
 
         // No need to be specific, it's a browser
-        if ((string) $key === '') {
+        if ($key === null) {
             return true;
         }
 
@@ -145,7 +140,7 @@ class UserAgent implements Stringable
         }
 
         // No need to be specific, it's a robot
-        if ((string) $key === '') {
+        if ($key === null) {
             return true;
         }
 
@@ -163,7 +158,7 @@ class UserAgent implements Stringable
         }
 
         // No need to be specific, it's a mobile
-        if ((string) $key === '') {
+        if ($key === null) {
             return true;
         }
 
@@ -177,11 +172,10 @@ class UserAgent implements Stringable
     public function isReferral(): bool
     {
         if (! isset($this->referrer)) {
-            $referer = service('superglobals')->server('HTTP_REFERER');
-            if ($referer === null || $referer === '') {
+            if (empty($_SERVER['HTTP_REFERER'])) {
                 $this->referrer = false;
             } else {
-                $refererHost = @parse_url($referer, PHP_URL_HOST);
+                $refererHost = @parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
                 $ownHost     = parse_url(\base_url(), PHP_URL_HOST);
 
                 $this->referrer = ($refererHost && $refererHost !== $ownHost);
@@ -244,9 +238,7 @@ class UserAgent implements Stringable
      */
     public function getReferrer(): string
     {
-        $referrer = service('superglobals')->server('HTTP_REFERER');
-
-        return $referrer === null ? '' : trim($referrer);
+        return empty($_SERVER['HTTP_REFERER']) ? '' : trim($_SERVER['HTTP_REFERER']);
     }
 
     /**
@@ -268,7 +260,7 @@ class UserAgent implements Stringable
         // Set the new user-agent string and parse it, unless empty
         $this->agent = $string;
 
-        if ($string !== '') {
+        if (! empty($string)) {
             $this->compileData();
         }
     }
@@ -283,7 +275,7 @@ class UserAgent implements Stringable
         $this->setPlatform();
 
         foreach (['setRobot', 'setBrowser', 'setMobile'] as $function) {
-            if ($this->{$function}()) {
+            if ($this->{$function}() === true) {
                 break;
             }
         }
@@ -294,7 +286,7 @@ class UserAgent implements Stringable
      */
     protected function setPlatform(): bool
     {
-        if (is_array($this->config->platforms) && $this->config->platforms !== []) {
+        if (is_array($this->config->platforms) && $this->config->platforms) {
             foreach ($this->config->platforms as $key => $val) {
                 if (preg_match('|' . preg_quote($key, '|') . '|i', $this->agent)) {
                     $this->platform = $val;
@@ -314,7 +306,7 @@ class UserAgent implements Stringable
      */
     protected function setBrowser(): bool
     {
-        if (is_array($this->config->browsers) && $this->config->browsers !== []) {
+        if (is_array($this->config->browsers) && $this->config->browsers) {
             foreach ($this->config->browsers as $key => $val) {
                 if (preg_match('|' . $key . '.*?([0-9\.]+)|i', $this->agent, $match)) {
                     $this->isBrowser = true;
@@ -335,7 +327,7 @@ class UserAgent implements Stringable
      */
     protected function setRobot(): bool
     {
-        if (is_array($this->config->robots) && $this->config->robots !== []) {
+        if (is_array($this->config->robots) && $this->config->robots) {
             foreach ($this->config->robots as $key => $val) {
                 if (preg_match('|' . preg_quote($key, '|') . '|i', $this->agent)) {
                     $this->isRobot = true;
@@ -355,7 +347,7 @@ class UserAgent implements Stringable
      */
     protected function setMobile(): bool
     {
-        if (is_array($this->config->mobiles) && $this->config->mobiles !== []) {
+        if (is_array($this->config->mobiles) && $this->config->mobiles) {
             foreach ($this->config->mobiles as $key => $val) {
                 if (false !== (stripos($this->agent, $key))) {
                     $this->isMobile = true;

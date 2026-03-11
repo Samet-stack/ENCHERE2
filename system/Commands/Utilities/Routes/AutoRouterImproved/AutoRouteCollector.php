@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -21,27 +19,51 @@ use CodeIgniter\Commands\Utilities\Routes\FilterCollector;
  *
  * @see \CodeIgniter\Commands\Utilities\Routes\AutoRouterImproved\AutoRouteCollectorTest
  */
-final readonly class AutoRouteCollector
+final class AutoRouteCollector
 {
     /**
-     * @param string             $namespace            namespace to search
-     * @param list<class-string> $protectedControllers List of controllers in Defined
-     *                                                 Routes that should not be accessed via Auto-Routing.
-     * @param list<string>       $httpMethods
-     * @param string             $prefix               URI prefix for Module Routing
+     * @var string namespace to search
+     */
+    private string $namespace;
+
+    private string $defaultController;
+    private string $defaultMethod;
+    private array $httpMethods;
+
+    /**
+     * List of controllers in Defined Routes that should not be accessed via Auto-Routing.
+     *
+     * @var class-string[]
+     */
+    private array $protectedControllers;
+
+    /**
+     * @var string URI prefix for Module Routing
+     */
+    private string $prefix;
+
+    /**
+     * @param string $namespace namespace to search
      */
     public function __construct(
-        private string $namespace,
-        private string $defaultController,
-        private string $defaultMethod,
-        private array $httpMethods,
-        private array $protectedControllers,
-        private string $prefix = '',
+        string $namespace,
+        string $defaultController,
+        string $defaultMethod,
+        array $httpMethods,
+        array $protectedControllers,
+        string $prefix = ''
     ) {
+        $this->namespace            = $namespace;
+        $this->defaultController    = $defaultController;
+        $this->defaultMethod        = $defaultMethod;
+        $this->httpMethods          = $httpMethods;
+        $this->protectedControllers = $protectedControllers;
+        $this->prefix               = $prefix;
     }
 
     /**
-     * @return list<list<string>>
+     * @return array<int, array<int, string>>
+     * @phpstan-return list<list<string>>
      */
     public function get(): array
     {
@@ -59,7 +81,7 @@ final readonly class AutoRouteCollector
             $routes = $reader->read(
                 $class,
                 $this->defaultController,
-                $this->defaultMethod,
+                $this->defaultMethod
             );
 
             if ($routes === []) {
@@ -92,14 +114,7 @@ final readonly class AutoRouteCollector
         return $tbody;
     }
 
-    /**
-     * Adding Filters
-     *
-     * @param list<array<string, array|string>> $routes
-     *
-     * @return list<array<string, array|string>>
-     */
-    private function addFilters(array $routes): array
+    private function addFilters($routes)
     {
         $filterCollector = new FilterCollector(true);
 
@@ -122,13 +137,11 @@ final readonly class AutoRouteCollector
             $filtersShortest = $filterCollector->get($route['method'], $routePath . $sampleUri);
 
             // Get common array elements
-            $filters = [
-                'before' => array_intersect($filtersLongest['before'], $filtersShortest['before']),
-                'after'  => array_intersect($filtersLongest['after'], $filtersShortest['after']),
-            ];
+            $filters['before'] = array_intersect($filtersLongest['before'], $filtersShortest['before']);
+            $filters['after']  = array_intersect($filtersLongest['after'], $filtersShortest['after']);
 
-            $route['before'] = implode(' ', array_map(class_basename(...), $filters['before']));
-            $route['after']  = implode(' ', array_map(class_basename(...), $filters['after']));
+            $route['before'] = implode(' ', array_map('class_basename', $filters['before']));
+            $route['after']  = implode(' ', array_map('class_basename', $filters['after']));
         }
 
         return $routes;

@@ -29,7 +29,7 @@ namespace Kint;
 
 use Kint\Parser\Parser;
 use Kint\Renderer\RendererInterface;
-use Kint\Value\Context\ContextInterface;
+use Kint\Zval\Value;
 
 interface FacadeInterface
 {
@@ -42,8 +42,8 @@ interface FacadeInterface
     /**
      * Renders a list of vars including the pre and post renders.
      *
-     * @param array              $vars Data to dump
-     * @param ContextInterface[] $base The base contexts
+     * @param array   $vars Data to dump
+     * @param Value[] $base The base value objects
      */
     public function dumpAll(array $vars, array $base): string;
 }

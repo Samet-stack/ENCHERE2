@@ -27,14 +27,13 @@ declare(strict_types=1);
 
 namespace Kint\Parser;
 
-use Kint\Value\AbstractValue;
-use Kint\Value\Representation\SplFileInfoRepresentation;
+use Kint\Zval\Representation\SplFileInfoRepresentation;
+use Kint\Zval\Value;
 use SplFileInfo;
-use TypeError;
 
-class FsPathPlugin extends AbstractPlugin implements PluginCompleteInterface
+class FsPathPlugin extends AbstractPlugin
 {
-    public static array $blacklist = ['/', '.'];
+    public static $blacklist = ['/', '.'];
 
     public function getTypes(): array
     {
@@ -46,35 +45,30 @@ class FsPathPlugin extends AbstractPlugin implements PluginCompleteInterface
         return Parser::TRIGGER_SUCCESS;
     }
 
-    public function parseComplete(&$var, AbstractValue $v, int $trigger): AbstractValue
+    public function parse(&$var, Value &$o, int $trigger): void
     {
         if (\strlen($var) > 2048) {
-            return $v;
+            return;
         }
 
         if (!\preg_match('/[\\/\\'.DIRECTORY_SEPARATOR.']/', $var)) {
-            return $v;
+            return;
         }
 
         if (\preg_match('/[?<>"*|]/', $var)) {
-            return $v;
+            return;
         }
 
-        try {
-            if (!@\file_exists($var)) {
-                return $v;
-            }
-        } catch (TypeError $e) {// @codeCoverageIgnore
-            // Only possible in PHP 7
-            return $v; // @codeCoverageIgnore
+        if (!@\file_exists($var)) {
+            return;
         }
 
         if (\in_array($var, self::$blacklist, true)) {
-            return $v;
+            return;
         }
 
-        $v->addRepresentation(new SplFileInfoRepresentation(new SplFileInfo($var)), 0);
-
-        return $v;
+        $r = new SplFileInfoRepresentation(new SplFileInfo($var));
+        $r->hints[] = 'fspath';
+        $o->addRepresentation($r, 0);
     }
 }

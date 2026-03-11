@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -15,8 +13,9 @@ namespace CodeIgniter\Cache\Handlers;
 
 use Closure;
 use CodeIgniter\Cache\CacheInterface;
-use CodeIgniter\Exceptions\InvalidArgumentException;
 use Config\Cache;
+use Exception;
+use InvalidArgumentException;
 
 /**
  * Base class for cache handling
@@ -51,7 +50,7 @@ abstract class BaseHandler implements CacheInterface
      * Keys that exceed MAX_KEY_LENGTH are hashed.
      * From https://github.com/symfony/cache/blob/7b024c6726af21fd4984ac8d1eae2b9f3d90de88/CacheItem.php#L158
      *
-     * @param mixed  $key    The key to validate
+     * @param string $key    The key to validate
      * @param string $prefix Optional prefix to include in length calculations
      *
      * @throws InvalidArgumentException When $key is not valid
@@ -65,9 +64,8 @@ abstract class BaseHandler implements CacheInterface
             throw new InvalidArgumentException('Cache key cannot be empty.');
         }
 
-        $reserved = config(Cache::class)->reservedCharacters;
-
-        if ($reserved !== '' && strpbrk($key, $reserved) !== false) {
+        $reserved = config(Cache::class)->reservedCharacters ?? self::RESERVED_CHARACTERS;
+        if ($reserved && strpbrk($key, $reserved) !== false) {
             throw new InvalidArgumentException('Cache key contains reserved characters ' . $reserved);
         }
 
@@ -75,7 +73,17 @@ abstract class BaseHandler implements CacheInterface
         return strlen($prefix . $key) > static::MAX_KEY_LENGTH ? $prefix . md5($key) : $prefix . $key;
     }
 
-    public function remember(string $key, int $ttl, Closure $callback): mixed
+    /**
+     * Get an item from the cache, or execute the given Closure and store the result.
+     *
+     * @param string  $key      Cache item name
+     * @param int     $ttl      Time to live
+     * @param Closure $callback Callback return value
+     * @phpstan-param Closure(): mixed $callback
+     *
+     * @return array|bool|float|int|object|string|null
+     */
+    public function remember(string $key, int $ttl, Closure $callback)
     {
         $value = $this->get($key);
 
@@ -89,24 +97,16 @@ abstract class BaseHandler implements CacheInterface
     }
 
     /**
-     * Check if connection is alive.
+     * Deletes items from the cache store matching a given pattern.
      *
-     * Default implementation for handlers that don't require connection management.
-     * Handlers with persistent connections (Redis, Predis, Memcached) should override this.
-     */
-    public function ping(): bool
-    {
-        return true;
-    }
-
-    /**
-     * Reconnect to the cache server.
+     * @param string $pattern Cache items glob-style pattern
      *
-     * Default implementation for handlers that don't require connection management.
-     * Handlers with persistent connections (Redis, Predis, Memcached) should override this.
+     * @return int|never
+     *
+     * @throws Exception
      */
-    public function reconnect(): bool
+    public function deleteMatching(string $pattern)
     {
-        return true;
+        throw new Exception('The deleteMatching method is not implemented.');
     }
 }

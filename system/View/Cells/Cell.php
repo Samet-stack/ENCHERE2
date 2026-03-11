@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -13,10 +11,9 @@ declare(strict_types=1);
 
 namespace CodeIgniter\View\Cells;
 
-use CodeIgniter\Exceptions\LogicException;
 use CodeIgniter\Traits\PropertiesTrait;
+use LogicException;
 use ReflectionClass;
-use Stringable;
 
 /**
  * Class Cell
@@ -27,7 +24,7 @@ use Stringable;
  *
  * @function mount()
  */
-class Cell implements Stringable
+class Cell
 {
     use PropertiesTrait;
 
@@ -85,7 +82,7 @@ class Cell implements Stringable
             $viewName  = decamelize(class_basename(static::class));
             $directory = dirname((new ReflectionClass($this))->getFileName()) . DIRECTORY_SEPARATOR;
 
-            $possibleView1 = $directory . substr($viewName, 0, (int) strrpos($viewName, '_cell')) . '.php';
+            $possibleView1 = $directory . substr($viewName, 0, strrpos($viewName, '_cell')) . '.php';
             $possibleView2 = $directory . $viewName . '.php';
         }
 
@@ -97,13 +94,13 @@ class Cell implements Stringable
 
         $candidateViews = array_filter(
             [$view, $possibleView1 ?? '', $possibleView2 ?? ''],
-            static fn (string $path): bool => $path !== '' && is_file($path),
+            static fn (string $path): bool => $path !== '' && is_file($path)
         );
 
         if ($candidateViews === []) {
             throw new LogicException(sprintf(
                 'Cannot locate the view file for the "%s" cell.',
-                static::class,
+                static::class
             ));
         }
 
@@ -121,7 +118,7 @@ class Cell implements Stringable
     /**
      * Provides capability to render on string casting.
      */
-    public function __toString(): string
+    public function __toString()
     {
         return $this->render();
     }

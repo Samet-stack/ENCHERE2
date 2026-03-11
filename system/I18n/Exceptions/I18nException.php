@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -72,7 +70,7 @@ class I18nException extends FrameworkException
      */
     public static function forInvalidHour(string $hour)
     {
-        return new static(lang('Time.invalidHours', [$hour]));
+        return new static(lang('Time.invalidHour', [$hour]));
     }
 
     /**

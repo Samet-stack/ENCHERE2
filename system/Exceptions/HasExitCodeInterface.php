@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -16,7 +14,7 @@ namespace CodeIgniter\Exceptions;
 /**
  * Interface for Exceptions that has exception code as exit code.
  */
-interface HasExitCodeInterface extends ExceptionInterface
+interface HasExitCodeInterface
 {
     /**
      * Returns exit status code.

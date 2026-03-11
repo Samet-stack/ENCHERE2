@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -17,13 +15,7 @@ use DateTime;
 use IntlCalendar;
 
 /**
- * @property-read float|int $days
- * @property-read float|int $hours
- * @property-read float|int $minutes
- * @property-read float|int $months
- * @property-read int       $seconds
- * @property-read float|int $weeks
- * @property-read float|int $years
+ * Class TimeDifference
  *
  * @see \CodeIgniter\I18n\TimeDifferenceTest
  */

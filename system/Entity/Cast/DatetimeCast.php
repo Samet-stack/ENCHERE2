@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -14,9 +12,12 @@ declare(strict_types=1);
 namespace CodeIgniter\Entity\Cast;
 
 use CodeIgniter\I18n\Time;
-use DateTimeInterface;
+use DateTime;
 use Exception;
 
+/**
+ * Class DatetimeCast
+ */
 class DatetimeCast extends BaseCast
 {
     /**
@@ -32,12 +33,12 @@ class DatetimeCast extends BaseCast
             return $value;
         }
 
-        if ($value instanceof DateTimeInterface) {
+        if ($value instanceof DateTime) {
             return Time::createFromInstance($value);
         }
 
         if (is_numeric($value)) {
-            return Time::createFromTimestamp((int) $value, date_default_timezone_get());
+            return Time::createFromTimestamp($value);
         }
 
         if (is_string($value)) {

@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -54,29 +52,35 @@ class FileHandler extends BaseHandler
      */
     public function __construct(Cache $config)
     {
-        $options = [
-            ...['storePath' => WRITEPATH . 'cache', 'mode' => 0640],
-            ...$config->file,
-        ];
+        if (! property_exists($config, 'file')) {
+            $config->file = [
+                'storePath' => $config->storePath ?? WRITEPATH . 'cache',
+                'mode'      => 0640,
+            ];
+        }
 
-        $this->path = $options['storePath'] !== '' ? $options['storePath'] : WRITEPATH . 'cache';
-        $this->path = rtrim($this->path, '\\/') . '/';
+        $this->path = ! empty($config->file['storePath']) ? $config->file['storePath'] : WRITEPATH . 'cache';
+        $this->path = rtrim($this->path, '/') . '/';
 
         if (! is_really_writable($this->path)) {
             throw CacheException::forUnableToWrite($this->path);
         }
 
-        $this->mode   = $options['mode'];
+        $this->mode   = $config->file['mode'] ?? 0640;
         $this->prefix = $config->prefix;
-
-        helper('filesystem');
     }
 
-    public function initialize(): void
+    /**
+     * {@inheritDoc}
+     */
+    public function initialize()
     {
     }
 
-    public function get(string $key): mixed
+    /**
+     * {@inheritDoc}
+     */
+    public function get(string $key)
     {
         $key  = static::validateKey($key, $this->prefix);
         $data = $this->getItem($key);
@@ -84,7 +88,10 @@ class FileHandler extends BaseHandler
         return is_array($data) ? $data['data'] : null;
     }
 
-    public function save(string $key, mixed $value, int $ttl = 60): bool
+    /**
+     * {@inheritDoc}
+     */
+    public function save(string $key, $value, int $ttl = 60)
     {
         $key = static::validateKey($key, $this->prefix);
 
@@ -94,7 +101,7 @@ class FileHandler extends BaseHandler
             'data' => $value,
         ];
 
-        if (write_file($this->path . $key, serialize($contents))) {
+        if ($this->writeFile($this->path . $key, serialize($contents))) {
             try {
                 chmod($this->path . $key, $this->mode);
 
@@ -110,14 +117,22 @@ class FileHandler extends BaseHandler
         return false;
     }
 
-    public function delete(string $key): bool
+    /**
+     * {@inheritDoc}
+     */
+    public function delete(string $key)
     {
         $key = static::validateKey($key, $this->prefix);
 
         return is_file($this->path . $key) && unlink($this->path . $key);
     }
 
-    public function deleteMatching(string $pattern): int
+    /**
+     * {@inheritDoc}
+     *
+     * @return int
+     */
+    public function deleteMatching(string $pattern)
     {
         $deleted = 0;
 
@@ -130,10 +145,13 @@ class FileHandler extends BaseHandler
         return $deleted;
     }
 
-    public function increment(string $key, int $offset = 1): bool|int
+    /**
+     * {@inheritDoc}
+     */
+    public function increment(string $key, int $offset = 1)
     {
-        $prefixedKey = static::validateKey($key, $this->prefix);
-        $tmp         = $this->getItem($prefixedKey);
+        $key = static::validateKey($key, $this->prefix);
+        $tmp = $this->getItem($key);
 
         if ($tmp === false) {
             $tmp = ['data' => 0, 'ttl' => 60];
@@ -150,27 +168,39 @@ class FileHandler extends BaseHandler
         return $this->save($key, $value, $ttl) ? $value : false;
     }
 
-    public function decrement(string $key, int $offset = 1): bool|int
+    /**
+     * {@inheritDoc}
+     */
+    public function decrement(string $key, int $offset = 1)
     {
         return $this->increment($key, -$offset);
     }
 
-    public function clean(): bool
+    /**
+     * {@inheritDoc}
+     */
+    public function clean()
     {
-        return delete_files($this->path, false, true);
+        return $this->deleteFiles($this->path, false, true);
     }
 
-    public function getCacheInfo(): array
+    /**
+     * {@inheritDoc}
+     */
+    public function getCacheInfo()
     {
-        return get_dir_file_info($this->path);
+        return $this->getDirFileInfo($this->path);
     }
 
-    public function getMetaData(string $key): ?array
+    /**
+     * {@inheritDoc}
+     */
+    public function getMetaData(string $key)
     {
         $key = static::validateKey($key, $this->prefix);
 
         if (false === $data = $this->getItem($key)) {
-            return null;
+            return false; // @TODO This will return null in a future release
         }
 
         return [
@@ -180,6 +210,9 @@ class FileHandler extends BaseHandler
         ];
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function isSupported(): bool
     {
         return is_writable($this->path);
@@ -187,27 +220,18 @@ class FileHandler extends BaseHandler
 
     /**
      * Does the heavy lifting of actually retrieving the file and
-     * verifying its age.
+     * verifying it's age.
      *
-     * @return array{data: mixed, ttl: int, time: int}|false
+     * @return array<string, mixed>|false
+     * @phpstan-return array{data: mixed, ttl: int, time: int}|false
      */
-    protected function getItem(string $filename): array|false
+    protected function getItem(string $filename)
     {
         if (! is_file($this->path . $filename)) {
             return false;
         }
 
-        $content = @file_get_contents($this->path . $filename);
-
-        if ($content === false) {
-            return false;
-        }
-
-        try {
-            $data = unserialize($content);
-        } catch (Throwable) {
-            return false;
-        }
+        $data = @unserialize(file_get_contents($this->path . $filename));
 
         if (! is_array($data)) {
             return false;
@@ -233,13 +257,13 @@ class FileHandler extends BaseHandler
     /**
      * Writes a file to disk, or returns false if not successful.
      *
-     * @deprecated 4.6.1 Use `write_file()` instead.
-     *
      * @param string $path
      * @param string $data
      * @param string $mode
+     *
+     * @return bool
      */
-    protected function writeFile($path, $data, $mode = 'wb'): bool
+    protected function writeFile($path, $data, $mode = 'wb')
     {
         if (($fp = @fopen($path, $mode)) === false) {
             return false;
@@ -247,9 +271,7 @@ class FileHandler extends BaseHandler
 
         flock($fp, LOCK_EX);
 
-        $result = 0;
-
-        for ($written = 0, $length = strlen($data); $written < $length; $written += $result) {
+        for ($result = $written = 0, $length = strlen($data); $written < $length; $written += $result) {
             if (($result = fwrite($fp, substr($data, $written))) === false) {
                 break;
             }
@@ -266,8 +288,6 @@ class FileHandler extends BaseHandler
      * Files must be writable or owned by the system in order to be deleted.
      * If the second parameter is set to TRUE, any directories contained
      * within the supplied base directory will be nuked as well.
-     *
-     * @deprecated 4.6.1 Use `delete_files()` instead.
      *
      * @param string $path   File path
      * @param bool   $delDir Whether to delete any directories found in the path
@@ -287,7 +307,7 @@ class FileHandler extends BaseHandler
             if ($filename !== '.' && $filename !== '..') {
                 if (is_dir($path . DIRECTORY_SEPARATOR . $filename) && $filename[0] !== '.') {
                     $this->deleteFiles($path . DIRECTORY_SEPARATOR . $filename, $delDir, $htdocs, $_level + 1);
-                } elseif (! $htdocs || preg_match('/^(\.htaccess|index\.(html|htm|php)|web\.config)$/i', $filename) !== 1) {
+                } elseif ($htdocs !== true || ! preg_match('/^(\.htaccess|index\.(html|htm|php)|web\.config)$/i', $filename)) {
                     @unlink($path . DIRECTORY_SEPARATOR . $filename);
                 }
             }
@@ -295,7 +315,7 @@ class FileHandler extends BaseHandler
 
         closedir($currentDir);
 
-        return ($delDir && $_level > 0) ? @rmdir($path) : true;
+        return ($delDir === true && $_level > 0) ? @rmdir($path) : true;
     }
 
     /**
@@ -304,52 +324,37 @@ class FileHandler extends BaseHandler
      *
      * Any sub-folders contained within the specified path are read as well.
      *
-     * @deprecated 4.6.1 Use `get_dir_file_info()` instead.
-     *
      * @param string $sourceDir    Path to source
      * @param bool   $topLevelOnly Look only at the top level directory specified?
      * @param bool   $_recursion   Internal variable to determine recursion status - do not use in calls
      *
-     * @return array<string, array{
-     *  name: string,
-     *  server_path: string,
-     *  size: int,
-     *  date: int,
-     *  relative_path: string,
-     * }>|false
+     * @return array|false
      */
-    protected function getDirFileInfo(string $sourceDir, bool $topLevelOnly = true, bool $_recursion = false): array|false
+    protected function getDirFileInfo(string $sourceDir, bool $topLevelOnly = true, bool $_recursion = false)
     {
-        static $filedata = [];
+        static $_filedata = [];
+        $relativePath     = $sourceDir;
 
-        $relativePath = $sourceDir;
-        $filePointer  = @opendir($sourceDir);
-
-        if (! is_bool($filePointer)) {
-            // reset the array and make sure $sourceDir has a trailing slash on the initial call
+        if ($fp = @opendir($sourceDir)) {
+            // reset the array and make sure $source_dir has a trailing slash on the initial call
             if ($_recursion === false) {
-                $filedata = [];
-
-                $resolvedSrc = realpath($sourceDir);
-                $resolvedSrc = $resolvedSrc === false ? $sourceDir : $resolvedSrc;
-
-                $sourceDir = rtrim($resolvedSrc, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+                $_filedata = [];
+                $sourceDir = rtrim(realpath($sourceDir) ?: $sourceDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
             }
 
-            // Used to be foreach (scandir($sourceDir, 1) as $file), but scandir() is simply not as fast
-            while (false !== $file = readdir($filePointer)) {
+            // Used to be foreach (scandir($source_dir, 1) as $file), but scandir() is simply not as fast
+            while (false !== ($file = readdir($fp))) {
                 if (is_dir($sourceDir . $file) && $file[0] !== '.' && $topLevelOnly === false) {
                     $this->getDirFileInfo($sourceDir . $file . DIRECTORY_SEPARATOR, $topLevelOnly, true);
                 } elseif (! is_dir($sourceDir . $file) && $file[0] !== '.') {
-                    $filedata[$file] = $this->getFileInfo($sourceDir . $file);
-
-                    $filedata[$file]['relative_path'] = $relativePath;
+                    $_filedata[$file]                  = $this->getFileInfo($sourceDir . $file);
+                    $_filedata[$file]['relative_path'] = $relativePath;
                 }
             }
 
-            closedir($filePointer);
+            closedir($fp);
 
-            return $filedata;
+            return $_filedata;
         }
 
         return false;
@@ -361,23 +366,12 @@ class FileHandler extends BaseHandler
      * Options are: name, server_path, size, date, readable, writable, executable, fileperms
      * Returns FALSE if the file cannot be found.
      *
-     * @deprecated 4.6.1 Use `get_file_info()` instead.
+     * @param string       $file           Path to file
+     * @param array|string $returnedValues Array or comma separated string of information returned
      *
-     * @param string              $file           Path to file
-     * @param list<string>|string $returnedValues Array or comma separated string of information returned
-     *
-     * @return array{
-     *  name?: string,
-     *  server_path?: string,
-     *  size?: int,
-     *  date?: int,
-     *  readable?: bool,
-     *  writable?: bool,
-     *  executable?: bool,
-     *  fileperms?: int
-     * }|false
+     * @return array|false
      */
-    protected function getFileInfo(string $file, $returnedValues = ['name', 'server_path', 'size', 'date']): array|false
+    protected function getFileInfo(string $file, $returnedValues = ['name', 'server_path', 'size', 'date'])
     {
         if (! is_file($file)) {
             return false;

@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -15,6 +13,7 @@ namespace CodeIgniter\HTTP;
 
 use CodeIgniter\Cookie\CookieStore;
 use CodeIgniter\HTTP\Exceptions\HTTPException;
+use Config\Services;
 
 /**
  * Handle a redirect response
@@ -36,7 +35,7 @@ class RedirectResponse extends Response
     {
         // If it appears to be a relative URL, then convert to full URL
         // for better security.
-        if (! str_starts_with($uri, 'http')) {
+        if (strpos($uri, 'http') !== 0) {
             $uri = site_url($uri);
         }
 
@@ -57,7 +56,7 @@ class RedirectResponse extends Response
     {
         $namedRoute = $route;
 
-        $route = service('routes')->reverseRoute($route, ...$params);
+        $route = Services::routes()->reverseRoute($route, ...$params);
 
         if (! $route) {
             throw HTTPException::forInvalidRedirectRoute($namedRoute);
@@ -76,7 +75,7 @@ class RedirectResponse extends Response
      */
     public function back(?int $code = null, string $method = 'auto')
     {
-        service('session');
+        Services::session();
 
         return $this->redirect(previous_url(), $method, $code);
     }
@@ -91,10 +90,10 @@ class RedirectResponse extends Response
      */
     public function withInput()
     {
-        $session = service('session');
+        $session = Services::session();
         $session->setFlashdata('_ci_old_input', [
-            'get'  => service('superglobals')->getGetArray(),
-            'post' => service('superglobals')->getPostArray(),
+            'get'  => $_GET ?? [],
+            'post' => $_POST ?? [],
         ]);
 
         $this->withErrors();
@@ -113,10 +112,11 @@ class RedirectResponse extends Response
      */
     private function withErrors(): self
     {
-        $validation = service('validation');
+        $validation = Services::validation();
 
-        if ($validation->getErrors() !== []) {
-            service('session')->setFlashdata('_ci_validation_errors', $validation->getErrors());
+        if ($validation->getErrors()) {
+            $session = Services::session();
+            $session->setFlashdata('_ci_validation_errors', $validation->getErrors());
         }
 
         return $this;
@@ -131,7 +131,7 @@ class RedirectResponse extends Response
      */
     public function with(string $key, $message)
     {
-        service('session')->setFlashdata($key, $message);
+        Services::session()->setFlashdata($key, $message);
 
         return $this;
     }
@@ -146,7 +146,7 @@ class RedirectResponse extends Response
      */
     public function withCookies()
     {
-        $this->cookieStore = new CookieStore(service('response')->getCookies());
+        $this->cookieStore = new CookieStore(Services::response()->getCookies());
 
         return $this;
     }
@@ -161,14 +161,8 @@ class RedirectResponse extends Response
      */
     public function withHeaders()
     {
-        foreach (service('response')->headers() as $name => $value) {
-            if ($value instanceof Header) {
-                $this->setHeader($name, $value->getValue());
-            } else {
-                foreach ($value as $header) {
-                    $this->addHeader($name, $header->getValue());
-                }
-            }
+        foreach (Services::response()->headers() as $name => $header) {
+            $this->setHeader($name, $header->getValue());
         }
 
         return $this;

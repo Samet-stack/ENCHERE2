@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -106,7 +104,7 @@ class ResourceController extends BaseResource
     /**
      * Set/change the expected response representation for returned objects
      *
-     * @param 'json'|'xml' $format Response format
+     * @param string $format json/xml
      *
      * @return void
      */

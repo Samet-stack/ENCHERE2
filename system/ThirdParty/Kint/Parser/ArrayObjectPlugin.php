@@ -28,10 +28,9 @@ declare(strict_types=1);
 namespace Kint\Parser;
 
 use ArrayObject;
-use Kint\Value\AbstractValue;
-use Kint\Value\Context\ContextInterface;
+use Kint\Zval\Value;
 
-class ArrayObjectPlugin extends AbstractPlugin implements PluginBeginInterface
+class ArrayObjectPlugin extends AbstractPlugin
 {
     public function getTypes(): array
     {
@@ -43,26 +42,24 @@ class ArrayObjectPlugin extends AbstractPlugin implements PluginBeginInterface
         return Parser::TRIGGER_BEGIN;
     }
 
-    public function parseBegin(&$var, ContextInterface $c): ?AbstractValue
+    public function parse(&$var, Value &$o, int $trigger): void
     {
         if (!$var instanceof ArrayObject) {
-            return null;
+            return;
         }
 
         $flags = $var->getFlags();
 
         if (ArrayObject::STD_PROP_LIST === $flags) {
-            return null;
+            return;
         }
-
-        $parser = $this->getParser();
 
         $var->setFlags(ArrayObject::STD_PROP_LIST);
 
-        $v = $parser->parse($var, $c);
+        $o = $this->parser->parse($var, $o);
 
         $var->setFlags($flags);
 
-        return $v;
+        $this->parser->haltParse();
     }
 }

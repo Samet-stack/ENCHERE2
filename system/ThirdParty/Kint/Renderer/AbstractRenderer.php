@@ -27,38 +27,67 @@ declare(strict_types=1);
 
 namespace Kint\Renderer;
 
-abstract class AbstractRenderer implements ConstructableRendererInterface
+use Kint\Zval\InstanceValue;
+use Kint\Zval\Value;
+
+/**
+ * @psalm-type PluginMap array<string, class-string>
+ *
+ * @psalm-consistent-constructor
+ */
+abstract class AbstractRenderer implements RendererInterface
 {
-    public static ?string $js_nonce = null;
-    public static ?string $css_nonce = null;
+    public const SORT_NONE = 0;
+    public const SORT_VISIBILITY = 1;
+    public const SORT_FULL = 2;
 
-    /** @psalm-var ?non-empty-string */
-    public static ?string $file_link_format = null;
-
-    protected bool $show_trace = true;
-    protected ?array $callee = null;
-    protected array $trace = [];
-
-    protected bool $render_spl_ids = true;
-
-    public function __construct()
-    {
-    }
-
-    public function shouldRenderObjectIds(): bool
-    {
-        return $this->render_spl_ids;
-    }
+    protected $call_info = [];
+    protected $statics = [];
+    protected $show_trace = true;
 
     public function setCallInfo(array $info): void
     {
-        $this->callee = $info['callee'] ?? null;
-        $this->trace = $info['trace'] ?? [];
+        if (!isset($info['modifiers']) || !\is_array($info['modifiers'])) {
+            $info['modifiers'] = [];
+        }
+
+        if (!isset($info['trace']) || !\is_array($info['trace'])) {
+            $info['trace'] = [];
+        }
+
+        $this->call_info = [
+            'params' => $info['params'] ?? null,
+            'modifiers' => $info['modifiers'],
+            'callee' => $info['callee'] ?? null,
+            'caller' => $info['caller'] ?? null,
+            'trace' => $info['trace'],
+        ];
+    }
+
+    public function getCallInfo(): array
+    {
+        return $this->call_info;
     }
 
     public function setStatics(array $statics): void
     {
-        $this->show_trace = !empty($statics['display_called_from']);
+        $this->statics = $statics;
+        $this->setShowTrace(!empty($statics['display_called_from']));
+    }
+
+    public function getStatics(): array
+    {
+        return $this->statics;
+    }
+
+    public function setShowTrace(bool $show_trace): void
+    {
+        $this->show_trace = $show_trace;
+    }
+
+    public function getShowTrace(): bool
+    {
+        return $this->show_trace;
     }
 
     public function filterParserPlugins(array $plugins): array
@@ -76,12 +105,71 @@ abstract class AbstractRenderer implements ConstructableRendererInterface
         return '';
     }
 
-    public static function getFileLink(string $file, int $line): ?string
+    /**
+     * Returns the first compatible plugin available.
+     *
+     * @psalm-param PluginMap $plugins Array of hints to class strings
+     * @psalm-param string[] $hints Array of object hints
+     *
+     * @psalm-return PluginMap Array of hints to class strings filtered and sorted by object hints
+     */
+    public function matchPlugins(array $plugins, array $hints): array
     {
-        if (null === self::$file_link_format) {
-            return null;
+        $out = [];
+
+        foreach ($hints as $key) {
+            if (isset($plugins[$key])) {
+                $out[$key] = $plugins[$key];
+            }
         }
 
-        return \str_replace(['%f', '%l'], [$file, $line], self::$file_link_format);
+        return $out;
+    }
+
+    public static function sortPropertiesFull(Value $a, Value $b): int
+    {
+        $sort = Value::sortByAccess($a, $b);
+        if ($sort) {
+            return $sort;
+        }
+
+        $sort = Value::sortByName($a, $b);
+        if ($sort) {
+            return $sort;
+        }
+
+        return InstanceValue::sortByHierarchy($a->owner_class, $b->owner_class);
+    }
+
+    /**
+     * Sorts an array of Value.
+     *
+     * @param Value[] $contents Object properties to sort
+     *
+     * @return Value[]
+     */
+    public static function sortProperties(array $contents, int $sort): array
+    {
+        switch ($sort) {
+            case self::SORT_VISIBILITY:
+                // Containers to quickly stable sort by type
+                $containers = [
+                    Value::ACCESS_PUBLIC => [],
+                    Value::ACCESS_PROTECTED => [],
+                    Value::ACCESS_PRIVATE => [],
+                    Value::ACCESS_NONE => [],
+                ];
+
+                foreach ($contents as $item) {
+                    $containers[$item->access][] = $item;
+                }
+
+                return \call_user_func_array('array_merge', $containers);
+            case self::SORT_FULL:
+                \usort($contents, [self::class, 'sortPropertiesFull']);
+                // no break
+            default:
+                return $contents;
+        }
     }
 }

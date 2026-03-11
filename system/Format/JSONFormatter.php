@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -26,9 +24,9 @@ class JSONFormatter implements FormatterInterface
     /**
      * Takes the given data and formats it.
      *
-     * @param array<array-key, mixed>|object|string $data
+     * @param array|bool|float|int|object|string|null $data
      *
-     * @return false|non-empty-string
+     * @return false|string (JSON string | false)
      */
     public function format($data)
     {
@@ -37,11 +35,9 @@ class JSONFormatter implements FormatterInterface
         $options = $config->formatterOptions['application/json'] ?? JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
         $options |= JSON_PARTIAL_OUTPUT_ON_ERROR;
 
-        if (ENVIRONMENT !== 'production') {
-            $options |= JSON_PRETTY_PRINT;
-        }
+        $options = ENVIRONMENT === 'production' ? $options : $options | JSON_PRETTY_PRINT;
 
-        $result = json_encode($data, $options, $config->jsonEncodeDepth ?? 512);
+        $result = json_encode($data, $options, 512);
 
         if (! in_array(json_last_error(), [JSON_ERROR_NONE, JSON_ERROR_RECURSION], true)) {
             throw FormatException::forInvalidJSON(json_last_error_msg());

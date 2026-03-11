@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -17,41 +15,26 @@ use CodeIgniter\Exceptions\FrameworkException;
 
 class SessionException extends FrameworkException
 {
-    /**
-     * @return static
-     */
     public static function forMissingDatabaseTable()
     {
         return new static(lang('Session.missingDatabaseTable'));
     }
 
-    /**
-     * @return static
-     */
     public static function forInvalidSavePath(?string $path = null)
     {
         return new static(lang('Session.invalidSavePath', [$path]));
     }
 
-    /**
-     * @return static
-     */
     public static function forWriteProtectedSavePath(?string $path = null)
     {
         return new static(lang('Session.writeProtectedSavePath', [$path]));
     }
 
-    /**
-     * @return static
-     */
     public static function forEmptySavepath()
     {
         return new static(lang('Session.emptySavePath'));
     }
 
-    /**
-     * @return static
-     */
     public static function forInvalidSavePathFormat(string $path)
     {
         return new static(lang('Session.invalidSavePathFormat', [$path]));
@@ -59,8 +42,6 @@ class SessionException extends FrameworkException
 
     /**
      * @deprecated
-     *
-     * @return static
      *
      * @codeCoverageIgnore
      */

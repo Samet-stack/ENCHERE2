@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -17,20 +15,12 @@ use CodeIgniter\CodeIgniter;
 use CodeIgniter\Database\BaseConnection;
 use CodeIgniter\Database\BaseResult;
 use CodeIgniter\Database\Query;
-use CodeIgniter\Database\TableName;
-use stdClass;
 
 /**
  * @extends BaseConnection<object|resource, object|resource>
  */
 class MockConnection extends BaseConnection
 {
-    /**
-     * @var array{
-     *   connect?: false|list<false|object|resource>|object|resource,
-     *   execute?: false|object|resource,
-     * }
-     */
     protected $returnValues = [];
 
     /**
@@ -40,21 +30,9 @@ class MockConnection extends BaseConnection
      */
     protected $schema;
 
-    /**
-     * @var string
-     */
     public $database;
-
-    /**
-     * @var Query
-     */
     public $lastQuery;
 
-    /**
-     * @param false|list<false|object|resource>|object|resource $return
-     *
-     * @return $this
-     */
     public function shouldReturn(string $method, $return)
     {
         $this->returnValues[$method] = $return;
@@ -70,22 +48,21 @@ class MockConnection extends BaseConnection
      * Should automatically handle different connections for read/write
      * queries if needed.
      *
-     * @param mixed $binds
+     * @param mixed ...$binds
      *
-     * @return BaseResult<object|resource, object|resource>|bool|Query
+     * @return BaseResult|bool|Query
      *
      * @todo BC set $queryClass default as null in 4.1
      */
     public function query(string $sql, $binds = null, bool $setEscapeFlags = true, string $queryClass = '')
     {
-        /** @var class-string<Query> $queryClass */
         $queryClass = str_replace('Connection', 'Query', static::class);
 
         $query = new $queryClass($this);
 
         $query->setQuery($sql, $binds, $setEscapeFlags);
 
-        if ($this->swapPre !== '' && $this->DBPrefix !== '') {
+        if (! empty($this->swapPre) && ! empty($this->DBPrefix)) {
             $query->swapPrefix($this->DBPrefix, $this->swapPre);
         }
 
@@ -93,12 +70,12 @@ class MockConnection extends BaseConnection
 
         $this->lastQuery = $query;
 
-        $this->resultID = $this->simpleQuery($query->getQuery());
-
-        if ($this->resultID === false) {
+        // Run the query
+        if (false === ($this->resultID = $this->simpleQuery($query->getQuery()))) {
             $query->setDuration($startTime, $startTime);
 
             // @todo deal with errors
+
             return false;
         }
 
@@ -110,7 +87,6 @@ class MockConnection extends BaseConnection
         }
 
         // query is not write-type, so it must be read-type query; return QueryResult
-        /** @var class-string<BaseResult> $resultClass */
         $resultClass = str_replace('Connection', 'Result', static::class);
 
         return new $resultClass($this->connID, $this->resultID);
@@ -119,7 +95,7 @@ class MockConnection extends BaseConnection
     /**
      * Connect to the database.
      *
-     * @return false|object|resource
+     * @return mixed
      */
     public function connect(bool $persistent = false)
     {
@@ -146,13 +122,13 @@ class MockConnection extends BaseConnection
     /**
      * Select a specific database table to use.
      *
-     * @return bool
+     * @return mixed
      */
     public function setDatabase(string $databaseName)
     {
         $this->database = $databaseName;
 
-        return true;
+        return $this;
     }
 
     /**
@@ -166,7 +142,7 @@ class MockConnection extends BaseConnection
     /**
      * Executes the query against the database.
      *
-     * @return false|object|resource
+     * @return bool|object
      */
     protected function execute(string $sql)
     {
@@ -184,7 +160,9 @@ class MockConnection extends BaseConnection
     /**
      * Returns the last error code and message.
      *
-     * @return array{code: int, message: string}
+     * Must return an array with keys 'code' and 'message':
+     *
+     *  return ['code' => null, 'message' => null);
      */
     public function error(): array
     {
@@ -194,6 +172,9 @@ class MockConnection extends BaseConnection
         ];
     }
 
+    /**
+     * Insert ID
+     */
     public function insertID(): int
     {
         return $this->connID->insert_id;
@@ -211,33 +192,22 @@ class MockConnection extends BaseConnection
 
     /**
      * Generates a platform-specific query string so that the column names can be fetched.
-     *
-     * @param string|TableName $table
      */
-    protected function _listColumns($table = ''): string
+    protected function _listColumns(string $table = ''): string
     {
         return '';
     }
 
-    /**
-     * @return list<stdClass>
-     */
     protected function _fieldData(string $table): array
     {
         return [];
     }
 
-    /**
-     * @return array<string, stdClass>
-     */
     protected function _indexData(string $table): array
     {
         return [];
     }
 
-    /**
-     * @return array<string, stdClass>
-     */
     protected function _foreignKeyData(string $table): array
     {
         return [];
@@ -245,8 +215,6 @@ class MockConnection extends BaseConnection
 
     /**
      * Close the connection.
-     *
-     * @return void
      */
     protected function _close()
     {

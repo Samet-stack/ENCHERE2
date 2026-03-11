@@ -28,26 +28,29 @@ declare(strict_types=1);
 namespace Kint\Renderer\Text;
 
 use Kint\Renderer\TextRenderer;
-use Kint\Value\AbstractValue;
+use Kint\Zval\Value;
 
+/**
+ * @psalm-consistent-constructor
+ */
 abstract class AbstractPlugin implements PluginInterface
 {
-    protected TextRenderer $renderer;
+    protected $renderer;
 
     public function __construct(TextRenderer $r)
     {
         $this->renderer = $r;
     }
 
-    public function renderLockedHeader(AbstractValue $v, ?string $content = null): string
+    public function renderLockedHeader(Value $o, ?string $content = null): string
     {
         $out = '';
 
-        if (0 === $v->getContext()->getDepth()) {
-            $out .= $this->renderer->colorTitle($this->renderer->renderTitle($v)).PHP_EOL;
+        if (0 == $o->depth) {
+            $out .= $this->renderer->colorTitle($this->renderer->renderTitle($o)).PHP_EOL;
         }
 
-        $out .= $this->renderer->renderHeader($v);
+        $out .= $this->renderer->renderHeader($o);
 
         if (null !== $content) {
             $out .= ' '.$this->renderer->colorValue($content);

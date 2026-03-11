@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -15,8 +13,6 @@ namespace CodeIgniter\Config;
 
 use CodeIgniter\Autoloader\Autoloader;
 use CodeIgniter\Autoloader\FileLocator;
-use CodeIgniter\Autoloader\FileLocatorCached;
-use CodeIgniter\Autoloader\FileLocatorInterface;
 use CodeIgniter\Cache\CacheInterface;
 use CodeIgniter\Cache\ResponseCache;
 use CodeIgniter\CLI\Commands;
@@ -29,7 +25,6 @@ use CodeIgniter\Debug\Timer;
 use CodeIgniter\Debug\Toolbar;
 use CodeIgniter\Email\Email;
 use CodeIgniter\Encryption\EncrypterInterface;
-use CodeIgniter\Exceptions\InvalidArgumentException;
 use CodeIgniter\Filters\Filters;
 use CodeIgniter\Format\Format;
 use CodeIgniter\Honeypot\Honeypot;
@@ -73,14 +68,11 @@ use Config\Honeypot as ConfigHoneyPot;
 use Config\Images;
 use Config\Migrations;
 use Config\Modules;
-use Config\Optimize;
 use Config\Pager as ConfigPager;
 use Config\Services as AppServices;
-use Config\Session as ConfigSession;
 use Config\Toolbar as ConfigToolbar;
 use Config\Validation as ConfigValidation;
 use Config\View as ConfigView;
-use Config\WorkerMode;
 
 /**
  * Services Configuration file.
@@ -132,7 +124,7 @@ use Config\WorkerMode;
  * @method static Router                     router(RouteCollectionInterface $routes = null, Request $request = null, $getShared = true)
  * @method static RouteCollection            routes($getShared = true)
  * @method static Security                   security(App $config = null, $getShared = true)
- * @method static Session                    session(ConfigSession $config = null, $getShared = true)
+ * @method static Session                    session(App $config = null, $getShared = true)
  * @method static SiteURIFactory             siteurifactory(App $config = null, Superglobals $superglobals = null, $getShared = true)
  * @method static Superglobals               superglobals(array $server = null, array $get = null, bool $getShared = true)
  * @method static Throttler                  throttler($getShared = true)
@@ -150,21 +142,14 @@ class BaseService
      * have been requested as a "shared" instance.
      * Keys should be lowercase service names.
      *
-     * @var array<string, object> [key => instance]
+     * @var array
      */
     protected static $instances = [];
 
     /**
-     * Factory method list.
-     *
-     * @var array<string, (callable(mixed ...$params): object)> [key => callable]
-     */
-    protected static array $factories = [];
-
-    /**
      * Mock objects for testing which are returned if exist.
      *
-     * @var array<string, object> [key => instance]
+     * @var array
      */
     protected static $mocks = [];
 
@@ -179,65 +164,15 @@ class BaseService
      * A cache of other service classes we've found.
      *
      * @var array
-     *
-     * @deprecated 4.5.0 No longer used.
      */
     protected static $services = [];
 
     /**
      * A cache of the names of services classes found.
      *
-     * @var list<string>
+     * @var array<string>
      */
     private static array $serviceNames = [];
-
-    /**
-     * Simple method to get an entry fast.
-     *
-     * @param string $key Identifier of the entry to look for.
-     *
-     * @return object|null Entry.
-     */
-    public static function get(string $key): ?object
-    {
-        return static::$instances[$key] ?? static::__callStatic($key, []);
-    }
-
-    /**
-     * Checks if a service instance has been created.
-     *
-     * @param string $key Identifier of the entry to check.
-     *
-     * @return bool True if the service instance exists, false otherwise.
-     */
-    public static function has(string $key): bool
-    {
-        return isset(static::$instances[$key]);
-    }
-
-    /**
-     * Sets an entry.
-     *
-     * @param string $key Identifier of the entry.
-     */
-    public static function set(string $key, object $value): void
-    {
-        if (isset(static::$instances[$key])) {
-            throw new InvalidArgumentException('The entry for "' . $key . '" is already set.');
-        }
-
-        static::$instances[$key] = $value;
-    }
-
-    /**
-     * Overrides an existing entry.
-     *
-     * @param string $key Identifier of the entry.
-     */
-    public static function override(string $key, object $value): void
-    {
-        static::$instances[$key] = $value;
-    }
 
     /**
      * Returns a shared instance of any of the class' services.
@@ -291,20 +226,13 @@ class BaseService
      * within namespaced folders, as well as convenience methods for
      * loading 'helpers', and 'libraries'.
      *
-     * @return FileLocatorInterface
+     * @return FileLocator
      */
     public static function locator(bool $getShared = true)
     {
         if ($getShared) {
             if (empty(static::$instances['locator'])) {
-                $cacheEnabled = class_exists(Optimize::class)
-                    && (new Optimize())->locatorCacheEnabled;
-
-                if ($cacheEnabled) {
-                    static::$instances['locator'] = new FileLocatorCached(new FileLocator(static::autoloader()));
-                } else {
-                    static::$instances['locator'] = new FileLocator(static::autoloader());
-                }
+                static::$instances['locator'] = new FileLocator(static::autoloader());
             }
 
             return static::$mocks['locator'] ?? static::$instances['locator'];
@@ -321,10 +249,6 @@ class BaseService
      */
     public static function __callStatic(string $name, array $arguments)
     {
-        if (isset(static::$factories[$name])) {
-            return static::$factories[$name](...$arguments);
-        }
-
         $service = static::serviceExists($name);
 
         if ($service === null) {
@@ -341,14 +265,11 @@ class BaseService
     public static function serviceExists(string $name): ?string
     {
         static::buildServicesCache();
-
         $services = array_merge(self::$serviceNames, [Services::class]);
         $name     = strtolower($name);
 
         foreach ($services as $service) {
             if (method_exists($service, $name)) {
-                static::$factories[$name] = [$service, $name];
-
                 return $service;
             }
         }
@@ -360,14 +281,11 @@ class BaseService
      * Reset shared instances and mocks for testing.
      *
      * @return void
-     *
-     * @testTag only available to test code
      */
     public static function reset(bool $initAutoloader = true)
     {
         static::$mocks     = [];
         static::$instances = [];
-        static::$factories = [];
 
         if ($initAutoloader) {
             static::autoloader()->initialize(new Autoload(), new Modules());
@@ -375,58 +293,9 @@ class BaseService
     }
 
     /**
-     * Reconnect cache connection for worker mode at the start of a request.
-     * Checks if cache connection is alive and reconnects if needed.
-     *
-     * This should be called at the beginning of each request in worker mode,
-     * before the application runs.
-     */
-    public static function reconnectCacheForWorkerMode(): void
-    {
-        if (! isset(static::$instances['cache'])) {
-            return;
-        }
-
-        $cache = static::$instances['cache'];
-
-        if (! $cache->ping()) {
-            $cache->reconnect();
-        }
-    }
-
-    /**
-     * Resets all services except those in the persistent list.
-     * Used for worker mode to preserve expensive-to-initialize services.
-     *
-     * Called at the END of each request to clean up state.
-     */
-    public static function resetForWorkerMode(WorkerMode $config): void
-    {
-        // Reset mocks (testing only, safe to clear)
-        static::$mocks = [];
-
-        // Reset factories
-        static::$factories = [];
-
-        // Process each service instance
-        $persistentInstances = [];
-
-        foreach (static::$instances as $serviceName => $service) {
-            // Persist services in the persistent list
-            if (in_array($serviceName, $config->persistentServices, true)) {
-                $persistentInstances[$serviceName] = $service;
-            }
-        }
-
-        static::$instances = $persistentInstances;
-    }
-
-    /**
      * Resets any mock and shared instances for a single service.
      *
      * @return void
-     *
-     * @testTag only available to test code
      */
     public static function resetSingle(string $name)
     {
@@ -440,22 +309,62 @@ class BaseService
      * @param object $mock
      *
      * @return void
-     *
-     * @testTag only available to test code
      */
     public static function injectMock(string $name, $mock)
     {
-        static::$instances[$name]         = $mock;
         static::$mocks[strtolower($name)] = $mock;
     }
 
     /**
-     * Resets the service cache.
+     * Will scan all psr4 namespaces registered with system to look
+     * for new Config\Services files. Caches a copy of each one, then
+     * looks for the service method in each, returning an instance of
+     * the service, if available.
+     *
+     * @return object|null
+     *
+     * @deprecated
+     *
+     * @codeCoverageIgnore
      */
-    public static function resetServicesCache(): void
+    protected static function discoverServices(string $name, array $arguments)
     {
-        self::$serviceNames = [];
-        static::$discovered = false;
+        if (! static::$discovered) {
+            if ((new Modules())->shouldDiscover('services')) {
+                $locator = static::locator();
+                $files   = $locator->search('Config/Services');
+
+                if (empty($files)) {
+                    // no files at all found - this would be really, really bad
+                    return null;
+                }
+
+                // Get instances of all service classes and cache them locally.
+                foreach ($files as $file) {
+                    $classname = $locator->getClassname($file);
+
+                    if (! in_array($classname, [Services::class], true)) {
+                        static::$services[] = new $classname();
+                    }
+                }
+            }
+
+            static::$discovered = true;
+        }
+
+        if (! static::$services) {
+            // we found stuff, but no services - this would be really bad
+            return null;
+        }
+
+        // Try to find the desired service method
+        foreach (static::$services as $class) {
+            if (method_exists($class, $name)) {
+                return $class::$name(...$arguments);
+            }
+        }
+
+        return null;
     }
 
     protected static function buildServicesCache(): void
@@ -465,23 +374,13 @@ class BaseService
                 $locator = static::locator();
                 $files   = $locator->search('Config/Services');
 
-                $systemPath = static::autoloader()->getNamespace('CodeIgniter')[0];
-
                 // Get instances of all service classes and cache them locally.
                 foreach ($files as $file) {
-                    // Does not search `CodeIgniter` namespace to prevent from loading twice.
-                    if (str_starts_with($file, $systemPath)) {
-                        continue;
-                    }
-
-                    $classname = $locator->findQualifiedNameFromPath($file);
-
-                    if ($classname === false) {
-                        continue;
-                    }
+                    $classname = $locator->getClassname($file);
 
                     if ($classname !== Services::class) {
                         self::$serviceNames[] = $classname;
+                        static::$services[]   = new $classname();
                     }
                 }
             }

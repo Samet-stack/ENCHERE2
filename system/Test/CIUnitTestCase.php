@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -19,7 +17,6 @@ use CodeIgniter\Database\BaseConnection;
 use CodeIgniter\Database\MigrationRunner;
 use CodeIgniter\Database\Seeder;
 use CodeIgniter\Events\Events;
-use CodeIgniter\HTTP\Header;
 use CodeIgniter\Router\RouteCollection;
 use CodeIgniter\Session\Handlers\ArrayHandler;
 use CodeIgniter\Test\Mock\MockCache;
@@ -53,7 +50,7 @@ abstract class CIUnitTestCase extends TestCase
      * WARNING: Do not override unless you know exactly what you are doing.
      *          This property may be deprecated in the future.
      *
-     * @var list<string> array of methods
+     * @var array of methods
      */
     protected $setUpMethods = [
         'resetFactories',
@@ -67,14 +64,12 @@ abstract class CIUnitTestCase extends TestCase
      *
      * WARNING: This property may be deprecated in the future.
      *
-     * @var list<string> array of methods
+     * @var array of methods
      */
     protected $tearDownMethods = [];
 
     /**
      * Store of identified traits.
-     *
-     * @var array<class-string, class-string>|null
      */
     private ?array $traits = null;
 
@@ -112,9 +107,9 @@ abstract class CIUnitTestCase extends TestCase
 
     /**
      * The seed file(s) used for all tests within this test case.
-     * Should be fully-namespaced or relative to $basePath.
+     * Should be fully-namespaced or relative to $basePath
      *
-     * @var ''|class-string<Seeder>|list<class-string<Seeder>>
+     * @var array|string
      */
     protected $seed = '';
 
@@ -124,15 +119,15 @@ abstract class CIUnitTestCase extends TestCase
      *
      * @var string
      */
-    protected $basePath = TESTPATH . '_support/Database';
+    protected $basePath = SUPPORTPATH . 'Database';
 
     /**
      * The namespace(s) to help us find the migration classes.
-     * `null` is equivalent to running `spark migrate --all`.
+     * Empty is equivalent to running `spark migrate --all`.
      * Note that running "all" runs migrations in date order,
-     * but specifying namespaces runs them in namespace order (then date).
+     * but specifying namespaces runs them in namespace order (then date)
      *
-     * @var list<string>|string|null
+     * @var array|string|null
      */
     protected $namespace = 'Tests\Support';
 
@@ -140,7 +135,8 @@ abstract class CIUnitTestCase extends TestCase
      * The name of the database group to connect to.
      * If not present, will use the defaultGroup.
      *
-     * @var non-empty-string
+     * @var string
+     * @phpstan-var non-empty-string
      */
     protected $DBGroup = 'tests';
 
@@ -159,17 +155,17 @@ abstract class CIUnitTestCase extends TestCase
     protected $migrations;
 
     /**
-     * Seeder instance.
+     * Seeder instance
      *
-     * @var Seeder|null
+     * @var Seeder
      */
     protected $seeder;
 
     /**
      * Stores information needed to remove any
-     * rows inserted via $this->hasInDatabase().
+     * rows inserted via $this->hasInDatabase();
      *
-     * @var list<array<int|string, mixed>>
+     * @var array
      */
     protected $insertCache = [];
 
@@ -189,27 +185,27 @@ abstract class CIUnitTestCase extends TestCase
      * Values to be set in the SESSION global
      * before running the test.
      *
-     * @var array<int|string, mixed>
+     * @var array
      */
     protected $session = [];
 
     /**
-     * Enabled auto clean op buffer after request call.
+     * Enabled auto clean op buffer after request call
      *
      * @var bool
      */
     protected $clean = true;
 
     /**
-     * Custom request's headers.
+     * Custom request's headers
      *
-     * @var array<string, Header|list<Header>>
+     * @var array
      */
     protected $headers = [];
 
     /**
      * Allows for formatting the request body to what
-     * the controller is going to expect.
+     * the controller is going to expect
      *
      * @var string
      */
@@ -241,7 +237,7 @@ abstract class CIUnitTestCase extends TestCase
     {
         parent::setUp();
 
-        if (! $this->app instanceof CodeIgniter) {
+        if (! $this->app) {
             $this->app = $this->createApplication();
         }
 
@@ -279,7 +275,7 @@ abstract class CIUnitTestCase extends TestCase
      * Checks for traits with corresponding
      * methods for setUp or tearDown.
      *
-     * @param 'setUp'|'tearDown' $stage
+     * @param string $stage 'setUp' or 'tearDown'
      */
     private function callTraitMethods(string $stage): void
     {
@@ -301,9 +297,7 @@ abstract class CIUnitTestCase extends TestCase
     // --------------------------------------------------------------------
 
     /**
-     * Resets shared instanced for all Factories components.
-     *
-     * @return void
+     * Resets shared instanced for all Factories components
      */
     protected function resetFactories()
     {
@@ -311,9 +305,7 @@ abstract class CIUnitTestCase extends TestCase
     }
 
     /**
-     * Resets shared instanced for all Services.
-     *
-     * @return void
+     * Resets shared instanced for all Services
      */
     protected function resetServices(bool $initAutoloader = true)
     {
@@ -321,9 +313,7 @@ abstract class CIUnitTestCase extends TestCase
     }
 
     /**
-     * Injects the mock Cache driver to prevent filesystem collisions.
-     *
-     * @return void
+     * Injects the mock Cache driver to prevent filesystem collisions
      */
     protected function mockCache()
     {
@@ -331,9 +321,7 @@ abstract class CIUnitTestCase extends TestCase
     }
 
     /**
-     * Injects the mock email driver so no emails really send.
-     *
-     * @return void
+     * Injects the mock email driver so no emails really send
      */
     protected function mockEmail()
     {
@@ -341,9 +329,7 @@ abstract class CIUnitTestCase extends TestCase
     }
 
     /**
-     * Injects the mock session driver into Services.
-     *
-     * @return void
+     * Injects the mock session driver into Services
      */
     protected function mockSession()
     {
@@ -374,7 +360,7 @@ abstract class CIUnitTestCase extends TestCase
         $this->assertTrue($result, sprintf(
             'Failed asserting that expected message "%s" with level "%s" was logged.',
             $expectedMessage ?? '',
-            $level,
+            $level
         ));
 
         return $result;
@@ -387,11 +373,11 @@ abstract class CIUnitTestCase extends TestCase
     {
         $this->assertTrue(
             TestLogger::didLog($level, $logMessage, false),
-            $message !== '' ? $message : sprintf(
+            $message ?: sprintf(
                 'Failed asserting that logs have a record of message containing "%s" with level "%s".',
                 $logMessage,
-                $level,
-            ),
+                $level
+            )
         );
     }
 
@@ -430,7 +416,7 @@ abstract class CIUnitTestCase extends TestCase
     {
         $this->assertNotNull(
             $this->getHeaderEmitted($header, $ignoreCase, __METHOD__),
-            "Didn't find header for {$header}",
+            "Didn't find header for {$header}"
         );
     }
 
@@ -444,7 +430,7 @@ abstract class CIUnitTestCase extends TestCase
     {
         $this->assertNull(
             $this->getHeaderEmitted($header, $ignoreCase, __METHOD__),
-            "Found header for {$header}",
+            "Found header for {$header}"
         );
     }
 
@@ -454,9 +440,7 @@ abstract class CIUnitTestCase extends TestCase
      * where the result is close but not exactly equal to the
      * expected time, for reasons beyond our control.
      *
-     * @param float|int $actual
-     *
-     * @return void
+     * @param mixed $actual
      *
      * @throws Exception
      */
@@ -476,7 +460,7 @@ abstract class CIUnitTestCase extends TestCase
      * @param mixed $expected
      * @param mixed $actual
      *
-     * @return bool|null
+     * @return bool|void
      *
      * @throws Exception
      */
@@ -494,11 +478,9 @@ abstract class CIUnitTestCase extends TestCase
             $difference = abs($expected - $actual);
 
             $this->assertLessThanOrEqual($tolerance, $difference, $message);
-        } catch (Exception) {
+        } catch (Exception $e) {
             return false;
         }
-
-        return null;
     }
 
     // --------------------------------------------------------------------
@@ -514,7 +496,7 @@ abstract class CIUnitTestCase extends TestCase
     protected function createApplication()
     {
         // Initialize the autoloader.
-        service('autoloader')->initialize(new Autoload(), new Modules());
+        Services::autoloader()->initialize(new Autoload(), new Modules());
 
         $app = new MockCodeIgniter(new App());
         $app->initialize();
@@ -533,8 +515,8 @@ abstract class CIUnitTestCase extends TestCase
 
         foreach (xdebug_get_headers() as $emittedHeader) {
             $found = $ignoreCase
-                ? (str_starts_with(strtolower($emittedHeader), strtolower($header)))
-                : (str_starts_with($emittedHeader, $header));
+                ? (stripos($emittedHeader, $header) === 0)
+                : (strpos($emittedHeader, $header) === 0);
 
             if ($found) {
                 return $emittedHeader;

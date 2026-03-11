@@ -27,35 +27,31 @@ declare(strict_types=1);
 
 namespace Kint\Renderer;
 
+use Kint\Kint;
 use Kint\Parser;
-use Kint\Parser\PluginInterface as ParserPluginInterface;
 use Kint\Renderer\Text\PluginInterface;
 use Kint\Utils;
-use Kint\Value\AbstractValue;
-use Kint\Value\ArrayValue;
-use Kint\Value\Context\ArrayContext;
-use Kint\Value\Context\ClassDeclaredContext;
-use Kint\Value\Context\PropertyContext;
-use Kint\Value\InstanceValue;
-use Kint\Value\StringValue;
+use Kint\Zval\InstanceValue;
+use Kint\Zval\Value;
 
 /**
- * @psalm-import-type Encoding from StringValue
+ * @psalm-import-type Encoding from \Kint\Zval\BlobValue
+ * @psalm-import-type PluginMap from AbstractRenderer
  */
 class TextRenderer extends AbstractRenderer
 {
     /**
      * TextRenderer plugins should implement PluginInterface.
      *
-     * @psalm-var class-string<PluginInterface>[]
+     * @psalm-var PluginMap
      */
-    public static array $plugins = [
-        'array_limit' => Text\LockPlugin::class,
-        'blacklist' => Text\LockPlugin::class,
-        'depth_limit' => Text\LockPlugin::class,
-        'splfileinfo' => Text\SplFileInfoPlugin::class,
+    public static $plugins = [
+        'array_limit' => Text\ArrayLimitPlugin::class,
+        'blacklist' => Text\BlacklistPlugin::class,
+        'depth_limit' => Text\DepthLimitPlugin::class,
+        'enum' => Text\EnumPlugin::class,
         'microtime' => Text\MicrotimePlugin::class,
-        'recursion' => Text\LockPlugin::class,
+        'recursion' => Text\RecursionPlugin::class,
         'trace' => Text\TracePlugin::class,
     ];
 
@@ -63,21 +59,14 @@ class TextRenderer extends AbstractRenderer
      * Parser plugins must be instanceof one of these or
      * it will be removed for performance reasons.
      *
-     * @psalm-var class-string<ParserPluginInterface>[]
+     * @psalm-var class-string[]
      */
-    public static array $parser_plugin_whitelist = [
+    public static $parser_plugin_whitelist = [
         Parser\ArrayLimitPlugin::class,
         Parser\ArrayObjectPlugin::class,
         Parser\BlacklistPlugin::class,
-        Parser\ClosurePlugin::class,
-        Parser\DateTimePlugin::class,
-        Parser\DomPlugin::class,
         Parser\EnumPlugin::class,
-        Parser\IteratorPlugin::class,
         Parser\MicrotimePlugin::class,
-        Parser\MysqliPlugin::class,
-        Parser\SimpleXMLElementPlugin::class,
-        Parser\SplFileInfoPlugin::class,
         Parser\StreamPlugin::class,
         Parser\TracePlugin::class,
     ];
@@ -86,80 +75,80 @@ class TextRenderer extends AbstractRenderer
      * The maximum length of a string before it is truncated.
      *
      * Falsey to disable
+     *
+     * @var int
      */
-    public static int $strlen_max = 0;
-
-    /**
-     * Timestamp to print in footer in date() format.
-     */
-    public static ?string $timestamp = null;
+    public static $strlen_max = 0;
 
     /**
      * The default width of the terminal for headers.
+     *
+     * @var int
      */
-    public static int $default_width = 80;
+    public static $default_width = 80;
 
     /**
      * Indentation width.
+     *
+     * @var int
      */
-    public static int $default_indent = 4;
+    public static $default_indent = 4;
 
     /**
      * Decorate the header and footer.
+     *
+     * @var bool
      */
-    public static bool $decorations = true;
+    public static $decorations = true;
 
-    public int $header_width = 80;
-    public int $indent_width = 4;
+    /**
+     * Sort mode for object properties.
+     *
+     * @var int
+     */
+    public static $sort = self::SORT_NONE;
 
-    protected array $plugin_objs = [];
+    public $header_width = 80;
+    public $indent_width = 4;
+
+    protected $plugin_objs = [];
 
     public function __construct()
     {
-        parent::__construct();
         $this->header_width = self::$default_width;
         $this->indent_width = self::$default_indent;
     }
 
-    public function render(AbstractValue $v): string
+    public function render(Value $o): string
     {
-        $render_spl_ids_stash = $this->render_spl_ids;
-
-        if ($this->render_spl_ids && ($v->flags & AbstractValue::FLAG_GENERATED)) {
-            $this->render_spl_ids = false;
-        }
-
-        if ($plugin = $this->getPlugin($v)) {
-            $output = $plugin->render($v);
+        if ($plugin = $this->getPlugin(self::$plugins, $o->hints)) {
+            $output = $plugin->render($o);
             if (null !== $output && \strlen($output)) {
-                if (!$this->render_spl_ids && $render_spl_ids_stash) {
-                    $this->render_spl_ids = true;
-                }
-
                 return $output;
             }
         }
 
         $out = '';
 
-        $c = $v->getContext();
-
-        if (0 === $c->getDepth()) {
-            $out .= $this->colorTitle($this->renderTitle($v)).PHP_EOL;
+        if (0 == $o->depth) {
+            $out .= $this->colorTitle($this->renderTitle($o)).PHP_EOL;
         }
 
-        $out .= $header = $this->renderHeader($v);
-        $out .= $this->renderChildren($v);
-
-        if (\strlen($header)) {
-            $out .= PHP_EOL;
-        }
-
-        if (!$this->render_spl_ids && $render_spl_ids_stash) {
-            $this->render_spl_ids = true;
-        }
+        $out .= $this->renderHeader($o);
+        $out .= $this->renderChildren($o).PHP_EOL;
 
         return $out;
+    }
+
+    public function renderNothing(): string
+    {
+        if (self::$decorations) {
+            return $this->colorTitle(
+                $this->boxText('No argument', $this->header_width)
+            ).PHP_EOL;
+        }
+
+        return $this->colorTitle('No argument').PHP_EOL;
     }
 
     public function boxText(string $text, int $width): string
@@ -178,99 +167,96 @@ class TextRenderer extends AbstractRenderer
         return $out;
     }
 
-    public function renderTitle(AbstractValue $v): string
+    public function renderTitle(Value $o): string
     {
+        $name = (string) $o->getName();
+
         if (self::$decorations) {
-            return $this->boxText($v->getDisplayName(), $this->header_width);
+            return $this->boxText($name, $this->header_width);
         }
 
-        return Utils::truncateString($v->getDisplayName(), $this->header_width);
+        return Utils::truncateString($name, $this->header_width);
     }
 
-    public function renderHeader(AbstractValue $v): string
+    public function renderHeader(Value $o): string
     {
         $output = [];
 
-        $c = $v->getContext();
-
-        if ($c->getDepth() > 0) {
-            if ($c instanceof ClassDeclaredContext) {
-                $output[] = $this->colorType($c->getModifiers());
+        if ($o->depth) {
+            if (null !== ($s = $o->getModifiers())) {
+                $output[] = $s;
             }
 
-            if ($c instanceof ArrayContext) {
-                $output[] = $this->escape(\var_export($c->getName(), true));
-            } else {
-                $output[] = $this->escape((string) $c->getName());
-            }
+            if (null !== $o->name) {
+                $output[] = $this->escape(\var_export($o->name, true));
 
-            if ($c instanceof PropertyContext && null !== ($s = $c->getHooks())) {
-                $output[] = $this->colorType($this->escape($s));
-            }
-
-            if (null !== ($s = $c->getOperator())) {
-                $output[] = $this->escape($s);
+                if (null !== ($s = $o->getOperator())) {
+                    $output[] = $this->escape($s);
+                }
             }
         }
 
-        $s = $v->getDisplayType();
-        if ($c->isRef()) {
-            $s = '&'.$s;
+        if (null !== ($s = $o->getType())) {
+            if ($o->reference) {
+                $s = '&'.$s;
+            }
+
+            $s = $this->colorType($this->escape($s));
+
+            if ($o instanceof InstanceValue && isset($o->spl_object_id)) {
+                $s .= '#'.((int) $o->spl_object_id);
+            }
+
+            $output[] = $s;
         }
 
-        $s = $this->colorType($this->escape($s));
-
-        if ($v instanceof InstanceValue && $this->shouldRenderObjectIds()) {
-            $s .= '#'.$v->getSplObjectId();
-        }
-
-        $output[] = $s;
-
-        if (null !== ($s = $v->getDisplaySize())) {
+        if (null !== ($s = $o->getSize())) {
             $output[] = '('.$this->escape($s).')';
         }
 
-        if (null !== ($s = $v->getDisplayValue())) {
+        if (null !== ($s = $o->getValueShort())) {
             if (self::$strlen_max) {
                 $s = Utils::truncateString($s, self::$strlen_max);
             }
             $output[] = $this->colorValue($this->escape($s));
         }
 
-        return \str_repeat(' ', $c->getDepth() * $this->indent_width).\implode(' ', $output);
+        return \str_repeat(' ', $o->depth * $this->indent_width).\implode(' ', $output);
     }
 
-    public function renderChildren(AbstractValue $v): string
+    public function renderChildren(Value $o): string
     {
-        $children = $v->getDisplayChildren();
-
-        if (!$children) {
-            if ($v instanceof ArrayValue) {
-                return ' []';
-            }
-
+        if ('array' === $o->type) {
+            $output = ' [';
+        } elseif ('object' === $o->type) {
+            $output = ' (';
+        } else {
             return '';
         }
 
-        if ($v instanceof ArrayValue) {
-            $output = ' [';
-        } elseif ($v instanceof InstanceValue) {
-            $output = ' (';
+        $children = '';
+
+        if ($o->value && \is_array($o->value->contents)) {
+            if ($o instanceof InstanceValue && 'properties' === $o->value->getName()) {
+                foreach (self::sortProperties($o->value->contents, self::$sort) as $obj) {
+                    $children .= $this->render($obj);
+                }
+            } else {
+                foreach ($o->value->contents as $child) {
+                    $children .= $this->render($child);
+                }
+            }
+        }
+
+        if ($children) {
+            $output .= PHP_EOL.$children;
+            $output .= \str_repeat(' ', $o->depth * $this->indent_width);
+        }
+
+        if ('array' === $o->type) {
+            $output .= ']';
         } else {
-            $output = '';
-        }
-
-        $output .= PHP_EOL;
-        foreach ($children as $child) {
-            $output .= $this->render($child);
-        }
-
-        $indent = \str_repeat(' ', $v->getContext()->getDepth() * $this->indent_width);
-
-        if ($v instanceof ArrayValue) {
-            $output .= $indent.']';
-        } elseif ($v instanceof InstanceValue) {
-            $output .= $indent.')';
+            $output .= ')';
         }
 
         return $output;
@@ -314,7 +300,7 @@ class TextRenderer extends AbstractRenderer
     {
         $return = [];
 
-        foreach ($plugins as $plugin) {
+        foreach ($plugins as $index => $plugin) {
             foreach (self::$parser_plugin_whitelist as $whitelist) {
                 if ($plugin instanceof $whitelist) {
                     $return[] = $plugin;
@@ -328,11 +314,13 @@ class TextRenderer extends AbstractRenderer
 
     public function ideLink(string $file, int $line): string
     {
-        return $this->escape(Utils::shortenPath($file)).':'.$line;
+        return $this->escape(Kint::shortenPath($file)).':'.$line;
     }
 
     /**
      * @psalm-param Encoding $encoding
+     *
+     * @param mixed $encoding
      */
     public function escape(string $string, $encoding = false): string
     {
@@ -343,58 +331,49 @@ class TextRenderer extends AbstractRenderer
     {
         $output = '';
 
-        if (isset($this->callee['file'])) {
+        if (isset($this->call_info['callee']['file'])) {
             $output .= 'Called from '.$this->ideLink(
-                $this->callee['file'],
-                $this->callee['line']
+                $this->call_info['callee']['file'],
+                $this->call_info['callee']['line']
             );
         }
 
         if (
-            isset($this->callee['function']) &&
+            isset($this->call_info['callee']['function']) &&
             (
-                !empty($this->callee['class']) ||
+                !empty($this->call_info['callee']['class']) ||
                 !\in_array(
-                    $this->callee['function'],
+                    $this->call_info['callee']['function'],
                     ['include', 'include_once', 'require', 'require_once'],
                     true
                 )
             )
         ) {
             $output .= ' [';
-            $output .= $this->callee['class'] ?? '';
-            $output .= $this->callee['type'] ?? '';
-            $output .= $this->callee['function'].'()]';
-        }
-
-        if (null !== self::$timestamp) {
-            if (\strlen($output)) {
-                $output .= ' ';
-            }
-            $output .= \date(self::$timestamp);
+            $output .= $this->call_info['callee']['class'] ?? '';
+            $output .= $this->call_info['callee']['type'] ?? '';
+            $output .= $this->call_info['callee']['function'].'()]';
         }
 
         return $output;
     }
 
-    protected function getPlugin(AbstractValue $v): ?PluginInterface
+    /**
+     * @psalm-param PluginMap $plugins
+     * @psalm-param string[] $hints
+     */
+    protected function getPlugin(array $plugins, array $hints): ?PluginInterface
     {
-        $hint = $v->getHint();
+        if ($plugins = $this->matchPlugins($plugins, $hints)) {
+            $plugin = \end($plugins);
 
-        if (null === $hint || !isset(self::$plugins[$hint])) {
-            return null;
+            if (!isset($this->plugin_objs[$plugin]) && \is_subclass_of($plugin, PluginInterface::class)) {
+                $this->plugin_objs[$plugin] = new $plugin($this);
+            }
+
+            return $this->plugin_objs[$plugin];
         }
 
-        $plugin = self::$plugins[$hint];
-
-        if (!\is_a($plugin, PluginInterface::class, true)) {
-            return null;
-        }
-
-        if (!isset($this->plugin_objs[$plugin])) {
-            $this->plugin_objs[$plugin] = new $plugin($this);
-        }
-
-        return $this->plugin_objs[$plugin];
+        return null;
     }
 }

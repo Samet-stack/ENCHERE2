@@ -28,14 +28,15 @@ declare(strict_types=1);
 namespace Kint\Renderer\Rich;
 
 use Kint\Renderer\RichRenderer;
-use Kint\Value\AbstractValue;
-use Kint\Value\Context\ClassDeclaredContext;
-use Kint\Value\Context\PropertyContext;
-use Kint\Value\InstanceValue;
+use Kint\Zval\InstanceValue;
+use Kint\Zval\Value;
 
+/**
+ * @psalm-consistent-constructor
+ */
 abstract class AbstractPlugin implements PluginInterface
 {
-    protected RichRenderer $renderer;
+    protected $renderer;
 
     public function __construct(RichRenderer $r)
     {
@@ -45,51 +46,47 @@ abstract class AbstractPlugin implements PluginInterface
     /**
      * @param string $content The replacement for the getValueShort contents
      */
-    public function renderLockedHeader(AbstractValue $v, string $content): string
+    public function renderLockedHeader(Value $o, string $content): string
     {
         $header = '<dt class="kint-parent kint-locked">';
 
-        $c = $v->getContext();
-
-        if (RichRenderer::$access_paths && $c->getDepth() > 0 && null !== ($ap = $c->getAccessPath())) {
+        if (RichRenderer::$access_paths && $o->depth > 0 && $ap = $o->getAccessPath()) {
             $header .= '<span class="kint-access-path-trigger" title="Show access path">&rlarr;</span>';
         }
 
-        $header .= '<nav></nav>';
+        $header .= '<span class="kint-popup-trigger" title="Open in new window">&boxbox;</span><nav></nav>';
 
-        if ($c instanceof ClassDeclaredContext) {
-            $header .= '<var>'.$c->getModifiers().'</var> ';
+        if (null !== ($s = $o->getModifiers())) {
+            $header .= '<var>'.$s.'</var> ';
         }
 
-        $header .= '<dfn>'.$this->renderer->escape($v->getDisplayName()).'</dfn> ';
+        if (null !== ($s = $o->getName())) {
+            $header .= '<dfn>'.$this->renderer->escape($s).'</dfn> ';
 
-        if ($c instanceof PropertyContext && null !== ($s = $c->getHooks())) {
-            $header .= '<var>'.$this->renderer->escape($s).'</var> ';
+            if ($s = $o->getOperator()) {
+                $header .= $this->renderer->escape($s, 'ASCII').' ';
+            }
         }
 
-        if (null !== ($s = $c->getOperator())) {
-            $header .= $this->renderer->escape($s, 'ASCII').' ';
+        if (null !== ($s = $o->getType())) {
+            if (RichRenderer::$escape_types) {
+                $s = $this->renderer->escape($s);
+            }
+
+            if ($o->reference) {
+                $s = '&amp;'.$s;
+            }
+
+            $header .= '<var>'.$s.'</var>';
+
+            if ($o instanceof InstanceValue && isset($o->spl_object_id)) {
+                $header .= '#'.((int) $o->spl_object_id);
+            }
+
+            $header .= ' ';
         }
 
-        $s = $v->getDisplayType();
-
-        if (RichRenderer::$escape_types) {
-            $s = $this->renderer->escape($s);
-        }
-
-        if ($c->isRef()) {
-            $s = '&amp;'.$s;
-        }
-
-        $header .= '<var>'.$s.'</var>';
-
-        if ($v instanceof InstanceValue && $this->renderer->shouldRenderObjectIds()) {
-            $header .= '#'.$v->getSplObjectId();
-        }
-
-        $header .= ' ';
-
-        if (null !== ($s = $v->getDisplaySize())) {
+        if (null !== ($s = $o->getSize())) {
             if (RichRenderer::$escape_types) {
                 $s = $this->renderer->escape($s);
             }

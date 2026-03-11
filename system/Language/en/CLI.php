@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -19,19 +17,17 @@ return [
     'generator'          => [
         'cancelOperation' => 'Operation has been cancelled.',
         'className'       => [
-            'cell'        => 'Cell class name',
-            'command'     => 'Command class name',
-            'config'      => 'Config class name',
-            'controller'  => 'Controller class name',
-            'default'     => 'Class name',
-            'entity'      => 'Entity class name',
-            'filter'      => 'Filter class name',
-            'migration'   => 'Migration class name',
-            'model'       => 'Model class name',
-            'seeder'      => 'Seeder class name',
-            'test'        => 'Test class name',
-            'transformer' => 'Transformer class name',
-            'validation'  => 'Validation class name',
+            'cell'       => 'Cell class name',
+            'command'    => 'Command class name',
+            'config'     => 'Config class name',
+            'controller' => 'Controller class name',
+            'default'    => 'Class name',
+            'entity'     => 'Entity class name',
+            'filter'     => 'Filter class name',
+            'migration'  => 'Migration class name',
+            'model'      => 'Model class name',
+            'seeder'     => 'Seeder class name',
+            'validation' => 'Validation class name',
         ],
         'commandType'      => 'Command type',
         'databaseGroup'    => 'Database group',
@@ -53,9 +49,4 @@ return [
     'helpUsage'           => 'Usage:',
     'invalidColor'        => 'Invalid "{0}" color: "{1}".',
     'namespaceNotDefined' => 'Namespace "{0}" is not defined.',
-    'signals'             => [
-        'noPcntlExtension' => 'PCNTL extension not available. Signal handling disabled.',
-        'noPosixExtension' => 'SIGTSTP/SIGCONT handling requires POSIX extension. These signals will be removed from registration.',
-        'failedSignal'     => 'Failed to register handler for signal: "{0}".',
-    ],
 ];
