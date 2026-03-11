@@ -633,6 +633,10 @@ class Enchere extends BaseController
         $data['nbUtilisateurs'] = $monmodel->getNbUtilisateurs();
         $data['nbArticles'] = $monmodel->getNbArticles();
         $data['dernieresVentes'] = $monmodel->getLesVentes();
+        
+        // Données pour les statistiques avancées (graphiques)
+        $data['evolutionEncheres'] = $monmodel->getEvolutionEncheres();
+        $data['tauxParticipation'] = $monmodel->getTauxParticipation();
 
         return view('dashboard', $data);
     }
