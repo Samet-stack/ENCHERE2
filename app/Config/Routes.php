@@ -30,7 +30,7 @@ $routes->get('Enchere/qrcodeVente/(:num)', 'Enchere::qrcodeVente/$1');
 $routes->get('Enchere/listeArticles', 'Enchere::listeArticles');
 $routes->get('Enchere/creerArticle', 'Enchere::creerArticle');
 $routes->post('Enchere/validerCreerArticle', 'Enchere::validerCreerArticle');
-$routes->post('Enchere/selectionnerArticle/(:num)', 'Enchere::selectionnerArticle/$1', ['filter' => 'role:benevole']);
+$routes->post('Enchere/selectionnerArticle/(:num)', 'Enchere::selectionnerArticle/$1', ['filter' => 'role:benevole,secretaire']);
 
 // Enchères
 $routes->post('Enchere/encherir/(:num)', 'Enchere::encherir/$1');
