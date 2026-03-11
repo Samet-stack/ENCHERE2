@@ -95,12 +95,14 @@
         .stat-label {
             color: #7f8c8d;
             margin-top: 5px;
+            font-weight: bold;
         }
 
         table {
             border-collapse: collapse;
             width: 100%;
             margin: 15px 0;
+            background-color: white;
         }
 
         table th,
@@ -151,7 +153,7 @@
             border: 1px solid #ddd;
             border-radius: 8px;
             padding: 15px;
-            margin: 10px 0;
+            margin: 10px 0 30px;
         }
 
         footer {
@@ -161,22 +163,7 @@
             padding: 15px;
             margin-top: 30px;
         }
-
-        .charts-container {
-            display: flex;
-            gap: 20px;
-            margin: 20px 0;
-        }
-
-        .chart-box {
-            flex: 1;
-            background-color: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 20px;
-        }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -185,7 +172,7 @@
     <div class="container">
         <h1>Tableau de bord</h1>
 
-        <!-- Statistiques -->
+        <!-- Statistiques Simples -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-value">
@@ -194,13 +181,13 @@
                 <div class="stat-label">Ventes totales</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">
+                <div class="stat-value" style="color: #27ae60;">
                     <?= $statsVentes['en_cours']; ?>
                 </div>
                 <div class="stat-label">Ventes en cours</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">
+                <div class="stat-value" style="color: #e67e22;">
                     <?= number_format($montantTotal, 2); ?> €
                 </div>
                 <div class="stat-label">Revenus confirmés</div>
@@ -209,40 +196,29 @@
                 <div class="stat-value">
                     <?= $nbUtilisateurs; ?>
                 </div>
-                <div class="stat-label">Utilisateurs</div>
+                <div class="stat-label">Utilisateurs inscrits</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">
+                <div class="stat-value" style="color: #8e44ad;">
                     <?= $nbArticles; ?>
                 </div>
-                <div class="stat-label">Articles</div>
+                <div class="stat-label">Articles mis aux enchères</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">
+                <div class="stat-value" style="color: #f1c40f;">
                     <?= $statsVentes['a_venir']; ?>
                 </div>
                 <div class="stat-label">Ventes à venir</div>
             </div>
         </div>
 
-        <!-- Graphiques Statistiques -->
-        <h2>Évolution et Répartition</h2>
-        <div class="charts-container">
-            <div class="chart-box">
-                <canvas id="ventesChart"></canvas>
-            </div>
-            <div class="chart-box">
-                <canvas id="caChart"></canvas>
-            </div>
-        </div>
-
         <!-- Actions rapides -->
         <div class="card">
-            <h3>Actions rapides</h3>
+            <h3 style="margin-top: 0; color: #2c3e50;">Actions rapides</h3>
             <?= anchor('Enchere/creerVente', '+ Nouvelle vente', ['class' => 'btn btn-success']); ?>
             <?= anchor('Enchere/creerArticle', '+ Nouvel article', ['class' => 'btn btn-success']); ?>
-            <?= anchor('Enchere/listeVentes', 'Voir les ventes', ['class' => 'btn']); ?>
-            <?= anchor('Enchere/listeArticles', 'Voir les articles', ['class' => 'btn']); ?>
+            <?= anchor('Enchere/listeVentes', 'Gérer les ventes', ['class' => 'btn']); ?>
+            <?= anchor('Enchere/listeArticles', 'Gérer les articles', ['class' => 'btn']); ?>
         </div>
 
         <!-- Dernières ventes -->
@@ -250,10 +226,10 @@
         <?php if (!empty($dernieresVentes)): ?>
             <table>
                 <tr>
-                    <th>Titre</th>
+                    <th>Titre de la vente</th>
                     <th>État</th>
-                    <th>Début</th>
-                    <th>Fin</th>
+                    <th>Date de début</th>
+                    <th>Date de fin</th>
                     <th>Actions</th>
                 </tr>
                 <?php foreach ($dernieresVentes as $vente): ?>
@@ -290,9 +266,9 @@
                         </td>
                         <td>
                             <?= anchor('Enchere/detailVente/' . $vente->id_vente, 'Détails', ['class' => 'btn']); ?>
-                            <?= anchor('Enchere/qrcodeVente/' . $vente->id_vente, 'QR', ['class' => 'btn']); ?>
+                            <?= anchor('Enchere/qrcodeVente/' . $vente->id_vente, 'QR Code', ['class' => 'btn']); ?>
                             <?php if ($vente->etat !== 'cloturee'): ?>
-                                <?= anchor('Enchere/cloturerVente/' . $vente->id_vente, 'Clôturer', ['class' => 'btn btn-danger', 'onclick' => "return confirm('Clôturer ?')"]); ?>
+                                <?= anchor('Enchere/cloturerVente/' . $vente->id_vente, 'Clôturer la vente', ['class' => 'btn btn-danger', 'onclick' => "return confirm('Êtes-vous sûr de vouloir clôturer cette vente ?')"]); ?>
                             <?php
         endif; ?>
                         </td>
@@ -302,66 +278,35 @@
             </table>
         <?php
 else: ?>
-            <p style="color: #7f8c8d;">Aucune vente. Créez-en une !</p>
+            <div class="card">
+                <p style="color: #7f8c8d; text-align: center; margin: 0;">Aucune vente enregistrée pour le moment. Vous pouvez en créer une depuis les actions rapides !</p>
+            </div>
         <?php
 endif; ?>
     </div>
 
-    <!-- STATISTIQUES AVANCÉES : Articles les plus enchéris -->
-    <div class="container">
-        <h2>🏆 Articles les plus enchéris</h2>
+    <!-- PRIX D'OR : Articles les plus populaires -->
+    <div class="container" style="margin-top: -10px;">
+        <h2>🏆 Articles les plus populaires</h2>
         <?php if (!empty($topArticles)): ?>
             <table>
                 <tr>
                     <th>Article</th>
-                    <th>Nombre d'enchères</th>
+                    <th>Total d'enchères reçues</th>
                 </tr>
                 <?php foreach ($topArticles as $article): ?>
                     <tr>
-                        <td><?= $article->libelle; ?></td>
-                        <td><strong><?= $article->nb_encheres; ?></strong></td>
+                        <td style="font-size: 16px;"><strong><?= $article->libelle; ?></strong></td>
+                        <td><span class="badge badge-success" style="font-size: 14px; padding: 6px 12px;"><?= $article->nb_encheres; ?> enchères</span></td>
                     </tr>
                 <?php
     endforeach; ?>
             </table>
         <?php
 else: ?>
-            <p style="color: #7f8c8d;">Aucune enchère pour le moment.</p>
-        <?php
-endif; ?>
-
-        <!-- STATISTIQUES AVANCÉES : Évolution des enchères -->
-        <div class="charts-container">
-            <div class="chart-box">
-                <canvas id="evolutionChart"></canvas>
+            <div class="card">
+                <p style="color: #7f8c8d; text-align: center; margin: 0;">Aucune enchère n'a encore été effectuée sur vos articles.</p>
             </div>
-        </div>
-
-        <!-- STATISTIQUES AVANCÉES : Taux de participation par vente -->
-        <h2>📈 Taux de participation par vente</h2>
-        <?php if (!empty($tauxParticipation)): ?>
-            <table>
-                <tr>
-                    <th>Vente</th>
-                    <th>Taux de participation</th>
-                </tr>
-                <?php foreach ($tauxParticipation as $v): ?>
-                    <tr>
-                        <td><?= $v->titre; ?></td>
-                        <td>
-                            <div style="background: #ecf0f1; border-radius: 10px; overflow: hidden;">
-                                <div style="background: <?= $v->taux >= 50 ? '#27ae60' : '#f39c12'; ?>; width: <?= $v->taux; ?>%; padding: 4px 8px; color: white; font-size: 12px; min-width: 30px; text-align: center;">
-                                    <?= $v->taux; ?>%
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                <?php
-    endforeach; ?>
-            </table>
-        <?php
-else: ?>
-            <p style="color: #7f8c8d;">Aucune donnée de participation.</p>
         <?php
 endif; ?>
     </div>
@@ -372,97 +317,6 @@ endif; ?>
         </p>
     </footer>
 
-    <script>
-        // Graphique des Ventes (Camembert)
-        const ctxVentes = document.getElementById('ventesChart').getContext('2d');
-        const ventesChart = new Chart(ctxVentes, {
-            type: 'doughnut',
-            data: {
-                labels: ['À venir', 'En cours', 'Clôturées'],
-                datasets: [{
-                    data: [
-                        <?= $statsVentes['a_venir']; ?>,
-                        <?= $statsVentes['en_cours']; ?>,
-                        <?= $statsVentes['cloturee']; ?>
-                    ],
-                    backgroundColor: [
-                        '#f1c40f', // yellow
-                        '#2ecc71', // green
-                        '#e74c3c'  // red
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'bottom' },
-                    title: { display: true, text: 'Répartition des statuts de ventes' }
-                }
-            }
-        });
-
-        // Graphique Vue d'ensemble (Barres)
-        const ctxCa = document.getElementById('caChart').getContext('2d');
-        const caChart = new Chart(ctxCa, {
-            type: 'bar',
-            data: {
-                labels: ['Utilisateurs', 'Articles', 'Ventes Totales'],
-                datasets: [{
-                    label: 'Quantité',
-                    data: [
-                        <?= $nbUtilisateurs; ?>,
-                        <?= $nbArticles; ?>,
-                        <?= $totalVentes; ?>
-                    ],
-                    backgroundColor: '#3498db',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: false },
-                    title: { display: true, text: 'Vue d\'ensemble de la plateforme' }
-                },
-                scales: {
-                    y: { beginAtZero: true }
-                }
-            }
-        });
-        // Graphique Évolution des enchères (7 derniers jours)
-        const ctxEvolution = document.getElementById('evolutionChart').getContext('2d');
-        const evolutionChart = new Chart(ctxEvolution, {
-            type: 'line',
-            data: {
-                labels: [<?php foreach ($evolutionEncheres as $e) {
-    echo "'" . date('d/m', strtotime($e->jour)) . "',";
-}?>],
-                datasets: [{
-                    label: 'Enchères par jour',
-                    data: [<?php foreach ($evolutionEncheres as $e) {
-    echo $e->total . ",";
-}?>],
-                    borderColor: '#3498db',
-                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                    fill: true,
-                    tension: 0.3,
-                    borderWidth: 2,
-                    pointRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: { display: true, text: 'Évolution des enchères (7 derniers jours)' },
-                    legend: { display: false }
-                },
-                scales: {
-                    y: { beginAtZero: true }
-                }
-            }
-        });
-    </script>
 </body>
 
 </html>
