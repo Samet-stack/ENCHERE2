@@ -12,6 +12,11 @@ class EnchereController extends BaseController
      */
     public function encherir($idVenteArticle)
     {
+        // Restriction : le secrétaire ne peut pas enchérir
+        if ($this->session->get('role') === 'secretaire') {
+            return redirect()->back()->with('error', 'En tant que secrétaire de mairie, vous n\'avez pas la possibilité d\'enchérir.');
+        }
+
         $enchereModel = new EnchereModel();
         $venteArticleModel = new VenteArticleModel();
 

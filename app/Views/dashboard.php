@@ -160,11 +160,26 @@
         }
 
         @media (max-width: 768px) {
-            .stats-grid { flex-direction: column; }
-            .stat-card { min-width: auto; }
-            table { font-size: 13px; }
-            table th, table td { padding: 6px; }
-            .container { padding: 10px; }
+            .stats-grid {
+                flex-direction: column;
+            }
+
+            .stat-card {
+                min-width: auto;
+            }
+
+            table {
+                font-size: 13px;
+            }
+
+            table th,
+            table td {
+                padding: 6px;
+            }
+
+            .container {
+                padding: 10px;
+            }
         }
 
         footer {
@@ -250,21 +265,21 @@
                             </strong></td>
                         <td>
                             <?php
-        $badgeClass = 'badge-warning';
-        $badgeLabel = $vente->etat;
-        if ($vente->etat === 'en_cours') {
-            $badgeClass = 'badge-success';
-            $badgeLabel = 'En cours';
-        }
-        if ($vente->etat === 'a_venir') {
-            $badgeClass = 'badge-warning';
-            $badgeLabel = 'À venir';
-        }
-        if ($vente->etat === 'cloturee') {
-            $badgeClass = 'badge-danger';
-            $badgeLabel = 'Clôturée';
-        }
-?>
+                            $badgeClass = 'badge-warning';
+                            $badgeLabel = $vente->etat;
+                            if ($vente->etat === 'en_cours') {
+                                $badgeClass = 'badge-success';
+                                $badgeLabel = 'En cours';
+                            }
+                            if ($vente->etat === 'a_venir') {
+                                $badgeClass = 'badge-warning';
+                                $badgeLabel = 'À venir';
+                            }
+                            if ($vente->etat === 'cloturee') {
+                                $badgeClass = 'badge-danger';
+                                $badgeLabel = 'Clôturée';
+                            }
+                            ?>
                             <span class="badge <?= $badgeClass; ?>">
                                 <?= $badgeLabel; ?>
                             </span>
@@ -280,25 +295,26 @@
                             <?= anchor('Enchere/qrcodeVente/' . $vente->id_vente, 'QR Code', ['class' => 'btn']); ?>
                             <?php if ($vente->etat !== 'cloturee'): ?>
                                 <?= anchor('Enchere/cloturerVente/' . $vente->id_vente, 'Clôturer la vente', ['class' => 'btn btn-danger', 'onclick' => "return confirm('Êtes-vous sûr de vouloir clôturer cette vente ?')"]); ?>
-                            <?php
-        endif; ?>
+                                <?php
+                            endif; ?>
                         </td>
                     </tr>
-                <?php
-    endforeach; ?>
+                    <?php
+                endforeach; ?>
             </table>
-        <?php
-else: ?>
+            <?php
+        else: ?>
             <div class="card">
-                <p style="color: #7f8c8d; text-align: center; margin: 0;">Aucune vente enregistrée pour le moment. Vous pouvez en créer une depuis les actions rapides !</p>
+                <p style="color: #7f8c8d; text-align: center; margin: 0;">Aucune vente enregistrée pour le moment. Vous
+                    pouvez en créer une depuis les actions rapides !</p>
             </div>
-        <?php
-endif; ?>
+            <?php
+        endif; ?>
     </div>
 
-    <!-- PRIX D'OR : Articles les plus populaires -->
+    <!-- Articles les plus populaires -->
     <div class="container" style="margin-top: -10px;">
-        <h2>🏆 Articles les plus populaires</h2>
+        <h2>Articles les plus populaires</h2>
         <?php if (!empty($topArticles)): ?>
             <table>
                 <tr>
@@ -308,23 +324,25 @@ endif; ?>
                 <?php foreach ($topArticles as $article): ?>
                     <tr>
                         <td style="font-size: 16px;"><strong><?= $article->libelle; ?></strong></td>
-                        <td><span class="badge badge-success" style="font-size: 14px; padding: 6px 12px;"><?= $article->nb_encheres; ?> enchères</span></td>
+                        <td><span class="badge badge-success"
+                                style="font-size: 14px; padding: 6px 12px;"><?= $article->nb_encheres; ?> enchères</span></td>
                     </tr>
-                <?php
-    endforeach; ?>
+                    <?php
+                endforeach; ?>
             </table>
-        <?php
-else: ?>
+            <?php
+        else: ?>
             <div class="card">
-                <p style="color: #7f8c8d; text-align: center; margin: 0;">Aucune enchère n'a encore été effectuée sur vos articles.</p>
+                <p style="color: #7f8c8d; text-align: center; margin: 0;">Aucune enchère n'a encore été effectuée sur vos
+                    articles.</p>
             </div>
-        <?php
-endif; ?>
+            <?php
+        endif; ?>
     </div>
 
     <!-- Évolution des enchères (7 derniers jours) -->
     <div class="container" style="margin-top: -10px;">
-        <h2>📈 Évolution des enchères (7 derniers jours)</h2>
+        <h2>Évolution des enchères (7 derniers jours)</h2>
         <?php if (!empty($evolutionEncheres)): ?>
             <table>
                 <tr>
@@ -334,7 +352,8 @@ endif; ?>
                 <?php foreach ($evolutionEncheres as $jour): ?>
                     <tr>
                         <td><?= date('d/m/Y', strtotime($jour->jour)); ?></td>
-                        <td><span class="badge badge-success" style="font-size: 14px; padding: 6px 12px;"><?= $jour->total; ?></span></td>
+                        <td><span class="badge badge-success"
+                                style="font-size: 14px; padding: 6px 12px;"><?= $jour->total; ?></span></td>
                     </tr>
                 <?php endforeach; ?>
             </table>
@@ -347,7 +366,7 @@ endif; ?>
 
     <!-- Taux de participation par vente -->
     <div class="container" style="margin-top: -10px;">
-        <h2>📊 Taux de participation par vente</h2>
+        <h2>Taux de participation par vente</h2>
         <?php if (!empty($tauxParticipation)): ?>
             <table>
                 <tr>
@@ -358,9 +377,13 @@ endif; ?>
                     <tr>
                         <td><?= $vente->titre; ?></td>
                         <td>
-                            <div style="background-color: #ecf0f1; border-radius: 10px; overflow: hidden; height: 24px; position: relative;">
-                                <div style="background-color: <?= $vente->taux >= 50 ? '#27ae60' : ($vente->taux >= 25 ? '#f39c12' : '#e74c3c'); ?>; height: 100%; width: <?= $vente->taux; ?>%; border-radius: 10px; transition: width 0.3s;"></div>
-                                <span style="position: absolute; top: 2px; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 13px;"><?= $vente->taux; ?>%</span>
+                            <div
+                                style="background-color: #ecf0f1; border-radius: 10px; overflow: hidden; height: 24px; position: relative;">
+                                <div
+                                    style="background-color: <?= $vente->taux >= 50 ? '#27ae60' : ($vente->taux >= 25 ? '#f39c12' : '#e74c3c'); ?>; height: 100%; width: <?= $vente->taux; ?>%; border-radius: 10px; transition: width 0.3s;">
+                                </div>
+                                <span
+                                    style="position: absolute; top: 2px; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 13px;"><?= $vente->taux; ?>%</span>
                             </div>
                         </td>
                     </tr>

@@ -271,22 +271,7 @@
                 <p><strong>Articles :</strong>
                     <?= count($articles); ?>
                 </p>
-                <?php if ($vente->etat === 'en_cours'): ?>
-                    <?php
-                    $fin = new DateTime($vente->date_fin);
-                    $now = new DateTime();
-                    $diff = $now->diff($fin);
-                    ?>
-                    <div class="countdown">
-                        <?php if ($diff->invert): ?>
-                            Terminé
-                        <?php else: ?>
-                            <?= $diff->d; ?>j
-                            <?= $diff->h; ?>h
-                            <?= $diff->i; ?>min restantes
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
+
             </div>
 
             <!-- Inscription -->
@@ -382,8 +367,8 @@
                                 <p style="color: #7f8c8d; font-style: italic;">🔒 Enchères visibles après clôture de la vente.</p>
                             <?php endif; ?>
 
-                            <!-- Formulaire d'enchère (masqué pour les bénévoles) -->
-                            <?php if ($vente->etat === 'en_cours' && session()->get('id_utilisateur') && !$estBenevole): ?>
+                            <!-- Formulaire d'enchère (masqué pour les bénévoles et secrétaires) -->
+                            <?php if ($vente->etat === 'en_cours' && session()->get('id_utilisateur') && !$estBenevole && session()->get('role') !== 'secretaire'): ?>
                                 <?php
                                 $minimum = max($article->prix_depart, 0.20);
                                 if ($article->enchere_max) {

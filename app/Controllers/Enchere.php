@@ -515,8 +515,8 @@ class Enchere extends BaseController
 
         $session = session();
 
-        // Restriction bénévole : ne peut pas consulter l'historique des enchères
-        if ($session->get('role') === 'benevole') {
+        // Seuls les habitants peuvent consulter leur historique d'enchères
+        if ($session->get('role') !== 'habitant') {
             return redirect()->to('Enchere/index');
         }
 

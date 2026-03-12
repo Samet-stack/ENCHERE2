@@ -12,7 +12,7 @@
             <?= anchor('Enchere/dashboard', 'Dashboard'); ?>
         <?php endif; ?>
 
-        <?php if (session()->get('role') !== 'benevole'): ?>
+        <?php if (session()->get('role') === 'habitant'): ?>
             <?= anchor('Enchere/historiqueEncheres', 'Mes enchères'); ?>
             <?= anchor('Enchere/mesAchats', 'Mes achats'); ?>
         <?php endif; ?>
