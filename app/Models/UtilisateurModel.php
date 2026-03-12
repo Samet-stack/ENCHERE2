@@ -34,6 +34,7 @@ class UtilisateurModel extends Model
         'telephone',
         'adresse',
         'ville',
+        'code_postal',
         'est_habitant',
         'est_actif',
         'created_at'

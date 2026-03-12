@@ -6,7 +6,10 @@
 
 -- Ajouter la colonne 'ville' si elle n'existe pas encore
 ALTER TABLE `utilisateurs`
-ADD COLUMN `ville` VARCHAR(100) DEFAULT NULL AFTER `adresse`;
+ADD COLUMN IF NOT EXISTS `ville` VARCHAR(100) DEFAULT NULL AFTER `adresse`,
+ADD COLUMN IF NOT EXISTS `code_postal` VARCHAR(5) DEFAULT NULL AFTER `ville`;
 
 -- Mettre à jour les utilisateurs existants de Getcet
-UPDATE `utilisateurs` SET `ville` = 'Getcet' WHERE `est_habitant` = 1;
+UPDATE `utilisateurs`
+SET `ville` = 'Getcet', `code_postal` = '99999'
+WHERE `est_habitant` = 1;

@@ -3,6 +3,19 @@ namespace App\Controllers;
 
 class Enchere extends BaseController
 {
+    private const VILLE_HABITANT = 'Getcet';
+    private const CODE_POSTAL_HABITANT = '99999';
+
+    private function normaliserVille(?string $ville): string
+    {
+        return ucfirst(strtolower(trim((string) $ville)));
+    }
+
+    private function estAdresseHabitantValide(?string $ville, ?string $codePostal): bool
+    {
+        return $this->normaliserVille($ville) === self::VILLE_HABITANT
+            && trim((string) $codePostal) === self::CODE_POSTAL_HABITANT;
+    }
     //  INITIALISATION (vérification session) 
     public function init()
     {
@@ -72,6 +85,7 @@ class Enchere extends BaseController
             ],
             'confirm_password' => 'required|matches[mot_de_passe]',
             'adresse' => 'required|max_length[255]',
+            'ville' => 'required|min_length[2]|max_length[100]',
             'code_postal' => 'required|exact_length[5]',
         ];
 
@@ -85,7 +99,8 @@ class Enchere extends BaseController
 
         // Vérification que le code postal correspond à la ville de Getcet
         $codePostal = $this->request->getVar('code_postal');
-        if ($codePostal !== '99999') {
+        $ville = $this->request->getVar('ville');
+        if (!$this->estAdresseHabitantValide($ville, $codePostal)) {
             return view('inscription', [
                 'titre' => 'Inscription - EnchèreAPorter',
                 'erreur' => 'Seuls les habitants de Getcet (code postal 99999) peuvent s\'inscrire.',
@@ -102,6 +117,8 @@ class Enchere extends BaseController
             'mot_de_passe' => \password_hash($this->request->getVar('mot_de_passe'), PASSWORD_DEFAULT),
             'telephone' => $this->request->getVar('telephone'),
             'adresse' => $this->request->getVar('adresse'),
+            'ville' => self::VILLE_HABITANT,
+            'code_postal' => self::CODE_POSTAL_HABITANT,
             'est_habitant' => 1,
             'est_actif' => 1,
             'created_at' => \date('Y-m-d H:i:s'),
@@ -206,6 +223,13 @@ class Enchere extends BaseController
 
         // Articles disponibles pour sélection (bénévole/secrétaire)
         $articlesDisponibles = $monmodel->getArticlesDisponibles();
+
+        if ($session->get('role') === 'benevole' && $vente->etat !== 'cloturee') {
+            foreach ($articles as $article) {
+                $article->enchere_max = null;
+                $article->nb_encheres = null;
+            }
+        }
 
         $data = [
             'titre' => $vente->titre . ' - EnchèreAPorter',
@@ -383,6 +407,10 @@ class Enchere extends BaseController
         $data = $this->init();
         if (!$data)
             return redirect()->to(base_url('Enchere/connexion'));
+        $session = session();
+        if (!in_array($session->get('role'), ['benevole', 'secretaire'])) {
+            return redirect()->to('Enchere/index');
+        }
         return view('creer_article', $data);
     }
 
@@ -391,6 +419,10 @@ class Enchere extends BaseController
         $data = $this->init();
         if (!$data)
             return redirect()->to(base_url('Enchere/connexion'));
+        $session = session();
+        if (!in_array($session->get('role'), ['benevole', 'secretaire'])) {
+            return redirect()->to('Enchere/index');
+        }
 
         $rules = [
             'libelle' => 'required|max_length[255]',
@@ -482,7 +514,7 @@ class Enchere extends BaseController
         $session = session();
 
         // Restriction bénévole : ne peut pas enchérir
-        if ($session->get('role') === 'benevole') {
+        if ($session->get('role') !== 'habitant') {
             return redirect()->to('Enchere/index');
         }
 
@@ -491,6 +523,10 @@ class Enchere extends BaseController
         $venteArticle = $monmodel->getVenteArticleDetail($idVenteArticle);
         if (!$venteArticle || $venteArticle->vente_etat !== 'en_cours') {
             return redirect()->to('Enchere/listeVentes');
+        }
+
+        if (!$monmodel->estInscrit($venteArticle->id_vente, $session->get('id_utilisateur'))) {
+            return redirect()->to('Enchere/detailVente/' . $venteArticle->id_vente);
         }
 
         $montant = (float) $this->request->getVar('montant');
@@ -638,19 +674,29 @@ class Enchere extends BaseController
 
         $session = session();
         $idUtilisateur = $session->get('id_utilisateur');
+        $monmodel = new \App\Models\Modele();
+        $utilisateur = $monmodel->getUtilisateurParId($idUtilisateur);
 
         $updateData = [
-            'nom'       => $this->request->getPost('nom'),
-            'prenom'    => $this->request->getPost('prenom'),
-            'telephone' => $this->request->getPost('telephone'),
-            'adresse'   => $this->request->getPost('adresse'),
+            'nom'         => $this->request->getPost('nom'),
+            'prenom'      => $this->request->getPost('prenom'),
+            'telephone'   => $this->request->getPost('telephone'),
+            'adresse'     => $this->request->getPost('adresse'),
+            'ville'       => $this->request->getPost('ville'),
+            'code_postal' => $this->request->getPost('code_postal'),
         ];
+
+        if ((int) $utilisateur->est_habitant === 1
+            && !$this->estAdresseHabitantValide($updateData['ville'], $updateData['code_postal'])) {
+            $data['utilisateur'] = $utilisateur;
+            $data['erreur_mdp'] = 'Les habitants doivent conserver une adresse a Getcet (99999).';
+            return view('profil', $data);
+        }
 
         $newMdp = $this->request->getPost('nouveau_mot_de_passe');
         if (!empty($newMdp)) {
             // Validation mot de passe fort
             if (strlen($newMdp) < 8 || !preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/', $newMdp)) {
-                $monmodel = new \App\Models\Modele();
                 $data['utilisateur'] = $monmodel->getUtilisateurParId($idUtilisateur);
                 $data['erreur_mdp'] = 'Le mot de passe doit contenir au moins 8 caractères, 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial.';
                 return view('profil', $data);
@@ -710,3 +756,4 @@ class Enchere extends BaseController
         return view('dashboard', $data);
     }
 }
+

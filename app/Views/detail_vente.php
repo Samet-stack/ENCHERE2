@@ -368,7 +368,7 @@
                             <?php endif; ?>
 
                             <!-- Formulaire d'enchère (masqué pour les bénévoles et secrétaires) -->
-                            <?php if ($vente->etat === 'en_cours' && session()->get('id_utilisateur') && !$estBenevole && session()->get('role') !== 'secretaire'): ?>
+                            <?php if ($vente->etat === 'en_cours' && session()->get('id_utilisateur') && !$estBenevole && session()->get('role') !== 'secretaire' && $estInscrit): ?>
                                 <?php
                                 $minimum = max($article->prix_depart, 0.20);
                                 if ($article->enchere_max) {
@@ -380,6 +380,8 @@
                                 <?php echo form_input(['name' => 'montant', 'type' => 'number', 'step' => '0.10', 'min' => $minimum, 'value' => $minimum]); ?>
                                 <?php echo form_submit('encherir', 'Enchérir', ['class' => 'btn btn-success']); ?>
                                 <?= form_close(); ?>
+                            <?php elseif ($vente->etat === 'en_cours' && session()->get('role') === 'habitant' && !$estInscrit): ?>
+                                <p style="color: #7f8c8d; font-style: italic;">Participation reservee aux habitants inscrits avant l'ouverture de la vente.</p>
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
@@ -421,3 +423,4 @@
 </body>
 
 </html>
+

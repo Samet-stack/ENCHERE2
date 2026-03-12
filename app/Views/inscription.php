@@ -118,12 +118,16 @@
         <?php echo form_input(['name' => 'email', 'type' => 'email', 'value' => set_value('email'), 'placeholder' => 'votre@email.fr']); ?>
         <br />
 
-        <?= form_label('Adresse (ville de Getcet) * : '); ?>
+        <?= form_label('Adresse * : '); ?>
         <?php echo form_input(['name' => 'adresse', 'value' => set_value('adresse'), 'placeholder' => 'Votre adresse à Getcet']); ?>
         <br />
 
+        <?= form_label('Ville * : '); ?>
+        <?php echo form_input(['name' => 'ville', 'value' => set_value('ville', 'Getcet'), 'placeholder' => 'Getcet']); ?>
+        <br />
+
         <?= form_label('Code postal * : '); ?>
-        <?php echo form_input(['name' => 'code_postal', 'value' => set_value('code_postal'), 'placeholder' => '99999', 'maxlength' => '5']); ?>
+        <?php echo form_input(['name' => 'code_postal', 'value' => set_value('code_postal', '99999'), 'placeholder' => '99999', 'maxlength' => '5']); ?>
         <br />
 
         <?= form_label('Téléphone : '); ?>

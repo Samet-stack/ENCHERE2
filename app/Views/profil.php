@@ -198,6 +198,12 @@
         <?= form_label('Adresse : '); ?>
         <?php echo form_input(['name' => 'adresse', 'value' => $utilisateur->adresse ?? '']); ?> <br />
 
+        <?= form_label('Ville : '); ?>
+        <?php echo form_input(['name' => 'ville', 'value' => $utilisateur->ville ?? '']); ?> <br />
+
+        <?= form_label('Code postal : '); ?>
+        <?php echo form_input(['name' => 'code_postal', 'value' => $utilisateur->code_postal ?? '']); ?> <br />
+
         <hr style="margin: 15px 0;">
 
         <?= form_label('Nouveau mot de passe (1 maj., 1 min., 1 chiffre, 1 spécial, min. 8 car.) : '); ?>

@@ -28,9 +28,9 @@ $routes->get('Enchere/cloturerVente/(:num)', 'Enchere::cloturerVente/$1');
 $routes->get('Enchere/qrcodeVente/(:num)', 'Enchere::qrcodeVente/$1');
 
 // Articles
-$routes->get('Enchere/listeArticles', 'Enchere::listeArticles');
-$routes->get('Enchere/creerArticle', 'Enchere::creerArticle');
-$routes->post('Enchere/validerCreerArticle', 'Enchere::validerCreerArticle');
+$routes->get('Enchere/listeArticles', 'Enchere::listeArticles', ['filter' => 'role:benevole,secretaire']);
+$routes->get('Enchere/creerArticle', 'Enchere::creerArticle', ['filter' => 'role:benevole,secretaire']);
+$routes->post('Enchere/validerCreerArticle', 'Enchere::validerCreerArticle', ['filter' => 'role:benevole,secretaire']);
 $routes->post('Enchere/selectionnerArticle/(:num)', 'Enchere::selectionnerArticle/$1', ['filter' => 'role:benevole,secretaire']);
 $routes->get('Enchere/supprimerArticle/(:num)', 'Enchere::supprimerArticle/$1', ['filter' => 'role:benevole,secretaire']);
 
