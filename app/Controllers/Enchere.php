@@ -87,7 +87,14 @@ class Enchere extends BaseController
             'created_at' => date('Y-m-d H:i:s'),
         ];
 
-        $monmodel->insertUtilisateur($data);
+        try {
+            $monmodel->insertUtilisateur($data);
+        } catch (\Exception $e) {
+            return view('inscription', [
+                'titre' => 'Inscription - EnchèreAPorter',
+                'erreur' => 'Erreur BD : ' . $e->getMessage(),
+            ]);
+        }
         return redirect()->to('Enchere/connexion');
     }
 
