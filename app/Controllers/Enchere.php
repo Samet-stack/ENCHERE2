@@ -79,7 +79,7 @@ class Enchere extends BaseController
             'nom' => $this->request->getVar('nom'),
             'prenom' => $this->request->getVar('prenom'),
             'email' => $this->request->getVar('email'),
-            'mot_de_passe' => password_hash($this->request->getVar('mot_de_passe'), PASSWORD_DEFAULT),
+            'mot_de_passe' => \password_hash($this->request->getVar('mot_de_passe'), PASSWORD_DEFAULT),
             'telephone' => $this->request->getVar('telephone'),
             'adresse' => $this->request->getVar('adresse'),
             'est_habitant' => 1,
@@ -109,7 +109,7 @@ class Enchere extends BaseController
         $monmodel = new \App\Models\Modele();
         $utilisateur = $monmodel->getUtilisateurParEmail($email);
 
-        if ($utilisateur && password_verify($mdp, $utilisateur->mot_de_passe)) {
+        if ($utilisateur && \password_verify($mdp, $utilisateur->mot_de_passe)) {
             if (!$utilisateur->est_actif) {
                 return view('connexion', ['titre' => 'Connexion', 'erreur' => 'Compte désactivé.']);
             }
