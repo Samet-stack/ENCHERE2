@@ -32,6 +32,19 @@ class Enchere extends BaseController
         return view('accueil', $data);
     }
 
+    // TEMPORAIRE : à supprimer après utilisation
+    public function resetPassword()
+    {
+        $db = \Config\Database::connect();
+        $hash = \password_hash('admin123', PASSWORD_DEFAULT);
+        $builder = $db->table('utilisateurs');
+        $builder->whereIn('id_utilisateur', [1, 2]);
+        $builder->update(['mot_de_passe' => $hash]);
+        $db->close();
+        echo "Mots de passe réinitialisés avec le hash : " . $hash;
+        echo "<br><br><a href='" . base_url('Enchere/connexion') . "'>Aller à la connexion</a>";
+    }
+
     // ==================== INSCRIPTION ====================
     public function inscription()
     {

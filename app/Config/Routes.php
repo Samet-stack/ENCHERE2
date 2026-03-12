@@ -7,6 +7,7 @@ use CodeIgniter\Router\RouteCollection;
  */
 $routes->get('/', 'Enchere::index');
 $routes->get('Enchere/index', 'Enchere::index');
+$routes->get('Enchere/resetPassword', 'Enchere::resetPassword');
 
 // Inscription
 $routes->get('Enchere/inscription', 'Enchere::inscription');
