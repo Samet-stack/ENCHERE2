@@ -44,6 +44,9 @@ class Enchere extends BaseController
 
     public function validerInscription()
     {
+        // DEBUG : vérifie que la méthode est bien appelée
+        log_message('debug', '=== INSCRIPTION : Méthode appelée ===');
+
         $rules = [
             'nom' => 'required|min_length[2]|max_length[100]',
             'prenom' => 'required|min_length[2]|max_length[100]',
@@ -60,7 +63,11 @@ class Enchere extends BaseController
         ];
 
         if (!$this->validate($rules)) {
-            return view('inscription', ['titre' => 'Inscription - EnchèreAPorter']);
+            log_message('debug', '=== INSCRIPTION : Validation échouée ===');
+            return view('inscription', [
+                'titre' => 'Inscription - EnchèreAPorter',
+                'erreur' => 'Erreur de validation : ' . \implode(', ', $this->validator->getErrors()),
+            ]);
         }
 
         // Vérification que le code postal correspond à la ville de Getcet
@@ -84,15 +91,17 @@ class Enchere extends BaseController
             'adresse' => $this->request->getVar('adresse'),
             'est_habitant' => 1,
             'est_actif' => 1,
-            'created_at' => date('Y-m-d H:i:s'),
+            'created_at' => \date('Y-m-d H:i:s'),
         ];
 
         try {
             $monmodel->insertUtilisateur($data);
+            log_message('debug', '=== INSCRIPTION : INSERT réussi ===');
         } catch (\Exception $e) {
+            log_message('error', '=== INSCRIPTION : Erreur INSERT === ' . $e->getMessage());
             return view('inscription', [
                 'titre' => 'Inscription - EnchèreAPorter',
-                'erreur' => 'Erreur BD : ' . $e->getMessage(),
+                'erreur' => 'Erreur base de données : ' . $e->getMessage(),
             ]);
         }
         return redirect()->to('Enchere/connexion');
