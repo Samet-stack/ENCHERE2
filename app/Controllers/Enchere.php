@@ -3,7 +3,7 @@ namespace App\Controllers;
 
 class Enchere extends BaseController
 {
-    // ==================== INITIALISATION (vérification session) ====================
+    //  INITIALISATION (vérification session) 
     public function init()
     {
         $session = session();
@@ -408,7 +408,7 @@ class Enchere extends BaseController
         $monmodel = new \App\Models\Modele();
         // Vérifier si l'article n'est pas déjà dans une vente
         $estDansVente = $monmodel->db->table('vente_articles')->where('id_article', $idArticle)->countAllResults() > 0;
-        
+
         if (!$estDansVente) {
             $monmodel->supprimerArticle($idArticle);
         }
@@ -607,32 +607,41 @@ class Enchere extends BaseController
         if (!$data)
             return redirect()->to(base_url('Enchere/connexion'));
 
-        $monmodel = new \App\Models\Modele();
         $session = session();
+        $idUtilisateur = $session->get('id_utilisateur');
 
         $updateData = [
-            'nom' => $this->request->getVar('nom'),
-            'prenom' => $this->request->getVar('prenom'),
-            'telephone' => $this->request->getVar('telephone'),
-            'adresse' => $this->request->getVar('adresse'),
+            'nom'       => $this->request->getPost('nom'),
+            'prenom'    => $this->request->getPost('prenom'),
+            'telephone' => $this->request->getPost('telephone'),
+            'adresse'   => $this->request->getPost('adresse'),
         ];
 
-        $newMdp = $this->request->getVar('nouveau_mot_de_passe');
+        $newMdp = $this->request->getPost('nouveau_mot_de_passe');
         if (!empty($newMdp)) {
             // Validation mot de passe fort
             if (strlen($newMdp) < 8 || !preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/', $newMdp)) {
-                $data = $this->init();
-                $monmodel2 = new \App\Models\Modele();
-                $data['utilisateur'] = $monmodel2->getUtilisateurParId($session->get('id_utilisateur'));
+                $monmodel = new \App\Models\Modele();
+                $data['utilisateur'] = $monmodel->getUtilisateurParId($idUtilisateur);
                 $data['erreur_mdp'] = 'Le mot de passe doit contenir au moins 8 caractères, 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial.';
                 return view('profil', $data);
             }
             $updateData['mot_de_passe'] = password_hash($newMdp, PASSWORD_DEFAULT);
         }
 
-        $monmodel->updateUtilisateur($session->get('id_utilisateur'), $updateData);
-        $session->set('nom', $updateData['nom']);
-        $session->set('prenom', $updateData['prenom']);
+        // Utilisation du modèle standard pour la mise à jour
+        $utilisateurModel = new \App\Models\UtilisateurModel();
+        
+        // On ignore la validation du modèle ici car les règles 'required' (email, etc.) 
+        // bloquent les mises à jour partielles si les champs ne sont pas fournis.
+        if ($utilisateurModel->skipValidation(true)->update($idUtilisateur, $updateData)) {
+            // Mise à jour de la session uniquement en cas de succès
+            $session->set('nom', $updateData['nom']);
+            $session->set('prenom', $updateData['prenom']);
+            $session->setFlashdata('success', 'Votre profil a été mis à jour avec succès.');
+        } else {
+            $session->setFlashdata('error', 'Une erreur est survenue lors de la mise à jour de votre profil.');
+        }
 
         return redirect()->to('Enchere/profil');
     }
@@ -663,7 +672,7 @@ class Enchere extends BaseController
         $data['nbUtilisateurs'] = $monmodel->getNbUtilisateurs();
         $data['nbArticles'] = $monmodel->getNbArticles();
         $data['dernieresVentes'] = $monmodel->getLesVentes();
-        
+
         // Variables manquantes pour les graphiques et stats avancées
         $data['evolutionEncheres'] = $monmodel->getEvolutionEncheres(7);
         $data['topArticles'] = $monmodel->getArticlesPlusEncheris(5);

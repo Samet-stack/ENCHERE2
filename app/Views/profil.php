@@ -164,6 +164,16 @@
             </p>
         </div>
 
+        <?php if (session()->getFlashdata('success')): ?>
+            <div style="background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 10px; border-radius: 4px; margin-bottom: 15px; text-align: center;">
+                <?= session()->getFlashdata('success'); ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if (session()->getFlashdata('error')): ?>
+            <div class="erreur-msg"><?= session()->getFlashdata('error'); ?></div>
+        <?php endif; ?>
+
         <?php if (isset($erreur_mdp)): ?>
             <div class="erreur-msg"><?= $erreur_mdp; ?></div>
         <?php endif; ?>
