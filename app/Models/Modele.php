@@ -136,6 +136,15 @@ class Modele extends Model
         return $query->getRow();
     }
 
+    public function supprimerArticle($id)
+    {
+        $db = \Config\Database::connect();
+        $builder = $db->table('articles');
+        $builder->where('id_article', $id);
+        $builder->delete();
+        $db->close();
+    }
+
     // ==================== VENTES ====================
     public function getLesVentes($etat = null)
     {

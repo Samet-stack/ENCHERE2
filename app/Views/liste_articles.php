@@ -153,6 +153,14 @@
                         <p class="prix">
                             Prix d'origine : <?= number_format($article->prix_origine, 2); ?> €
                         </p>
+                        <div style="margin-top: 10px;">
+                            <a href="<?= base_url('Enchere/supprimerArticle/' . $article->id_article); ?>" 
+                               class="btn" 
+                               style="background-color: #e74c3c; width: 100%; box-sizing: border-box; text-align: center;"
+                               onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet article ? Cette action est irréversible.');">
+                               Supprimer
+                            </a>
+                        </div>
                     </div>
                 <?php
     endforeach; ?>

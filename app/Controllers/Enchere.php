@@ -395,6 +395,27 @@ class Enchere extends BaseController
         return redirect()->to('Enchere/listeArticles');
     }
 
+    public function supprimerArticle($idArticle)
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+        $session = session();
+        if (!in_array($session->get('role'), ['benevole', 'secretaire'])) {
+            return redirect()->to('Enchere/index');
+        }
+
+        $monmodel = new \App\Models\Modele();
+        // Vérifier si l'article n'est pas déjà dans une vente
+        $estDansVente = $monmodel->db->table('vente_articles')->where('id_article', $idArticle)->countAllResults() > 0;
+        
+        if (!$estDansVente) {
+            $monmodel->supprimerArticle($idArticle);
+        }
+
+        return redirect()->to('Enchere/listeArticles');
+    }
+
     public function selectionnerArticle($idVente)
     {
         $data = $this->init();
