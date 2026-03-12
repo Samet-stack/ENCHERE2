@@ -485,6 +485,11 @@ class Enchere extends BaseController
 
         $monmodel = new \App\Models\Modele();
         $session = session();
+        $vente = $monmodel->getVenteParId($idVente);
+
+        if (!$vente || $vente->etat !== 'a_venir') {
+            return redirect()->to('Enchere/detailVente/' . $idVente);
+        }
 
         $idArticle = $this->request->getVar('id_article');
         $prixDepart = $this->request->getVar('prix_depart');

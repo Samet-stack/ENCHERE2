@@ -391,7 +391,7 @@
             <?php endif; ?>
 
             <!-- Sélectionner un article (bénévole/secrétaire) -->
-            <?php if (in_array(session()->get('role'), ['benevole', 'secretaire']) && $vente->etat !== 'cloturee'): ?>
+            <?php if (in_array(session()->get('role'), ['benevole', 'secretaire']) && $vente->etat === 'a_venir'): ?>
                 <div class="card" style="margin-top: 20px;">
                     <h3>Ajouter un article à cette vente</h3>
                     <?= form_open('Enchere/selectionnerArticle/' . $vente->id_vente) ?>
@@ -410,6 +410,10 @@
                     <?php echo form_input(['name' => 'prix_depart', 'type' => 'number', 'step' => '0.10', 'min' => '0.20', 'value' => '0.20']); ?>
                     <?php echo form_submit('ajouter', "Ajouter l'article", ['class' => 'btn btn-success']); ?>
                     <?= form_close(); ?>
+                </div>
+            <?php elseif (in_array(session()->get('role'), ['benevole', 'secretaire']) && $vente->etat === 'en_cours'): ?>
+                <div class="card" style="margin-top: 20px;">
+                    <p style="margin: 0; color: #7f8c8d;">Le catalogue est fige : les articles ne peuvent etre ajoutes que lorsque la vente est en statut a venir.</p>
                 </div>
             <?php endif; ?>
         </div>

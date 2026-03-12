@@ -1,0 +1,5 @@
+writable/docx_build/word/_rels/document.xml.rels
+scripts/Generate-DocumentationDocx.ps1
+writable/docx_build/word/styles.xml
+writable/docx_build/word/document.xml
+DOCUMENTATION_TECHNIQUE_APPLICATION.docx
