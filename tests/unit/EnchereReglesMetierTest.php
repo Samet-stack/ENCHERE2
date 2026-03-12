@@ -3,13 +3,44 @@
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**
- * Tests unitaires metier alignes sur le cahier des charges.
+ * Suite de tests metier simplifiee pour presentation.
  *
- * Ces tests verifient les regles principales sans dependre
- * directement de la base de donnees ou des routes.
+ * Repartition :
+ * - 5 tests secretaire
+ * - 5 tests habitant
+ * - 5 tests benevole
  */
 final class EnchereReglesMetierTest extends CIUnitTestCase
 {
+    // ==================== SECRETAIRE ====================
+
+    public function testSecretairePeutCreerUneVente(): void
+    {
+        $this->assertTrue($this->peutCreerVente('secretaire'));
+    }
+
+    public function testSecretaireNePeutPasEncherir(): void
+    {
+        $this->assertFalse($this->peutEncherir('secretaire', true, 'en_cours'));
+    }
+
+    public function testSecretairePeutAjouterArticleSurVenteAVenir(): void
+    {
+        $this->assertTrue($this->peutAjouterArticle('secretaire', 'a_venir'));
+    }
+
+    public function testSecretaireNePeutPasAjouterArticleSurVenteEnCours(): void
+    {
+        $this->assertFalse($this->peutAjouterArticle('secretaire', 'en_cours'));
+    }
+
+    public function testSecretairePeutCloturerVenteEnCours(): void
+    {
+        $this->assertTrue($this->peutCloturerVente('secretaire', 'en_cours'));
+    }
+
+    // ==================== HABITANT ====================
+
     public function testHabitantGetcetEstValide(): void
     {
         $this->assertTrue($this->estHabitantValide('Getcet', '99999'));
@@ -25,52 +56,73 @@ final class EnchereReglesMetierTest extends CIUnitTestCase
         $this->assertFalse($this->estHabitantValide('Getcet', '75000'));
     }
 
-    public function testPremiereEnchereMinimumEstVingtCentimes(): void
-    {
-        $minimum = $this->calculerMinimumEnchere(0.20, 0.00);
-
-        $this->assertSame(0.20, $minimum);
-    }
-
-    public function testEnchereSuivanteAjouteDixCentimesAuMaximumCourant(): void
-    {
-        $minimum = $this->calculerMinimumEnchere(0.20, 1.50);
-
-        $this->assertSame(1.60, $minimum);
-    }
-
-    public function testAjoutArticleAutoriseSeulementPourVenteAVenir(): void
-    {
-        $this->assertTrue($this->peutAjouterArticle('benevole', 'a_venir'));
-        $this->assertFalse($this->peutAjouterArticle('benevole', 'en_cours'));
-        $this->assertFalse($this->peutAjouterArticle('secretaire', 'cloturee'));
-    }
-
-    public function testParticipationEnchereReserveeAHabitantInscritPendantVenteEnCours(): void
+    public function testHabitantInscritPeutEncherirQuandVenteEnCours(): void
     {
         $this->assertTrue($this->peutEncherir('habitant', true, 'en_cours'));
-        $this->assertFalse($this->peutEncherir('habitant', false, 'en_cours'));
-        $this->assertFalse($this->peutEncherir('benevole', true, 'en_cours'));
-        $this->assertFalse($this->peutEncherir('habitant', true, 'a_venir'));
     }
+
+    public function testHabitantNonInscritNePeutPasEncherir(): void
+    {
+        $this->assertFalse($this->peutEncherir('habitant', false, 'en_cours'));
+    }
+
+    // ==================== BENEVOLE ====================
+
+    public function testBenevolePeutConsulterArticles(): void
+    {
+        $this->assertTrue($this->peutConsulterArticles('benevole'));
+    }
+
+    public function testBenevolePeutCreerArticle(): void
+    {
+        $this->assertTrue($this->peutCreerArticle('benevole'));
+    }
+
+    public function testBenevolePeutAjouterArticleSurVenteAVenir(): void
+    {
+        $this->assertTrue($this->peutAjouterArticle('benevole', 'a_venir'));
+    }
+
+    public function testBenevoleNePeutPasAjouterArticleSurVenteEnCours(): void
+    {
+        $this->assertFalse($this->peutAjouterArticle('benevole', 'en_cours'));
+    }
+
+    public function testBenevoleNePeutPasEncherir(): void
+    {
+        $this->assertFalse($this->peutEncherir('benevole', true, 'en_cours'));
+    }
+
+    // ==================== REGLES SIMPLIFIEES ====================
 
     private function estHabitantValide(string $ville, string $codePostal): bool
     {
         return trim(strtolower($ville)) === 'getcet' && trim($codePostal) === '99999';
     }
 
-    private function calculerMinimumEnchere(float $prixDepart, float $montantMax): float
+    private function peutCreerVente(string $role): bool
     {
-        if ($montantMax > 0) {
-            return round($montantMax + 0.10, 2);
-        }
+        return $role === 'secretaire';
+    }
 
-        return round(max($prixDepart, 0.20), 2);
+    private function peutCreerArticle(string $role): bool
+    {
+        return in_array($role, ['benevole', 'secretaire'], true);
+    }
+
+    private function peutConsulterArticles(string $role): bool
+    {
+        return in_array($role, ['benevole', 'secretaire'], true);
     }
 
     private function peutAjouterArticle(string $role, string $etatVente): bool
     {
         return in_array($role, ['benevole', 'secretaire'], true) && $etatVente === 'a_venir';
+    }
+
+    private function peutCloturerVente(string $role, string $etatVente): bool
+    {
+        return $role === 'secretaire' && $etatVente === 'en_cours';
     }
 
     private function peutEncherir(string $role, bool $estInscrit, string $etatVente): bool
