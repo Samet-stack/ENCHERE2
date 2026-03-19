@@ -230,6 +230,18 @@
             <?= $vente->secretaire_prenom . ' ' . $vente->secretaire_nom; ?>
         </p>
 
+        <?php if (session()->getFlashdata('erreur')): ?>
+            <div style="background-color:#fdecea; border-left:4px solid #e74c3c; color:#c0392b; padding:12px 16px; border-radius:4px; margin-bottom:15px;">
+                <?= session()->getFlashdata('erreur'); ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if (session()->getFlashdata('succes')): ?>
+            <div style="background-color:#eafaf1; border-left:4px solid #27ae60; color:#1e8449; padding:12px 16px; border-radius:4px; margin-bottom:15px;">
+                <?= session()->getFlashdata('succes'); ?>
+            </div>
+        <?php endif; ?>
+
         <?php
         $badgeClass = 'badge-warning';
         $badgeLabel = $vente->etat;
@@ -382,6 +394,18 @@
                                 <?= form_close(); ?>
                             <?php elseif ($vente->etat === 'en_cours' && session()->get('role') === 'habitant' && !$estInscrit): ?>
                                 <p style="color: #7f8c8d; font-style: italic;">Participation reservee aux habitants inscrits avant l'ouverture de la vente.</p>
+                            <?php endif; ?>
+
+                            <!-- Bouton Retirer de la vente (secrétaire/bénévole) -->
+                            <?php if (in_array(session()->get('role'), ['benevole', 'secretaire'])): ?>
+                                <div style="margin-top: 15px; text-align: right;">
+                                    <a href="<?= base_url('Enchere/retirerArticleVente/' . $article->id_vente_article); ?>" 
+                                       class="btn btn-danger" 
+                                       style="width: 100%; text-align: center; box-sizing: border-box;"
+                                       onclick="return confirm('Êtes-vous sûr de vouloir retirer cet article de la vente ? Cela annulera les enchères en cours sur ce lot.');">
+                                       Retirer de la vente
+                                    </a>
+                                </div>
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>

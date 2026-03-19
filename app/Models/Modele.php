@@ -4,7 +4,10 @@ use CodeIgniter\Model;
 
 class Modele extends Model
 {
-    // ==================== ROLES ====================
+    // ROLES
+    /**
+     * Récupère la liste de tous les rôles possibles (secrétaire, bénévole, habitant).
+     */
     public function getLesRoles()
     {
         $db = \Config\Database::connect();
@@ -15,6 +18,9 @@ class Modele extends Model
         return $query->getResult();
     }
 
+    /**
+     * Récupère un rôle spécifique à partir de son identifiant numérique.
+     */
     public function getRoleParId($id)
     {
         $db = \Config\Database::connect();
@@ -25,7 +31,10 @@ class Modele extends Model
         return $query->getRow();
     }
 
-    // ==================== UTILISATEURS ====================
+    // UTILISATEURS
+    /**
+     * Recherche un utilisateur via son adresse email, principalement utilisé pour la connexion.
+     */
     public function getUtilisateurParEmail($email)
     {
         $db = \Config\Database::connect();
@@ -36,6 +45,9 @@ class Modele extends Model
         return $query->getRow();
     }
 
+    /**
+     * Récupère toutes les informations d'un utilisateur et inclut le libellé de son rôle via une jointure.
+     */
     public function getUtilisateurParId($id)
     {
         $db = \Config\Database::connect();
@@ -48,6 +60,9 @@ class Modele extends Model
         return $query->getRow();
     }
 
+    /**
+     * Insère un nouvel utilisateur (généralement un habitant) dans la base de données après validation.
+     */
     public function insertUtilisateur($data)
     {
         $db = \Config\Database::connect();
@@ -56,6 +71,9 @@ class Modele extends Model
         $db->close();
     }
 
+    /**
+     * Met à jour les informations d'un utilisateur existant (profil, mot de passe...).
+     */
     public function updateUtilisateur($id, $data)
     {
         $db = \Config\Database::connect();
@@ -65,6 +83,9 @@ class Modele extends Model
         $db->close();
     }
 
+    /**
+     * Compte le nombre total d'utilisateurs inscrits sur la plateforme pour les statistiques.
+     */
     public function getNbUtilisateurs()
     {
         $db = \Config\Database::connect();
@@ -76,6 +97,9 @@ class Modele extends Model
         return $result->nb;
     }
 
+    /**
+     * Récupère la liste de tous les utilisateurs ayant le rôle "habitant" et étant actifs.
+     */
     public function getTousLesHabitants()
     {
         $db = \Config\Database::connect();
@@ -87,7 +111,10 @@ class Modele extends Model
         return $query->getResult();
     }
 
-    // ==================== ARTICLES ====================
+    // ARTICLES
+    /**
+     * Récupère le catalogue complet des articles enregistrés, qu'ils soient en vente ou non.
+     */
     public function getLesArticles()
     {
         $db = \Config\Database::connect();
@@ -98,6 +125,9 @@ class Modele extends Model
         return $query->getResult();
     }
 
+    /**
+     * Récupère les articles qui n'ont pas encore de vente associée (articles "orphelins").
+     */
     public function getArticlesDisponibles()
     {
         $db = \Config\Database::connect();
@@ -107,6 +137,9 @@ class Modele extends Model
         return $query->getResult();
     }
 
+    /**
+     * Insère un nouvel article (vêtement ou autre) dans le système.
+     */
     public function insertArticle($data)
     {
         $db = \Config\Database::connect();
@@ -115,6 +148,9 @@ class Modele extends Model
         $db->close();
     }
 
+    /**
+     * Compte le nombre total d'articles gérés par l'association.
+     */
     public function getNbArticles()
     {
         $db = \Config\Database::connect();
@@ -126,6 +162,9 @@ class Modele extends Model
         return $result->nb;
     }
 
+    /**
+     * Récupère les détails d'un article spécifique à partir de son identifiant.
+     */
     public function getArticleParId($id)
     {
         $db = \Config\Database::connect();
@@ -136,6 +175,9 @@ class Modele extends Model
         return $query->getRow();
     }
 
+    /**
+     * Supprime physiquement un article de la base de données.
+     */
     public function supprimerArticle($id)
     {
         $db = \Config\Database::connect();
@@ -145,7 +187,11 @@ class Modele extends Model
         $db->close();
     }
 
-    // ==================== VENTES ====================
+    // VENTES
+    /**
+     * Récupère toutes les ventes, triées par date décroissante. Inclut le nom du secrétaire créateur.
+     * @param string|null $etat Filtre optionnel par état (ex: "a_venir", "en_cours").
+     */
     public function getLesVentes($etat = null)
     {
         $db = \Config\Database::connect();
@@ -161,6 +207,9 @@ class Modele extends Model
         return $query->getResult();
     }
 
+    /**
+     * Récupère les informations complètes d'un événement de vente précis à partir de son ID.
+     */
     public function getVenteParId($id)
     {
         $db = \Config\Database::connect();
@@ -173,6 +222,9 @@ class Modele extends Model
         return $query->getRow();
     }
 
+    /**
+     * Crée/Planifie une nouvelle session de vente aux enchères dans le calendrier.
+     */
     public function insertVente($data)
     {
         $db = \Config\Database::connect();
@@ -181,6 +233,9 @@ class Modele extends Model
         $db->close();
     }
 
+    /**
+     * Met à jour une vente existante (ex: modification de l'état "en_cours" ou "cloturee").
+     */
     public function updateVente($id, $data)
     {
         $db = \Config\Database::connect();
@@ -190,6 +245,10 @@ class Modele extends Model
         $db->close();
     }
 
+    /**
+     * Méthode clé (Cron) gérant le cycle de vie des enchères : 
+     * Ouvre les ventes à venir, envoie les emails de notification/rappel, et clôture celles expirées.
+     */
     public function mettreAJourStatutsVentes()
     {
         $db = \Config\Database::connect();
@@ -252,6 +311,10 @@ class Modele extends Model
         $db->close();
     }
 
+    /**
+     * Logique de clôture d'une vente : détermine les gagnants de chaque lot et crée les Achats associés.
+     * Envoie également l'email de félicitations aux vainqueurs.
+     */
     public function cloturerVenteLogique($idVente, $db = null)
     {
         $closeDb = false;
@@ -296,6 +359,9 @@ class Modele extends Model
         }
     }
 
+    /**
+     * Compte le nombre de ventes groupées par état (utilisé pour les stats du dashboard secrétaire).
+     */
     public function compterVentesParEtat()
     {
         $db = \Config\Database::connect();
@@ -305,7 +371,10 @@ class Modele extends Model
         return $query->getResult();
     }
 
-    // ==================== VENTE_ARTICLES ====================
+    // VENTE_ARTICLES
+    /**
+     * Récupère le catalogue d'articles d'une vente avec l'enchère maximale actuelle pour chaque lot.
+     */
     public function getArticlesDeVente($idVente)
     {
         $db = \Config\Database::connect();
@@ -320,6 +389,9 @@ class Modele extends Model
         return $query->getResult();
     }
 
+    /**
+     * Récupère le détail combiné pour un lot spécifique (informations croisées Vente + Article).
+     */
     public function getVenteArticleDetail($id)
     {
         $db = \Config\Database::connect();
@@ -333,6 +405,9 @@ class Modele extends Model
         return $query->getRow();
     }
 
+    /**
+     * Associe un article (vêtement) au catalogue d'une vente avec son prix de départ.
+     */
     public function insertVenteArticle($data)
     {
         $db = \Config\Database::connect();
@@ -341,6 +416,9 @@ class Modele extends Model
         $db->close();
     }
 
+    /**
+     * Vérifie si un article est déjà présent dans une vente spécifique pour éviter tout doublon de lot.
+     */
     public function venteArticleExiste($idVente, $idArticle)
     {
         $db = \Config\Database::connect();
@@ -352,6 +430,9 @@ class Modele extends Model
         return $query->getRow() ? true : false;
     }
 
+    /**
+     * Récupère une liste simple des articles associés à une vente (souvent utilisé pour itérer le catalogue).
+     */
     public function getVenteArticlesParVente($idVente)
     {
         $db = \Config\Database::connect();
@@ -362,7 +443,22 @@ class Modele extends Model
         return $query->getResult();
     }
 
-    // ==================== INSCRIPTIONS ====================
+    /**
+     * Retire un article d'une vente (supprime l'association dans vente_articles).
+     */
+    public function retirerVenteArticle($idVenteArticle)
+    {
+        $db = \Config\Database::connect();
+        $builder = $db->table('vente_articles');
+        $builder->where('id_vente_article', $idVenteArticle);
+        $builder->delete();
+        $db->close();
+    }
+
+    // INSCRIPTIONS
+    /**
+     * Indique si un habitant est bien pré-inscrit à une vente (requis pour enchérir).
+     */
     public function estInscrit($idVente, $idUtilisateur)
     {
         $db = \Config\Database::connect();
@@ -374,6 +470,9 @@ class Modele extends Model
         return $query->getRow() ? true : false;
     }
 
+    /**
+     * Enregistre l'inscription d'un habitant de Getcet à une enchère à venir.
+     */
     public function insertInscription($data)
     {
         $db = \Config\Database::connect();
@@ -382,6 +481,9 @@ class Modele extends Model
         $db->close();
     }
 
+    /**
+     * Extrait la liste nominative (et les emails) de tous les participants inscrits à une vente.
+     */
     public function getInscritsVente($idVente)
     {
         $db = \Config\Database::connect();
@@ -394,7 +496,10 @@ class Modele extends Model
         return $query->getResult();
     }
 
-    // ==================== ENCHERES ====================
+    // ENCHERES
+    /**
+     * Détermine le montant d'enchère le plus haut pour un lot (sert de base pour la surenchère).
+     */
     public function getMontantMax($idVenteArticle)
     {
         $db = \Config\Database::connect();
@@ -408,6 +513,9 @@ class Modele extends Model
         return $result->montant ?? 0;
     }
 
+    /**
+     * Récupère l'enchère gagnante actuelle complète pour un lot avec l'utilisateur qui a placé ce montant.
+     */
     public function getEnchereMax($idVenteArticle)
     {
         $db = \Config\Database::connect();
@@ -423,6 +531,9 @@ class Modele extends Model
         return $query->getRow();
     }
 
+    /**
+     * Enregistre la soumission d'une nouvelle enchère par un habitant.
+     */
     public function insertEnchere($data)
     {
         $db = \Config\Database::connect();
@@ -431,6 +542,9 @@ class Modele extends Model
         $db->close();
     }
 
+    /**
+     * Récupère les données brutes d'une seule enchère à partir de son identifiant.
+     */
     public function getEnchereParId($id)
     {
         $db = \Config\Database::connect();
@@ -441,6 +555,9 @@ class Modele extends Model
         return $query->getRow();
     }
 
+    /**
+     * Annule logiquement une enchère (mise en est_annulee = 1) si l'utilisateur souhaite se rétracter.
+     */
     public function annulerEnchere($id)
     {
         $db = \Config\Database::connect();
@@ -450,6 +567,9 @@ class Modele extends Model
         $db->close();
     }
 
+    /**
+     * Récupère tout l'historique des enchères placées par un utilisateur pour son profil.
+     */
     public function getHistoriqueEncheres($idUtilisateur)
     {
         $db = \Config\Database::connect();
@@ -465,7 +585,10 @@ class Modele extends Model
         return $query->getResult();
     }
 
-    // ==================== ACHATS ====================
+    // ACHATS
+    /**
+     * Génère un "Achat" officiel lorsqu'un lot est remporté à la clôture de la vente.
+     */
     public function insertAchat($data)
     {
         $db = \Config\Database::connect();
@@ -474,6 +597,9 @@ class Modele extends Model
         $db->close();
     }
 
+    /**
+     * Récupère la liste des lots (achats) remportés par un utilisateur spécifique.
+     */
     public function getAchatsUtilisateur($idUtilisateur)
     {
         $db = \Config\Database::connect();
@@ -489,6 +615,9 @@ class Modele extends Model
         return $query->getResult();
     }
 
+    /**
+     * Récupère une transaction d'achat précise par son identifiant.
+     */
     public function getAchatParId($id)
     {
         $db = \Config\Database::connect();
@@ -499,6 +628,9 @@ class Modele extends Model
         return $query->getRow();
     }
 
+    /**
+     * Confirme l'achat d'un lot par un habitant (passage en confirmé avec la date du jour).
+     */
     public function confirmerAchat($id)
     {
         $db = \Config\Database::connect();
@@ -508,6 +640,9 @@ class Modele extends Model
         $db->close();
     }
 
+    /**
+     * Calcule le chiffre d'affaires total (somme de tous les achats confirmés) pour les statistiques.
+     */
     public function getMontantTotalAchats()
     {
         $db = \Config\Database::connect();
@@ -520,7 +655,10 @@ class Modele extends Model
         return $result->montant_final ?? 0;
     }
 
-    // ==================== MAILS LOG ====================
+    // MAILS LOG
+    /**
+     * Historise l'envoi d'emails métier pour éviter le spam ou l'envoi en double via le Cron.
+     */
     public function logMail($idVente, $typeMail, $destinataire, $statut, $db = null)
     {
         $closeDb = false;
@@ -543,7 +681,7 @@ class Modele extends Model
         }
     }
 
-    // ==================== STATISTIQUES AVANCÉES ====================
+    // STATISTIQUES AVANCÉES
 
     /**
      * Récupère les articles les plus enchéris (TOP N par nombre d'enchères).
@@ -613,7 +751,7 @@ class Modele extends Model
         return $ventes;
     }
 
-    // ==================== REÇU D'ACHAT ====================
+    // REÇU D'ACHAT
 
     /**
      * Détails complets d'un achat (article + vente + acheteur) pour le reçu.

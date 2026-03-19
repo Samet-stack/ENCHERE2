@@ -30,17 +30,25 @@ class Enchere extends BaseController
         return $data;
     }
 
-    // ==================== ACCUEIL ====================
+    // ACCUEIL
     public function index()
     {
         $monmodel = new \App\Models\Modele();
         $monmodel->mettreAJourStatutsVentes();
 
+        $ventesEnCours = $monmodel->getLesVentes('en_cours');
+        $ventesAVenir = $monmodel->getLesVentes('a_venir');
+
+        if (session()->get('role') === 'benevole') {
+            $ventesEnCours = [];
+            $ventesAVenir = [];
+        }
+
         $data = [
             'titre' => 'Accueil - EnchèreAPorter',
             'session' => session(),
-            'ventesEnCours' => $monmodel->getLesVentes('en_cours'),
-            'ventesAVenir' => $monmodel->getLesVentes('a_venir'),
+            'ventesEnCours' => $ventesEnCours,
+            'ventesAVenir' => $ventesAVenir,
         ];
         return view('accueil', $data);
     }
@@ -58,7 +66,7 @@ class Enchere extends BaseController
         echo "<br><br><a href='" . base_url('Enchere/connexion') . "'>Aller à la connexion</a>";
     }
 
-    // ==================== INSCRIPTION ====================
+    // INSCRIPTION
     public function inscription()
     {
         $session = session();
@@ -137,7 +145,7 @@ class Enchere extends BaseController
         return redirect()->to('Enchere/connexion');
     }
 
-    // ==================== CONNEXION ====================
+    // CONNEXION
     public function connexion()
     {
         $session = session();
@@ -185,13 +193,18 @@ class Enchere extends BaseController
         return redirect()->to(base_url('Enchere/connexion'));
     }
 
-    // ==================== VENTES ====================
+    // VENTES
     public function listeVentes()
     {
         $monmodel = new \App\Models\Modele();
         $monmodel->mettreAJourStatutsVentes();
 
         $etat = $this->request->getVar('etat');
+
+        // Un bénévole ne peut voir que les ventes clôturées
+        if (session()->get('role') === 'benevole') {
+            $etat = 'cloturee';
+        }
 
         $data = [
             'titre' => 'Ventes - EnchèreAPorter',
@@ -386,7 +399,7 @@ class Enchere extends BaseController
         return view('qrcode_vente', $data);
     }
 
-    // ==================== ARTICLES ====================
+    // ARTICLES
     public function listeArticles()
     {
         $data = $this->init();
@@ -467,11 +480,14 @@ class Enchere extends BaseController
         }
 
         $monmodel = new \App\Models\Modele();
-        // Vérifier si l'article n'est pas déjà dans une vente
+        // Vérifier si l'article est associé à une vente
         $estDansVente = $monmodel->db->table('vente_articles')->where('id_article', $idArticle)->countAllResults() > 0;
 
-        if (!$estDansVente) {
+        if ($estDansVente) {
+            session()->setFlashdata('erreur', 'Impossible de supprimer cet article : il est déjà associé à une ou plusieurs ventes.');
+        } else {
             $monmodel->supprimerArticle($idArticle);
+            session()->setFlashdata('succes', 'L\'article a été supprimé avec succès.');
         }
 
         return redirect()->to('Enchere/listeArticles');
@@ -509,7 +525,46 @@ class Enchere extends BaseController
         return redirect()->to('Enchere/detailVente/' . $idVente);
     }
 
-    // ==================== ENCHERES ====================
+    public function retirerArticleVente($idVenteArticle)
+    {
+        $data = $this->init();
+        if (!$data)
+            return redirect()->to(base_url('Enchere/connexion'));
+
+        $session = session();
+        if (!in_array($session->get('role'), ['benevole', 'secretaire'])) {
+            return redirect()->to('Enchere/index');
+        }
+
+        $monmodel = new \App\Models\Modele();
+        $venteArticle = $monmodel->getVenteArticleDetail($idVenteArticle);
+
+        if ($venteArticle) {
+            // On ne peut retirer un article que si aucune enchère n'a été placée
+            $nbEncheres = $monmodel->db->table('encheres')
+                ->where('id_vente_article', $idVenteArticle)
+                ->where('est_annulee', 0)
+                ->countAllResults();
+
+            if ($nbEncheres == 0) {
+                // S'il y a des enchères annulées, c'est bloquant côté foreign key
+                $nbToutesEncheres = $monmodel->db->table('encheres')->where('id_vente_article', $idVenteArticle)->countAllResults();
+                if($nbToutesEncheres == 0) {
+                    $monmodel->retirerVenteArticle($idVenteArticle);
+                    session()->setFlashdata('succes', 'L\'article a été retiré de la vente.');
+                } else {
+                    session()->setFlashdata('erreur', 'Impossible de retirer l\'article : des requêtes en base existent pour ce lot.');
+                }
+            } else {
+                session()->setFlashdata('erreur', 'Impossible de retirer l\'article : des enchères actives existent sur ce lot.');
+            }
+            return redirect()->to('Enchere/detailVente/' . $venteArticle->id_vente);
+        }
+
+        return redirect()->to('Enchere/listeVentes');
+    }
+
+    // ENCHERES
     public function encherir($idVenteArticle)
     {
         $data = $this->init();
@@ -595,7 +650,7 @@ class Enchere extends BaseController
         return view('historique_encheres', $data);
     }
 
-    // ==================== ACHATS ====================
+    // ACHATS
     public function mesAchats()
     {
         $data = $this->init();
@@ -658,7 +713,7 @@ class Enchere extends BaseController
         return view('recu_achat', $data);
     }
 
-    // ==================== PROFIL ====================
+    // PROFIL
     public function profil()
     {
         $data = $this->init();
@@ -683,16 +738,18 @@ class Enchere extends BaseController
         $utilisateur = $monmodel->getUtilisateurParId($idUtilisateur);
 
         $updateData = [
-            'nom'         => $this->request->getPost('nom'),
-            'prenom'      => $this->request->getPost('prenom'),
-            'telephone'   => $this->request->getPost('telephone'),
-            'adresse'     => $this->request->getPost('adresse'),
-            'ville'       => $this->request->getPost('ville'),
+            'nom' => $this->request->getPost('nom'),
+            'prenom' => $this->request->getPost('prenom'),
+            'telephone' => $this->request->getPost('telephone'),
+            'adresse' => $this->request->getPost('adresse'),
+            'ville' => $this->request->getPost('ville'),
             'code_postal' => $this->request->getPost('code_postal'),
         ];
 
-        if ((int) $utilisateur->est_habitant === 1
-            && !$this->estAdresseHabitantValide($updateData['ville'], $updateData['code_postal'])) {
+        if (
+            (int) $utilisateur->est_habitant === 1
+            && !$this->estAdresseHabitantValide($updateData['ville'], $updateData['code_postal'])
+        ) {
             $data['utilisateur'] = $utilisateur;
             $data['erreur_mdp'] = 'Les habitants doivent conserver une adresse a Getcet (99999).';
             return view('profil', $data);
@@ -711,7 +768,7 @@ class Enchere extends BaseController
 
         // Utilisation du modèle standard pour la mise à jour
         $utilisateurModel = new \App\Models\UtilisateurModel();
-        
+
         // On ignore la validation du modèle ici car les règles 'required' (email, etc.) 
         // bloquent les mises à jour partielles si les champs ne sont pas fournis.
         if ($utilisateurModel->skipValidation(true)->update($idUtilisateur, $updateData)) {
@@ -726,7 +783,7 @@ class Enchere extends BaseController
         return redirect()->to('Enchere/profil');
     }
 
-    // ==================== DASHBOARD (secrétaire) ====================
+    // DASHBOARD (secrétaire)
     public function dashboard()
     {
         $data = $this->init();

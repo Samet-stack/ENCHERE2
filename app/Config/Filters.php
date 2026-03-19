@@ -83,6 +83,8 @@ class Filters extends BaseConfig
                 'Enchere/creerArticle',
                 'Enchere/validerCreerArticle',
                 'Enchere/selectionnerArticle/*',
+                'Enchere/retirerArticleVente/*',
+                'Enchere/supprimerArticle/*',
                 'Enchere/encherir/*',
                 'Enchere/annulerEnchere/*',
                 'Enchere/historiqueEncheres',

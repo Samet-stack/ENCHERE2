@@ -128,6 +128,19 @@
 
     <div class="container">
         <h1>Articles</h1>
+
+        <?php if (session()->getFlashdata('erreur')): ?>
+            <div style="background-color:#fdecea; border-left:4px solid #e74c3c; color:#c0392b; padding:12px 16px; border-radius:4px; margin-bottom:15px;">
+                <?= session()->getFlashdata('erreur'); ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if (session()->getFlashdata('succes')): ?>
+            <div style="background-color:#eafaf1; border-left:4px solid #27ae60; color:#1e8449; padding:12px 16px; border-radius:4px; margin-bottom:15px;">
+                <?= session()->getFlashdata('succes'); ?>
+            </div>
+        <?php endif; ?>
+
         <?= anchor('Enchere/creerArticle', '+ Ajouter un article', ['class' => 'btn btn-success']); ?>
 
         <?php if (!empty($articles)): ?>

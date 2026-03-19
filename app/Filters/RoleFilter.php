@@ -13,7 +13,7 @@ class RoleFilter implements FilterInterface
         $session = service('session');
 
         if (!$session->get('id_utilisateur')) {
-            return redirect()->to('/connexion')->with('error', 'Veuillez vous connecter.');
+            return redirect()->to('/Enchere/connexion')->with('error', 'Veuillez vous connecter.');
         }
 
         $userRole = $session->get('role');

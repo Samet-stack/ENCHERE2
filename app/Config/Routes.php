@@ -32,6 +32,7 @@ $routes->get('Enchere/listeArticles', 'Enchere::listeArticles', ['filter' => 'ro
 $routes->get('Enchere/creerArticle', 'Enchere::creerArticle', ['filter' => 'role:benevole,secretaire']);
 $routes->post('Enchere/validerCreerArticle', 'Enchere::validerCreerArticle', ['filter' => 'role:benevole,secretaire']);
 $routes->post('Enchere/selectionnerArticle/(:num)', 'Enchere::selectionnerArticle/$1', ['filter' => 'role:benevole,secretaire']);
+$routes->get('Enchere/retirerArticleVente/(:num)','Enchere::retirerArticleVente/$1', ['filter' => 'role:benevole,secretaire']);
 $routes->get('Enchere/supprimerArticle/(:num)', 'Enchere::supprimerArticle/$1', ['filter' => 'role:benevole,secretaire']);
 
 // Enchères
