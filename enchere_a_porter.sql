@@ -1,4 +1,6 @@
-﻿DROP TABLE IF EXISTS `achats`;
+SET FOREIGN_KEY_CHECKS=0;
+
+DROP TABLE IF EXISTS `achats`;
 CREATE TABLE `achats` (
   `id_achat` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `id_vente_article` int(10) unsigned NOT NULL,
@@ -18,20 +20,22 @@ CREATE TABLE `achats` (
 LOCK TABLES `achats` WRITE;
 INSERT INTO `achats` VALUES (1,1,3,2,0.60,0,NULL);
 UNLOCK TABLES;
+
 DROP TABLE IF EXISTS `articles`;
 CREATE TABLE `articles` (
   `id_article` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `libelle` varchar(255) NOT NULL,
   `description` text DEFAULT NULL,
   `taille` varchar(20) DEFAULT NULL,
-  `etat` enum('bon','tr├¿s bon','comme neuf') NOT NULL DEFAULT 'bon',
+  `etat` enum('bon','très bon','comme neuf') NOT NULL DEFAULT 'bon',
   `prix_origine` decimal(10,2) NOT NULL,
   `photo` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id_article`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 LOCK TABLES `articles` WRITE;
-INSERT INTO `articles` VALUES (1,'test','test','S','bon',12.00,'uploads/articles/1772565212_26580a7c3c0487461b64.jpg'),(2,'polat','efzef','S','tr├¿s bon',29.99,'uploads/articles/1773262370_07ed8b4ee2046f7102c1.png');
+INSERT INTO `articles` VALUES (1,'test','test','S','bon',12.00,'uploads/articles/1772565212_26580a7c3c0487461b64.jpg'),(2,'polat','efzef','S','très bon',29.99,'uploads/articles/1773262370_07ed8b4ee2046f7102c1.png');
 UNLOCK TABLES;
+
 DROP TABLE IF EXISTS `encheres`;
 CREATE TABLE `encheres` (
   `id_enchere` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -49,6 +53,7 @@ CREATE TABLE `encheres` (
 LOCK TABLES `encheres` WRITE;
 INSERT INTO `encheres` VALUES (1,1,3,0.20,0,'2026-03-03 20:15:17'),(2,1,3,0.60,0,'2026-03-03 20:15:23');
 UNLOCK TABLES;
+
 DROP TABLE IF EXISTS `inscriptions`;
 CREATE TABLE `inscriptions` (
   `id_inscription` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -63,6 +68,7 @@ CREATE TABLE `inscriptions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 LOCK TABLES `inscriptions` WRITE;
 UNLOCK TABLES;
+
 DROP TABLE IF EXISTS `mails_log`;
 CREATE TABLE `mails_log` (
   `id_mail` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -77,6 +83,7 @@ CREATE TABLE `mails_log` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 LOCK TABLES `mails_log` WRITE;
 UNLOCK TABLES;
+
 DROP TABLE IF EXISTS `roles`;
 CREATE TABLE `roles` (
   `id_role` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -86,6 +93,7 @@ CREATE TABLE `roles` (
 LOCK TABLES `roles` WRITE;
 INSERT INTO `roles` VALUES (1,'secretaire'),(2,'benevole'),(3,'habitant');
 UNLOCK TABLES;
+
 DROP TABLE IF EXISTS `utilisateurs`;
 CREATE TABLE `utilisateurs` (
   `id_utilisateur` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -105,8 +113,9 @@ CREATE TABLE `utilisateurs` (
   CONSTRAINT `utilisateurs_ibfk_1` FOREIGN KEY (`id_role`) REFERENCES `roles` (`id_role`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 LOCK TABLES `utilisateurs` WRITE;
-INSERT INTO `utilisateurs` VALUES (1,1,'Dupont','Marie','secretaire@getcet.fr','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','01 23 45 67 89','Mairie de Getcet',0,1,'2026-03-03 20:01:17'),(2,2,'Martin','Pierre','benevole@getcet.fr','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','01 98 76 54 32','15 rue des BÔö£┬«nÔö£┬«voles, Getcet',0,1,'2026-03-03 20:01:17'),(3,3,'test','test','test@test.com','$2y$10$6j2Y1pPD/UG0Cu/4PabyFu/sj5M6f8pdVOKe2MK18vCwuspPLYy1m','test','test',1,1,'2026-03-03 20:05:58'),(4,3,'Test','User','testuser@example.com','$2y$10$OXEnydQ3PDnUATE22QtCWerQYX2.XJ9uNbdIjQVOw0SablTHkKqzW','0612345678','123 Rue de Getcet',1,1,'2026-03-11 12:20:39');
+INSERT INTO `utilisateurs` VALUES (1,1,'Dupont','Marie','secretaire@getcet.fr','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','01 23 45 67 89','Mairie de Getcet',0,1,'2026-03-03 20:01:17'),(2,2,'Martin','Pierre','benevole@getcet.fr','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','01 98 76 54 32','15 rue des Bénévoles, Getcet',0,1,'2026-03-03 20:01:17'),(3,3,'test','test','test@test.com','$2y$10$6j2Y1pPD/UG0Cu/4PabyFu/sj5M6f8pdVOKe2MK18vCwuspPLYy1m','test','test',1,1,'2026-03-03 20:05:58'),(4,3,'Test','User','testuser@example.com','$2y$10$OXEnydQ3PDnUATE22QtCWerQYX2.XJ9uNbdIjQVOw0SablTHkKqzW','0612345678','123 Rue de Getcet',1,1,'2026-03-11 12:20:39');
 UNLOCK TABLES;
+
 DROP TABLE IF EXISTS `vente_articles`;
 CREATE TABLE `vente_articles` (
   `id_vente_article` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -125,6 +134,7 @@ CREATE TABLE `vente_articles` (
 LOCK TABLES `vente_articles` WRITE;
 INSERT INTO `vente_articles` VALUES (1,1,1,1,0.20);
 UNLOCK TABLES;
+
 DROP TABLE IF EXISTS `ventes`;
 CREATE TABLE `ventes` (
   `id_vente` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -143,3 +153,5 @@ CREATE TABLE `ventes` (
 LOCK TABLES `ventes` WRITE;
 INSERT INTO `ventes` VALUES (1,1,'test','test','2026-03-03 20:12:00','2026-03-04 09:00:00','cloturee',NULL,'2026-03-03 20:11:26');
 UNLOCK TABLES;
+
+SET FOREIGN_KEY_CHECKS=1;
